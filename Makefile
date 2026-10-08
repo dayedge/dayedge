@@ -40,6 +40,7 @@ APP      := $(BUILD)/$(PRODUCT).app
 # One stable identity keeps macOS's permission grants across builds.
 SIGN_IDENTITY := DayEdge Self-Signed
 SIGN_KEYCHAIN := $(HOME)/Library/Keychains/dayedge-signing.keychain-db
+SIGN_KEYCHAIN_PASSWORD ?= dayedge-signing
 HAS_SIGN_IDENTITY := $(shell security find-identity -p codesigning "$(SIGN_KEYCHAIN)" 2>/dev/null | grep -c '"$(SIGN_IDENTITY)"')
 ifneq ($(HAS_SIGN_IDENTITY),0)
 SIGNING := CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$(SIGN_IDENTITY)" DEVELOPMENT_TEAM= \
@@ -52,7 +53,7 @@ build:
 ifeq ($(HAS_SIGN_IDENTITY),0)
 	@echo "Signing ad hoc: macOS will ask for permissions again after each build (make signing-identity)."
 else
-	@security unlock-keychain -p dayedge-signing "$(SIGN_KEYCHAIN)"
+	@security unlock-keychain -p "$(SIGN_KEYCHAIN_PASSWORD)" "$(SIGN_KEYCHAIN)"
 endif
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIGURATION) \
 		-derivedDataPath $(DERIVED) $(SIGNING) build

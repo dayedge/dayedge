@@ -35,6 +35,60 @@ State the minimum macOS version, supported architectures of that archive, change
 is self-signed and not notarized. Link the README's Gatekeeper instructions. Test the downloaded archive
 on a separate Mac/user account; a local build does not exercise download quarantine.
 
+## GitHub Actions
+
+`.github/workflows/release.yml` builds with Xcode 26.6 on `macos-26`. It runs lint and tests, imports
+the existing signing identity, builds a universal Release app, and verifies its signature, certificate
+fingerprint, version, bundle identifier, and architectures before packaging it. No Apple account or
+provisioning profile is required for these self-signed builds; they remain non-notarized.
+
+### One-time signing setup
+
+Export the **existing** `DayEdge Self-Signed` certificate together with its private key as a
+password-protected `.p12` file from Keychain Access. Use a strong export password. Do not create a new
+certificate on CI: the name alone does not make it the same signing identity.
+
+Under **Settings → Secrets and variables → Actions**, add these repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `CERTIFICATE_P12_BASE64` | Base64-encoded `.p12` containing the existing certificate and private key |
+| `CERTIFICATE_PASSWORD` | The `.p12` export password |
+
+For example, after exporting the file outside the checkout:
+
+```sh
+base64 -i /path/outside/repository/DayEdge.p12 | gh secret set CERTIFICATE_P12_BASE64 --repo dayedge/dayedge
+gh secret set CERTIFICATE_PASSWORD --repo dayedge/dayedge
+```
+
+The second command prompts for the password. Never paste the key or password into an issue, workflow
+file, or chat. Keep an encrypted backup of the identity outside the repository, then remove the temporary
+export. The runner uses a random password for its temporary keychain and deletes signing material at
+the end of the job. The workflow pins the public SHA-1 certificate fingerprint; update it deliberately
+if the signing identity changes. SHA-1 here identifies the certificate; archive checksums use SHA-256.
+
+### Build and release
+
+Commit and push the workflow before creating a release tag. With both `MARKETING_VERSION` values set
+to `1.0.0`, run these commands in the **publication checkout**, which has the clean public history:
+
+```sh
+git tag -a v1.0.0 -m "DayEdge 1.0.0"
+git push origin v1.0.0
+```
+
+A tag push creates a **draft** GitHub Release containing `DayEdge-1.0.0.zip` and its `.sha256` file.
+The tag must match the checked-in app version. Existing releases are never overwritten; remove a failed
+draft explicitly before retrying its creation. Download and smoke-test the archive, replace the draft
+notes with release highlights, then publish and update the tap.
+
+For a test build, choose **Actions → Release → Run workflow** and select a branch or tag. Manual runs
+upload the archive as an Actions artifact retained for 14 days and do not create a GitHub Release.
+After extracting the downloaded artifact, run `shasum -a 256 -c DayEdge-1.0.0.zip.sha256` alongside the
+inner app archive. Private repository assets require repository access; public Homebrew distribution
+needs a public release download URL.
+
 ## Homebrew tap
 
 Keep the cask in the project's separate tap repository. For each release:

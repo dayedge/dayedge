@@ -1,0 +1,149 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      # Public fingerprint of the existing certificate, not a secret.
+      SIGNING_CERTIFICATE_SHA1: FD34BE6C57039E9528A771E6CF873E1F464587A3
+
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Validate version
+        id: version
+        run: |
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+
+          project = pathlib.Path("DayEdge.xcodeproj/project.pbxproj").read_text()
+          versions = re.findall(r"MARKETING_VERSION = ([^;]+);", project)
+          if len(versions) != 2 or len(set(versions)) != 1:
+              raise SystemExit("Debug and Release must have the same marketing version")
+          version = versions[0]
+          if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
+              raise SystemExit("Expected a stable version such as 1.0.0")
+          if os.environ["GITHUB_REF_TYPE"] == "tag" and os.environ["GITHUB_REF_NAME"] != f"v{version}":
+              raise SystemExit("Release tag does not match the app version")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"value={version}\n")
+          PY
+          printf 'SIGN_KEYCHAIN=%s/dayedge-signing.keychain-db\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Check signing secrets
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          : "${CERTIFICATE_P12_BASE64:?Add CERTIFICATE_P12_BASE64 in repository Actions secrets}"
+          : "${CERTIFICATE_PASSWORD:?Add CERTIFICATE_PASSWORD in repository Actions secrets}"
+
+      - name: Check toolchain and install SwiftLint
+        run: |
+          xcodebuild -version
+          brew install swiftlint
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Import existing signing identity
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          umask 077
+          certificate="$RUNNER_TEMP/dayedge-signing.p12"
+          printf '%s' "$CERTIFICATE_P12_BASE64" | base64 --decode > "$certificate"
+          password="$(openssl rand -hex 32)"
+          echo "::add-mask::$password"
+          security create-keychain -p "$password" "$SIGN_KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$SIGN_KEYCHAIN"
+          security unlock-keychain -p "$password" "$SIGN_KEYCHAIN"
+          security import "$certificate" -k "$SIGN_KEYCHAIN" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$SIGN_KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$SIGN_KEYCHAIN" "$HOME/Library/Keychains/login.keychain-db"
+          security find-identity -p codesigning "$SIGN_KEYCHAIN" | grep -F "$SIGNING_CERTIFICATE_SHA1 \"DayEdge Self-Signed\""
+          printf 'SIGN_KEYCHAIN_PASSWORD=%s\n' "$password" >> "$GITHUB_ENV"
+          rm -f "$certificate"
+
+      - name: Build universal Release app
+        run: make build SIGN_KEYCHAIN="$SIGN_KEYCHAIN"
+
+      - name: Verify and package
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          app=build/DayEdge.app
+          codesign --verify --deep --strict "$app"
+          codesign -d --extract-certificates="$RUNNER_TEMP/dayedge-cert-" "$app"
+          actual="$(shasum -a 1 "$RUNNER_TEMP/dayedge-cert-0" | awk '{print toupper($1)}')"
+          test "$actual" = "$SIGNING_CERTIFICATE_SHA1"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" = "$RELEASE_VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")" = com.dayedge.app
+          lipo "$app/Contents/MacOS/DayEdge" -verify_arch arm64 x86_64
+          mkdir -p build/release
+          ditto -c -k --keepParent "$app" "build/release/DayEdge-$RELEASE_VERSION.zip"
+          cd build/release
+          shasum -a 256 "DayEdge-$RELEASE_VERSION.zip" > "DayEdge-$RELEASE_VERSION.zip.sha256"
+
+      - name: Upload build for testing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: DayEdge-${{ steps.version.outputs.value }}
+          path: build/release/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Create draft GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          Requires macOS 15 or later. Universal app for Apple Silicon and Intel.
+
+          This build uses DayEdge's stable self-signed certificate. It is not Apple Developer ID signed or notarized.
+          See the [installation instructions](https://github.com/dayedge/dayedge#install) for Gatekeeper guidance.
+
+          Before publishing: add the release highlights and smoke-test the downloaded archive on another Mac or user account.
+          NOTES
+          gh release create "$GITHUB_REF_NAME" \
+            "build/release/DayEdge-$RELEASE_VERSION.zip" \
+            "build/release/DayEdge-$RELEASE_VERSION.zip.sha256" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+            --title "DayEdge $RELEASE_VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
+
+      - name: Remove signing material
+        if: always()
+        run: |
+          if [ -n "${SIGN_KEYCHAIN:-}" ] && [ -f "$SIGN_KEYCHAIN" ]; then
+            security delete-keychain "$SIGN_KEYCHAIN"
+          fi
+          rm -f "$RUNNER_TEMP/dayedge-signing.p12" "$RUNNER_TEMP"/dayedge-cert-*
