@@ -1,0 +1,19 @@
+/* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
+"agendalistview.rows.loading" = "Wczytywanie…";
+"agendalistview.rows.no.events" = "Brak wydarzeń";
+"agendanowmarkerview.now" = "Teraz, %@";
+"agendanowtarget.free.until" = "Wolne do %@";
+"agendanowtarget.in.progress" = "W trakcie";
+"daytimelineeventview.continues" = "Trwa dalej";
+"daytimelineeventview.since" = "Od %@ – %@";
+"daytimelinesegmentlabel.midnight" = "Północ";
+"daytimelinesegmentlabel.yesterday" = "Wczoraj";
+"eventdotsview.more.events" = "Więcej wydarzeń";
+"eventdotsview.open.tasks" = "Otwórz zadania";
+"nowindicatorview.current.time" = "Bieżąca godzina, %@";
+"timedtaskmarkerview.completed" = "Ukończone";
+"timedtaskmarkerview.not.completed" = "Nieukończone";
+"agenda.all.day" = "całodn.";
+"agenda.overflow" = "+%lld więcej";
+"weather.sunrise" = "wschód";
+"weather.sunset" = "zachód";

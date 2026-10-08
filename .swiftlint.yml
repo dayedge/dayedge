@@ -1,0 +1,45 @@
+# SwiftLint for DayEdge — `make lint`, strict, no baseline. Rules fit the
+# codebase's own style (4 spaces, lines wrapped by hand at ~150–180
+# columns). Fix a finding; where that would make the code worse, disable it
+# on the spot with a one-line reason:
+#   // swiftlint:disable:next <rule> - <why>
+included:
+  - App
+  - Packages/DayEdge/Sources
+  - Packages/CalendarIndex/Sources
+excluded:
+  - Packages/DayEdge/.build
+  - Packages/CalendarIndex/.build
+  - build
+
+line_length:
+  warning: 180
+  error: 240
+  ignores_comments: true
+  ignores_urls: true
+
+# Short names are idiomatic here (x, y, i, a / b in comparisons); underscores
+# appear in API field names (temperature_2m) and theme tokens (Tasks_…).
+identifier_name:
+  min_length: 1
+  max_length: 60
+  allowed_symbols: ["_"]
+
+type_name:
+  max_length: 60
+
+# The app ships without debug output (no print, NSLog, debugPrint, dump);
+# real failures go to os.Logger at error level.
+custom_rules:
+  no_print:
+    name: "No print"
+    regex: '(?<![\w.])(print|debugPrint|dump)\('
+    match_kinds: [identifier]
+    message: "Don't ship debug output; use os.Logger at error level for real failures."
+    severity: error
+  no_nslog:
+    name: "No NSLog"
+    regex: '\bNSLog\('
+    match_kinds: [identifier]
+    message: "Don't ship debug output; use os.Logger at error level for real failures."
+    severity: error

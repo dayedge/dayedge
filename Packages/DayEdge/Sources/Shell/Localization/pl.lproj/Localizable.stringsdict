@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>meeting.reminder.minutes</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Za %lld minuty</string>
+			<key>many</key>
+			<string>Za %lld minut</string>
+			<key>one</key>
+			<string>Za %lld minutę</string>
+			<key>other</key>
+			<string>Za %lld minut</string>
+		</dict>
+	</dict>
+	<key>meeting.started.minutes</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Spotkanie rozpoczęło się %lld minuty temu</string>
+			<key>many</key>
+			<string>Spotkanie rozpoczęło się %lld minut temu</string>
+			<key>one</key>
+			<string>Spotkanie rozpoczęło się %lld minutę temu</string>
+			<key>other</key>
+			<string>Spotkanie rozpoczęło się %lld minut temu</string>
+		</dict>
+	</dict>
+	<key>meeting.starts.minutes</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Spotkanie rozpocznie się za %lld minuty</string>
+			<key>many</key>
+			<string>Spotkanie rozpocznie się za %lld minut</string>
+			<key>one</key>
+			<string>Spotkanie rozpocznie się za %lld minutę</string>
+			<key>other</key>
+			<string>Spotkanie rozpocznie się za %lld minut</string>
+		</dict>
+	</dict>
+	<key>snooze.minutes</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld minuty</string>
+			<key>many</key>
+			<string>%lld minut</string>
+			<key>one</key>
+			<string>%lld minuta</string>
+			<key>other</key>
+			<string>%lld minut</string>
+		</dict>
+	</dict>
+	<key>snooze.minutes.label</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>minuty</string>
+			<key>many</key>
+			<string>minut</string>
+			<key>one</key>
+			<string>minuta</string>
+			<key>other</key>
+			<string>minut</string>
+		</dict>
+	</dict>
+	<key>snooze.remind.minutes</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Przypomnij za %lld minuty</string>
+			<key>many</key>
+			<string>Przypomnij za %lld minut</string>
+			<key>one</key>
+			<string>Przypomnij za %lld minutę</string>
+			<key>other</key>
+			<string>Przypomnij za %lld minut</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,7 @@
+/* Systemowe pytania o dostęp. */
+"NSLocationUsageDescription" = "DayEdge pokazuje pogodę w Twojej lokalizacji.";
+"NSLocationWhenInUseUsageDescription" = "DayEdge pokazuje pogodę w Twojej lokalizacji.";
+"NSCalendarsUsageDescription" = "DayEdge odczytuje wydarzenia z kalendarzy, aby wyświetlać je na pasku menu. Może też usunąć odwołane wydarzenie, jeśli wybierzesz tę opcję.";
+"NSCalendarsFullAccessUsageDescription" = "DayEdge odczytuje wydarzenia z kalendarzy, aby wyświetlać je na pasku menu. Może też usunąć odwołane wydarzenie, jeśli wybierzesz tę opcję.";
+"NSRemindersUsageDescription" = "DayEdge wyświetla przypomnienia na pasku menu oraz pozwala je edytować i oznaczać jako ukończone.";
+"NSRemindersFullAccessUsageDescription" = "DayEdge wyświetla przypomnienia na pasku menu oraz pozwala je edytować i oznaczać jako ukończone.";

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleLocalizations</key>
+    <array><string>en</string><string>pl</string></array>
+    <!-- A menu-bar app: no Dock icon at launch (Settings → General → Show in Dock adds one). -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSLocationUsageDescription</key>
+    <string>DayEdge shows the weather where you are.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>DayEdge shows the weather where you are.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>DayEdge reads your calendar events to show them in its toolbar view, and can remove a cancelled event you choose to clean up.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>DayEdge reads your calendar events to show them in its toolbar view, and can remove a cancelled event you choose to clean up.</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>DayEdge shows your reminders in its toolbar view and lets you complete and edit them.</string>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>DayEdge shows your reminders in its toolbar view and lets you complete and edit them.</string>
+</dict>
+</plist>

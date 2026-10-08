@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Hardened runtime: calendar (and reminders) access through EventKit. -->
+    <key>com.apple.security.personal-information.calendars</key>
+    <true/>
+    <!-- Current Location for weather, only when the user picks it. -->
+    <key>com.apple.security.personal-information.location</key>
+    <true/>
+</dict>
+</plist>

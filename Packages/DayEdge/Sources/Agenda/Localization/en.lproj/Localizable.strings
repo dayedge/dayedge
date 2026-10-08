@@ -1,0 +1,20 @@
+
+/* App-owned presentation text. %@ placeholders are verbatim values in source order. */
+"agendalistview.rows.loading" = "Loading…";
+"agendalistview.rows.no.events" = "No events";
+"agendanowmarkerview.now" = "Now, %@";
+"agendanowtarget.free.until" = "Free until %@";
+"agendanowtarget.in.progress" = "In progress";
+"daytimelineeventview.continues" = "Continues";
+"daytimelineeventview.since" = "Since %@ – %@";
+"daytimelinesegmentlabel.midnight" = "Midnight";
+"daytimelinesegmentlabel.yesterday" = "Yesterday";
+"eventdotsview.more.events" = "More events";
+"eventdotsview.open.tasks" = "Open tasks";
+"nowindicatorview.current.time" = "Current time, %@";
+"timedtaskmarkerview.completed" = "Completed";
+"timedtaskmarkerview.not.completed" = "Not completed";
+"agenda.all.day" = "all-day";
+"agenda.overflow" = "+%lld more";
+"weather.sunrise" = "sunrise";
+"weather.sunset" = "sunset";

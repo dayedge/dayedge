@@ -1,0 +1,18 @@
+/* Sugestie: etykieta, potem pytanie, które wysyła. */
+"chip.agenda.label" = "Agenda na dziś";
+"chip.agenda.prompt" = "Co mam dziś w planie?";
+"chip.free.label" = "Wolne w tym tygodniu";
+"chip.free.prompt" = "Kiedy mam wolne w tym tygodniu?";
+"chip.overdue.label" = "Co jest zaległe";
+"chip.overdue.prompt" = "Które z moich zadań są zaległe?";
+"chip.prep.label" = "Przygotuj następne spotkanie";
+"chip.prep.prompt" = "Pomóż mi przygotować się do następnego spotkania.";
+
+/* Relative days in dates. */
+"date.today" = "Dzisiaj";
+"date.tomorrow" = "Jutro";
+"date.yesterday" = "Wczoraj";
+
+/* Deliberately reordered arguments and a literal percent for contract tests. */
+"fixture.reordered" = "%2$@ przed %1$@ — 100%%";
+"fixture.expanded" = "⟦This deliberately expanded label tests wrapping without translating user-provided content⟧";

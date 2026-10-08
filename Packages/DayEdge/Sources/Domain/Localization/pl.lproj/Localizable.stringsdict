@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>recurrence.days.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld dni: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld dni: %2$@</string>
+			<key>one</key>
+			<string>Codziennie: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld dni: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.every.days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %lld dni</string>
+			<key>many</key>
+			<string>Co %lld dni</string>
+			<key>one</key>
+			<string>Codziennie</string>
+			<key>other</key>
+			<string>Co %lld dni</string>
+		</dict>
+	</dict>
+	<key>recurrence.every.months</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %lld miesiące</string>
+			<key>many</key>
+			<string>Co %lld miesięcy</string>
+			<key>one</key>
+			<string>Co miesiąc</string>
+			<key>other</key>
+			<string>Co %lld miesięcy</string>
+		</dict>
+	</dict>
+	<key>recurrence.every.weeks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %lld tygodnie</string>
+			<key>many</key>
+			<string>Co %lld tygodni</string>
+			<key>one</key>
+			<string>Co tydzień</string>
+			<key>other</key>
+			<string>Co %lld tygodni</string>
+		</dict>
+	</dict>
+	<key>recurrence.every.years</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %lld lata</string>
+			<key>many</key>
+			<string>Co %lld lat</string>
+			<key>one</key>
+			<string>Co roku</string>
+			<key>other</key>
+			<string>Co %lld lat</string>
+		</dict>
+	</dict>
+	<key>recurrence.monthly.day</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld miesiące, %2$@ dzień</string>
+			<key>many</key>
+			<string>Co %1$lld miesięcy, %2$@ dzień</string>
+			<key>one</key>
+			<string>Co miesiąc, %2$@ dzień</string>
+			<key>other</key>
+			<string>Co %1$lld miesięcy, %2$@ dzień</string>
+		</dict>
+	</dict>
+	<key>recurrence.monthly.last.day</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %lld miesiące w ostatnim dniu</string>
+			<key>many</key>
+			<string>Co %lld miesięcy w ostatnim dniu</string>
+			<key>one</key>
+			<string>Co miesiąc w ostatnim dniu</string>
+			<key>other</key>
+			<string>Co %lld miesięcy w ostatnim dniu</string>
+		</dict>
+	</dict>
+	<key>recurrence.months.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld miesiące: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld miesięcy: %2$@</string>
+			<key>one</key>
+			<string>Co miesiąc: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld miesięcy: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.weeks.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld tygodnie: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld tygodni: %2$@</string>
+			<key>one</key>
+			<string>Co tydzień: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld tygodni: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.years.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld lata: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld lat: %2$@</string>
+			<key>one</key>
+			<string>Co roku: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld lat: %2$@</string>
+		</dict>
+	</dict>
+	<key>selection.calendars.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld kalendarze</string>
+			<key>many</key>
+			<string>%lld kalendarzy</string>
+			<key>one</key>
+			<string>%lld kalendarz</string>
+			<key>other</key>
+			<string>%lld kalendarzy</string>
+		</dict>
+	</dict>
+	<key>selection.lists.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld listy</string>
+			<key>many</key>
+			<string>%lld list</string>
+			<key>one</key>
+			<string>%lld lista</string>
+			<key>other</key>
+			<string>%lld list</string>
+		</dict>
+	</dict>
+	<key>tasksettings.last.days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Ostatnie %lld dni</string>
+			<key>many</key>
+			<string>Ostatnie %lld dni</string>
+			<key>one</key>
+			<string>Ostatni %lld dzień</string>
+			<key>other</key>
+			<string>Ostatnie %lld dni</string>
+		</dict>
+	</dict>
+	<key>workdays.holidays</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld święta</string>
+			<key>many</key>
+			<string>%lld świąt</string>
+			<key>one</key>
+			<string>%lld święto</string>
+			<key>other</key>
+			<string>%lld świąt</string>
+		</dict>
+	</dict>
+	<key>workdays.label</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>dni robocze</string>
+			<key>many</key>
+			<string>dni roboczych</string>
+			<key>one</key>
+			<string>dzień roboczy</string>
+			<key>other</key>
+			<string>dni roboczych</string>
+		</dict>
+	</dict>
+	<key>workdays.public.holidays</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld święta</string>
+			<key>many</key>
+			<string>%lld świąt</string>
+			<key>one</key>
+			<string>%lld święto</string>
+			<key>other</key>
+			<string>%lld świąt</string>
+		</dict>
+	</dict>
+	<key>workdays.weekends</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld dni weekendowe</string>
+			<key>many</key>
+			<string>%lld dni weekendowych</string>
+			<key>one</key>
+			<string>%lld dzień weekendowy</string>
+			<key>other</key>
+			<string>%lld dni weekendowych</string>
+		</dict>
+	</dict>
+	<key>workdays.working</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld dni robocze</string>
+			<key>many</key>
+			<string>%lld dni roboczych</string>
+			<key>one</key>
+			<string>%lld dzień roboczy</string>
+			<key>other</key>
+			<string>%lld dni roboczych</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.minutes.before</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld minutę przed</string>
+			<key>few</key>
+			<string>%lld minuty przed</string>
+			<key>many</key>
+			<string>%lld minut przed</string>
+			<key>other</key>
+			<string>%lld minut przed</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.minutes.after</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld minutę po</string>
+			<key>few</key>
+			<string>%lld minuty po</string>
+			<key>many</key>
+			<string>%lld minut po</string>
+			<key>other</key>
+			<string>%lld minut po</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.hours.before</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld godzinę przed</string>
+			<key>few</key>
+			<string>%lld godziny przed</string>
+			<key>many</key>
+			<string>%lld godzin przed</string>
+			<key>other</key>
+			<string>%lld godzin przed</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.hours.after</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld godzinę po</string>
+			<key>few</key>
+			<string>%lld godziny po</string>
+			<key>many</key>
+			<string>%lld godzin po</string>
+			<key>other</key>
+			<string>%lld godzin po</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.days.before</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld dzień przed</string>
+			<key>few</key>
+			<string>%lld dni przed</string>
+			<key>many</key>
+			<string>%lld dni przed</string>
+			<key>other</key>
+			<string>%lld dni przed</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.days.after</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld dzień po</string>
+			<key>few</key>
+			<string>%lld dni po</string>
+			<key>many</key>
+			<string>%lld dni po</string>
+			<key>other</key>
+			<string>%lld dni po</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.weeks.before</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld tydzień przed</string>
+			<key>few</key>
+			<string>%lld tygodnie przed</string>
+			<key>many</key>
+			<string>%lld tygodni przed</string>
+			<key>other</key>
+			<string>%lld tygodni przed</string>
+		</dict>
+	</dict>
+	<key>eventalert.offset.weeks.after</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld tydzień po</string>
+			<key>few</key>
+			<string>%lld tygodnie po</string>
+			<key>many</key>
+			<string>%lld tygodni po</string>
+			<key>other</key>
+			<string>%lld tygodni po</string>
+		</dict>
+	</dict>
+	<key>eventalert.days.before</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld dzień przed (%@)</string>
+			<key>few</key>
+			<string>%lld dni przed (%@)</string>
+			<key>many</key>
+			<string>%lld dni przed (%@)</string>
+			<key>other</key>
+			<string>%lld dni przed (%@)</string>
+		</dict>
+	</dict>
+	<key>day.count.events</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld wydarzenie</string>
+			<key>few</key>
+			<string>%lld wydarzenia</string>
+			<key>many</key>
+			<string>%lld wydarzeń</string>
+			<key>other</key>
+			<string>%lld wydarzeń</string>
+		</dict>
+	</dict>
+	<key>day.count.tasks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld zadanie</string>
+			<key>few</key>
+			<string>%lld zadania</string>
+			<key>many</key>
+			<string>%lld zadań</string>
+			<key>other</key>
+			<string>%lld zadań</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

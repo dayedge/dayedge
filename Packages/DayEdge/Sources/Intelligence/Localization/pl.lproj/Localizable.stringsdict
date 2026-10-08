@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>intelligence.connected.models</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Połączono · %lld modele</string>
+			<key>many</key>
+			<string>Połączono · %lld modeli</string>
+			<key>one</key>
+			<string>Połączono · %lld model</string>
+			<key>other</key>
+			<string>Połączono · %lld modeli</string>
+		</dict>
+	</dict>
+	<key>search.minimum.characters</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Wpisz co najmniej %lld znaki</string>
+			<key>many</key>
+			<string>Wpisz co najmniej %lld znaków</string>
+			<key>one</key>
+			<string>Wpisz co najmniej %lld znak</string>
+			<key>other</key>
+			<string>Wpisz co najmniej %lld znaków</string>
+		</dict>
+	</dict>
+	<key>search.results.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld wyniki</string>
+			<key>many</key>
+			<string>%lld wyników</string>
+			<key>one</key>
+			<string>%lld wynik</string>
+			<key>other</key>
+			<string>%lld wyników</string>
+		</dict>
+	</dict>
+	<key>intelligence.tokens</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld token</string>
+			<key>few</key>
+			<string>%lld tokeny</string>
+			<key>many</key>
+			<string>%lld tokenów</string>
+			<key>other</key>
+			<string>%lld tokena</string>
+		</dict>
+	</dict>
+	<key>intelligence.language.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld język</string>
+			<key>few</key>
+			<string>%lld języki</string>
+			<key>many</key>
+			<string>%lld języków</string>
+			<key>other</key>
+			<string>%lld języka</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

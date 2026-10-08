@@ -1,0 +1,116 @@
+today → D 2026-09-23
+tomorrow → D 2026-09-24
+yesterday → D 2026-09-22
+next week → D 2026-09-28
+last week → D 2026-09-14
+previous week → D 2026-09-14
+this week → D 2026-09-21
+next month → M 2026-10-01
+last month → M 2026-08-01
+previous month → M 2026-08-01
+this month → M 2026-09-01
+next year → M 2027-01-01
+last year → M 2025-01-01
+previous year → M 2025-01-01
+this year → M 2026-01-01
+in a week → D 2026-09-30
+in two weeks → D 2026-10-07
+in three weeks → D 2026-10-14
+a week from now → D 2026-09-30
+two weeks from now → D 2026-10-07
+one week ago → D 2026-09-16
+two weeks ago → D 2026-09-09
+a month from now → D 2026-10-23
+in one month → D 2026-10-23
+in two months → D 2026-11-23
+one month ago → D 2026-08-23
+two months ago → D 2026-07-23
+a year from now → D 2027-09-23
+in one year → D 2027-09-23
+one year ago → D 2025-09-23
+two years ago → D 2024-09-23
+next Monday → D 2026-09-28
+next Tuesday → D 2026-09-29
+next Wednesday → D 2026-09-30
+next Thursday → D 2026-10-01
+next Friday → D 2026-10-02
+next Saturday → D 2026-10-03
+next Sunday → D 2026-10-04
+last Monday → D 2026-09-21
+last Tuesday → D 2026-09-22
+last Wednesday → D 2026-09-16
+last Thursday → D 2026-09-17
+last Friday → D 2026-09-18
+last Saturday → D 2026-09-19
+last Sunday → D 2026-09-20
+this Monday → D 2026-09-21
+this Friday → D 2026-09-25
+Monday → D 2026-09-28
+Friday → D 2026-09-25
+Monday next week → D 2026-09-28
+Friday next week → D 2026-10-02
+Monday last week → D 2026-09-14
+Friday last week → D 2026-09-18
+the first day of this month → D 2026-09-01
+the first day of next month → D 2026-10-01
+the first day of last month → D 2026-08-01
+the last day of this month → D 2026-09-30
+the last day of next month → D 2026-10-31
+the last day of last month → D 2026-08-31
+beginning of this month → D 2026-09-01
+beginning of next month → D 2026-10-01
+beginning of last month → D 2026-08-01
+end of this month → D 2026-09-30
+end of next month → D 2026-10-31
+end of last month → D 2026-08-31
+beginning of the year → D 2026-01-01
+start of the year → D 2026-01-01
+end of the year → D 2026-12-31
+beginning of next year → D 2027-01-01
+end of next year → D 2027-12-31
+January 1 → D 2027-01-01
+December 31 → D 2026-12-31
+January 1 next year → D 2027-01-01
+December 31 this year → D 2026-12-31
+September 23 → D 2026-09-23
+23 September → D 2026-09-23
+September 23 2026 → D 2026-09-23
+23 September 2026 → D 2026-09-23
+the 23rd of September → —
+the 23rd of September 2026 → —
+Christmas → —
+Christmas Day → —
+Christmas this year → —
+Christmas next year → —
+New Year's Day → —
+New Year's Eve → —
+New Year's Day next year → —
+the day before Christmas → —
+the day after Christmas → —
+two days before Christmas → —
+two days after Christmas → —
+three days before New Year's Eve → —
+the week before Christmas → —
+the week after Christmas → —
+next weekend → D 2026-10-03
+this weekend → D 2026-09-26
+last weekend → D 2026-09-19
+next Monday morning → D 2026-09-28
+next Monday afternoon → D 2026-09-28
+next Monday evening → D 2026-09-28
+tomorrow morning → D 2026-09-24
+tomorrow afternoon → D 2026-09-24
+tomorrow evening → D 2026-09-24
+tonight → D 2026-09-23
+tomorrow at 9 → D 2026-09-24
+tomorrow at 9am → D 2026-09-24
+tomorrow at 14:00 → D 2026-09-24
+next Friday at noon → D 2026-10-02
+next Friday at midnight → D 2026-10-02
+Friday at 5pm → D 2026-09-25
+in 3 days → D 2026-09-26
+3 days from now → D 2026-09-26
+3 days ago → D 2026-09-20
+in 10 days → D 2026-10-03
+10 days from now → D 2026-10-03
+10 days ago → D 2026-09-13

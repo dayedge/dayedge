@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>recurrence.days.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld dni: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld dni: %2$@</string>
+			<key>one</key>
+			<string>Codziennie: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld dni: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.months.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld miesiące: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld miesięcy: %2$@</string>
+			<key>one</key>
+			<string>Co miesiąc: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld miesięcy: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.occurrences</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%2$@, %1$lld razy</string>
+			<key>many</key>
+			<string>%2$@, %1$lld razy</string>
+			<key>one</key>
+			<string>%2$@, %1$lld raz</string>
+			<key>other</key>
+			<string>%2$@, %1$lld razy</string>
+		</dict>
+	</dict>
+	<key>recurrence.weeks.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld tygodnie: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld tygodni: %2$@</string>
+			<key>one</key>
+			<string>Co tydzień: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld tygodni: %2$@</string>
+		</dict>
+	</dict>
+	<key>recurrence.years.on</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>Co %1$lld lata: %2$@</string>
+			<key>many</key>
+			<string>Co %1$lld lat: %2$@</string>
+			<key>one</key>
+			<string>Co roku: %2$@</string>
+			<key>other</key>
+			<string>Co %1$lld lat: %2$@</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

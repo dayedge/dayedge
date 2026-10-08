@@ -1,0 +1,17 @@
+
+/* App-owned presentation text. %@ placeholders are verbatim values in source order. */
+"calendareventmapper.no.title" = "(no title)";
+"calendareventmapper.unknown" = "Unknown";
+"eventkitremindersource.a.reminder.needs.a.title" = "A reminder needs a title.";
+"holidayproviding.public.holiday" = "Public holiday";
+"openmeteoweatherservice.clear" = "Clear";
+"openmeteoweatherservice.drizzle" = "Drizzle";
+"openmeteoweatherservice.foggy" = "Foggy";
+"openmeteoweatherservice.overcast" = "Overcast";
+"openmeteoweatherservice.partly.cloudy" = "Partly Cloudy";
+"openmeteoweatherservice.rain" = "Rain";
+"openmeteoweatherservice.rain.showers" = "Rain Showers";
+"openmeteoweatherservice.snow" = "Snow";
+"openmeteoweatherservice.snow.showers" = "Snow Showers";
+"openmeteoweatherservice.thunderstorm" = "Thunderstorm";
+"recurrence.until" = "%@, until %@";

@@ -1,0 +1,200 @@
+[parse] buy milk → TASK · Buy milk | - | - | - | none | - | -
+[parse] buy milk tomorrow → TASK · Buy milk | 2026-09-24 | - | - | none | - | -
+[parse] call John tomorrow → TASK · Call John | 2026-09-24 | - | - | none | - | -
+[parse] send invoice Friday → TASK · Send invoice | 2026-09-25 | - | - | none | - | -
+[parse] book dentist next Monday → TASK · Book dentist | 2026-09-28 | - | - | none | - | -
+[parse] pay electricity bill today → TASK · Pay electricity bill | 2026-09-23 | - | - | none | - | -
+[parse] finish report tonight → TASK · Finish report | 2026-09-23 | 20:00 | - | none | - | -
+[parse] water plants Saturday → TASK · Water plants | 2026-09-26 | - | - | none | - | -
+[parse] email Tom tomorrow → TASK · Email Tom | 2026-09-24 | - | - | none | - | -
+[parse] renew insurance next month → TASK · Renew insurance | 2026-10-01 | - | - | none | - | -
+[parse] buy milk at 5 pm → TASK · Buy milk | 2026-09-23 | 17:00 | - | none | - | -
+[parse] call John at 10 am → TASK · Call John | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice tomorrow at 11 → TASK · Send invoice | 2026-09-24 | 11:00 | - | none | - | -
+[parse] book dentist Friday at 14:30 → TASK · Book dentist | 2026-09-25 | 14:30 | - | none | - | -
+[parse] pay rent on October 1 → TASK · Pay rent | 2026-10-01 | - | - | none | - | -
+[parse] submit report Sep 30 at 9 → TASK · Submit report | 2026-09-30 | 09:00 | - | none | - | -
+[parse] pick up parcel in 2 hours → TASK · Pick up parcel | 2026-09-23 | 14:00 | - | none | - | -
+[parse] call mum in 30 minutes → TASK · Call mum | 2026-09-23 | 12:30 | - | none | - | -
+[parse] renew passport in 3 months → TASK · Renew passport | 2026-12-23 | - | - | none | - | -
+[parse] check backups in a week → TASK · Check backups | 2026-09-30 | - | - | none | - | -
+[parse] buy milk #groceries → TASK · Buy milk #groceries | - | - | - | none | - | -
+[parse] send invoice #work → TASK · Send invoice | - | - | work | none | - | -
+[parse] call mum #personal → TASK · Call mum | - | - | personal | none | - | -
+[parse] finish report tomorrow #work → TASK · Finish report | 2026-09-24 | - | work | none | - | -
+[parse] buy milk tomorrow #groceries → TASK · Buy milk #groceries | 2026-09-24 | - | - | none | - | -
+[parse] book dentist Friday #personal → TASK · Book dentist | 2026-09-25 | - | personal | none | - | -
+[parse] submit report at 10 #work → TASK · Submit report | 2026-09-24 | 10:00 | work | none | - | -
+[parse] pay rent Oct 1 #home → TASK · Pay rent | 2026-10-01 | - | home | none | - | -
+[parse] renew insurance next month #personal → TASK · Renew insurance | 2026-10-01 | - | personal | none | - | -
+[parse] order coffee beans Saturday #home → TASK · Order coffee beans | 2026-09-26 | - | home | none | - | -
+[parse] send invoice ! → TASK · Send invoice | - | - | - | low | - | -
+[parse] send invoice !! → TASK · Send invoice | - | - | - | medium | - | -
+[parse] send invoice !!! → TASK · Send invoice | - | - | - | high | - | -
+[parse] send invoice tomorrow !! → TASK · Send invoice | 2026-09-24 | - | - | medium | - | -
+[parse] finish report Friday #work !! → TASK · Finish report | 2026-09-25 | - | work | medium | - | -
+[parse] book flights next week ! → TASK · Book flights | 2026-09-28 | - | - | low | - | -
+[parse] call bank tomorrow high priority → TASK · Call bank | 2026-09-24 | - | - | high | - | -
+[parse] renew certificate Friday important → TASK · Renew certificate | 2026-09-25 | - | - | high | - | -
+[parse] submit proposal Monday low priority → TASK · Submit proposal | 2026-09-28 | - | - | low | - | -
+[parse] pay invoice tomorrow medium priority → TASK · Pay invoice | 2026-09-24 | - | - | medium | - | -
+[parse] every day take vitamins → TASK · Take vitamins | 2026-09-23 | - | - | none | daily | -
+[parse] take vitamins every day → TASK · Take vitamins | 2026-09-23 | - | - | none | daily | -
+[parse] water plants every Sunday → TASK · Water plants | 2026-09-27 | - | - | none | weekly 1 | -
+[parse] every Monday send status report → TASK · Send status report | 2026-09-28 | - | - | none | weekly 2 | -
+[parse] send status report every Monday → TASK · Send status report | 2026-09-28 | - | - | none | weekly 2 | -
+[parse] review budget weekly → TASK · Review budget | 2026-09-23 | - | - | none | weekly | -
+[parse] pay rent monthly → TASK · Pay rent | 2026-09-23 | - | - | none | monthly | -
+[parse] renew domain yearly → TASK · Renew domain | 2026-09-23 | - | - | none | yearly | -
+[parse] check backups every 2 weeks → TASK · Check backups | 2026-09-23 | - | - | none | weekly×2 | -
+[parse] water flowers every 3 days → TASK · Water flowers | 2026-09-23 | - | - | none | daily×3 | -
+[parse] send invoice every month on the 1st → TASK · Send invoice | 2026-10-01 | - | - | none | monthly d1 | -
+[parse] pay credit card every month on the 15th → TASK · Pay credit card | 2026-10-15 | - | - | none | monthly d15 | -
+[parse] take medication every weekday → TASK · Take medication | 2026-09-23 | - | - | none | weekly 2,3,4,5,6 | -
+[parse] run backup every Friday at 22:00 → TASK · Run backup | 2026-09-25 | 22:00 | - | none | weekly 6 | -
+[parse] call parents every Sunday at 18 → TASK · Call parents | 2026-09-27 | 18:00 | - | none | weekly 1 | -
+[parse] review goals every month on the last day → TASK · Review goals | 2026-09-30 | - | - | none | monthly d-1 | -
+[parse] submit timesheet every second Friday → TASK · Submit timesheet | 2026-09-25 | - | - | none | weekly×2 6 | -
+[ambiguous] clean fridge every other week → TASK · Clean fridge | 2026-09-23 | - | - | none | weekly×2 | -
+[parse] review portfolio quarterly → TASK · Review portfolio quarterly | - | - | - | none | - | -
+[ambiguous] change filter every six months → TASK · Change filter | 2026-09-23 | - | - | none | monthly×6 | -
+[parse] call John tomorrow remind 15m before → TASK · Call John | 2026-09-24 | - | - | none | - | 15m
+[parse] send invoice Friday remind 1h before → TASK · Send invoice | 2026-09-25 | - | - | none | - | 60m
+[parse] dentist Monday at 10 alert 30 minutes before → TASK · Dentist | 2026-09-28 | 10:00 | - | none | - | 30m
+[parse] pay rent Oct 1 remind at due time → TASK · Pay rent | 2026-10-01 | - | - | none | - | 0m
+[parse] submit report tomorrow remind me 10m before → TASK · Submit report | 2026-09-24 | - | - | none | - | 10m
+[parse] call mum at 18 reminder 5 minutes before → TASK · Call mum reminder | 2026-09-23 | 18:00 | - | none | - | -
+[parse] flight check-in Friday at 12 remind 2h before → TASK · Flight check-in | 2026-09-25 | 12:00 | - | none | - | 120m
+[parse] take medication daily remind at due time → TASK · Take medication | 2026-09-23 | - | - | none | daily | 0m
+[parse] water plants Sunday alert 1 hour before → TASK · Water plants | 2026-09-27 | - | - | none | - | 60m
+[parse] renew certificate next month remind 1 day before → TASK · Renew certificate | 2026-10-01 | - | - | none | - | 1440m
+[parse] 10 am tomorrow send invoice → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] 10 am Friday call John → TASK · Call John | 2026-09-25 | 10:00 | - | none | - | -
+[parse] 10 am next week send invoice → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] tomorrow at 10 send invoice → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] next Friday at 2 pm call the bank → TASK · Call the bank | 2026-10-02 | 14:00 | - | none | - | -
+[parse] Friday call the bank at 2 pm → TASK · Call the bank | 2026-09-25 | 14:00 | - | none | - | -
+[parse] at 2 pm Friday call the bank → TASK · Call the bank | 2026-09-25 | 14:00 | - | none | - | -
+[parse] call the bank 2 pm Friday → TASK · Call the bank | 2026-09-25 | 14:00 | - | none | - | -
+[parse] #work tomorrow 10am send invoice → TASK · Send invoice | 2026-09-24 | 10:00 | work | none | - | -
+[parse] !! next Monday finish architecture document #work → TASK · Finish architecture document | 2026-09-28 | - | work | medium | - | -
+[parse] tomorrow send invoice #work !! → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] #work send invoice tomorrow !! → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] !! send invoice #work tomorrow → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] tomorrow !! #work send invoice → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] send invoice !! tomorrow #work → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] every Friday #work send weekly report → TASK · Send weekly report | 2026-09-25 | - | work | none | weekly 6 | -
+[parse] #work every Friday send weekly report → TASK · Send weekly report | 2026-09-25 | - | work | none | weekly 6 | -
+[parse] send weekly report #work every Friday → TASK · Send weekly report | 2026-09-25 | - | work | none | weekly 6 | -
+[parse] at 17 every Friday send weekly report #work → TASK · Send weekly report | 2026-09-25 | 17:00 | work | none | weekly 6 | -
+[parse] every Friday at 17 send weekly report #work !! → TASK · Send weekly report | 2026-09-25 | 17:00 | work | medium | weekly 6 | -
+[parse] send invoice next week at 10 → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] next week send invoice at 10 → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] at 10 next week send invoice → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] next week at 10 send invoice → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] send invoice at 10 next week → TASK · Send invoice | 2026-09-28 | 10:00 | - | none | - | -
+[parse] #work 10 am next week send invoice !! → TASK · Send invoice | 2026-09-28 | 10:00 | work | medium | - | -
+[parse] !! 10am #work next week send invoice → TASK · Send invoice | 2026-09-28 | 10:00 | work | medium | - | -
+[parse] next week #work send invoice 10am !! → TASK · Send invoice | 2026-09-28 | 10:00 | work | medium | - | -
+[parse] send invoice !! #work at 10 next week → TASK · Send invoice | 2026-09-28 | 10:00 | work | medium | - | -
+[parse] at 10 !! send invoice next week #work → TASK · Send invoice | 2026-09-28 | 10:00 | work | medium | - | -
+[parse] buy milk tomorrow morning → TASK · Buy milk | 2026-09-24 | 09:00 | - | none | - | -
+[parse] call bank tomorrow afternoon → TASK · Call bank | 2026-09-24 | 13:00 | - | none | - | -
+[parse] send report tomorrow evening → TASK · Send report | 2026-09-24 | 18:00 | - | none | - | -
+[ambiguous] finish slides tonight → TASK · Finish slides | 2026-09-23 | 20:00 | - | none | - | -
+[parse] take medication at noon → TASK · Take medication | 2026-09-23 | 12:00 | - | none | - | -
+[parse] call John at midnight → TASK · Call John | 2026-09-24 | 00:00 | - | none | - | -
+[parse] run backup at 00:30 → TASK · Run backup | 2026-09-24 | 00:30 | - | none | - | -
+[parse] send report at 23:59 → TASK · Send report | 2026-09-23 | 23:59 | - | none | - | -
+[ambiguous] call John around 10 → TASK · Call John around 10 | - | - | - | none | - | -
+[ambiguous] dentist sometime Friday morning → TASK · Dentist sometime | 2026-09-25 | 09:00 | - | none | - | -
+[parse] send report before Friday → TASK · Send report before | 2026-09-25 | - | - | none | - | -
+[ambiguous] send report by Friday → TASK · Send report | 2026-09-25 | - | - | none | - | -
+[ambiguous] finish this by end of week → TASK · Finish this | 2026-09-27 | - | - | none | - | -
+[parse] submit report end of next week → TASK · Submit report | 2026-10-04 | - | - | none | - | -
+[ambiguous] pay invoice early next week → TASK · Pay invoice early | 2026-09-28 | - | - | none | - | -
+[ambiguous] call supplier late afternoon → TASK · Call supplier late | 2026-09-23 | 13:00 | - | none | - | -
+[ambiguous] book hotel sometime next month → TASK · Book hotel sometime | 2026-10-01 | - | - | none | - | -
+[ambiguous] review contract after lunch tomorrow → TASK · Review contract after lunch | 2026-09-24 | - | - | none | - | -
+[ambiguous] call John before dinner → TASK · Call John before dinner | - | - | - | none | - | -
+[ambiguous] buy milk on the way home → TASK · Buy milk on the way home | - | - | - | none | - | -
+[parse] call May tomorrow → TASK · Call | 2026-09-24 | - | - | none | - | -
+[ambiguous] call May 10 → TASK · Call | 2027-05-10 | - | - | none | - | -
+[parse] meet May next Friday → TASK · Meet | 2026-10-02 | - | - | none | - | -
+[ambiguous] May send invoice → TASK · Send invoice | 2027-05-01 | - | - | none | - | -
+[parse] send May the invoice tomorrow → TASK · Send the invoice | 2026-09-24 | - | - | none | - | -
+[parse] march report due tomorrow → TASK · Report | 2026-09-24 | - | - | none | - | -
+[ambiguous] March invoice → TASK · Invoice | 2027-03-01 | - | - | none | - | -
+[parse] review June numbers Friday → TASK · Review numbers | 2026-09-25 | - | - | none | - | -
+[ambiguous] June 5 report → TASK · Report | 2027-06-05 | - | - | none | - | -
+[parse] call April tomorrow at 10 → TASK · Call | 2026-09-24 | 10:00 | - | none | - | -
+[parse] work on presentation tomorrow → TASK · Work on presentation | 2026-09-24 | - | - | none | - | -
+[parse] work on presentation tomorrow #work → TASK · Work on presentation | 2026-09-24 | - | work | none | - | -
+[ambiguous] work tomorrow → TASK · Work | 2026-09-24 | - | - | none | - | -
+[reject] work → NOT TASK · Work | - | - | - | none | - | -
+[parse] home insurance renewal Friday → TASK · Home insurance renewal | 2026-09-25 | - | - | none | - | -
+[reject] home → NOT TASK · Home | - | - | - | none | - | -
+[parse] personal tax return next month → TASK · Personal tax return | 2026-10-01 | - | - | none | - | -
+[reject] personal → NOT TASK · Personal | - | - | - | none | - | -
+[parse] groceries tomorrow → TASK · Groceries | 2026-09-24 | - | - | none | - | -
+[ambiguous] groceries → NOT TASK · Groceries | - | - | - | none | - | -
+[parse] invoice 10 tomorrow → TASK · Invoice | 2026-09-24 | 10:00 | - | none | - | -
+[ambiguous] invoice 10 → NOT TASK · Invoice 10 | - | - | - | none | - | -
+[parse] buy 10 apples tomorrow → TASK · Buy 10 apples | 2026-09-24 | - | - | none | - | -
+[parse] order 20 cables Friday → TASK · Order 20 cables | 2026-09-25 | - | - | none | - | -
+[parse] pay invoice 12345 tomorrow → TASK · Pay invoice 12345 | 2026-09-24 | - | - | none | - | -
+[parse] call room 101 tomorrow at 10 → TASK · Call room 101 | 2026-09-24 | 10:00 | - | none | - | -
+[parse] version 10 release checklist Friday → TASK · Version 10 release checklist | 2026-09-25 | - | - | none | - | -
+[parse] review issue 123 at 14:00 → TASK · Review issue 123 | 2026-09-23 | 14:00 | - | none | - | -
+[ambiguous] 10 invoice tomorrow → TASK · 10 invoice | 2026-09-24 | - | - | none | - | -
+[parse] 10am invoice tomorrow → TASK · Invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice on 10/11 → TASK · Send invoice | 2026-10-11 | - | - | none | - | -
+[ambiguous] send invoice 10/11 → TASK · Send invoice | 2026-10-11 | - | - | none | - | -
+[ambiguous] call John 3/4 → TASK · Call John | 2027-03-04 | - | - | none | - | -
+[parse] submit VAT return 30.09 → TASK · Submit VAT return 30.09 | - | - | - | none | - | -
+[parse] submit VAT return 30/09/2026 → TASK · Submit VAT return | 2026-09-30 | - | - | none | - | -
+[parse] call John 2026-10-03 at 14:00 → TASK · Call John | 2026-10-03 | 14:00 | - | none | - | -
+[ambiguous] book hotel 04/05 → TASK · Book hotel | 2027-04-05 | - | - | none | - | -
+[parse] book hotel May 4 → TASK · Book hotel | 2027-05-04 | - | - | none | - | -
+[parse] book hotel 4 May → TASK · Book hotel | 2027-05-04 | - | - | none | - | -
+[parse] book hotel May 4th → TASK · Book hotel | 2027-05-04 | - | - | none | - | -
+[parse] send invoice tomorrow, 10 am, #work, !! → TASK · Send invoice | 2026-09-24 | 10:00 | work | medium | - | -
+[parse] send invoice — tomorrow at 10 — #work → TASK · Send invoice | 2026-09-24 | 10:00 | work | none | - | -
+[parse] send invoice; Friday; 14:00; #work → TASK · Send invoice | 2026-09-25 | 14:00 | work | none | - | -
+[parse] #work: send invoice tomorrow at 10 → TASK · Send invoice | 2026-09-24 | 10:00 | work | none | - | -
+[parse] tomorrow @ 10:00 — send invoice #work → TASK · Send invoice | 2026-09-24 | 10:00 | work | none | - | -
+[parse] send invoice (tomorrow at 10) → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice [tomorrow 10am] #work → TASK · Send invoice | 2026-09-24 | 10:00 | work | none | - | -
+[parse] SEND INVOICE TOMORROW AT 10 → TASK · SEND INVOICE | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send    invoice    tomorrow    at    10 → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice tomorrow@10 → TASK · Send invoice | 2026-09-24 | - | - | none | - | -
+[parse] send invoice tmrw at 10 → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice tom at 10 → TASK · Send invoice tom | 2026-09-24 | 10:00 | - | none | - | -
+[parse] send invoice nxt fri 10am → TASK · Send invoice | 2026-10-02 | 10:00 | - | none | - | -
+[parse] send invoice next fri 10 → TASK · Send invoice | 2026-10-02 | 10:00 | - | none | - | -
+[ambiguous] invoice fri 10 → TASK · Invoice | 2026-09-25 | 10:00 | - | none | - | -
+[parse] + send invoice tomorrow at 10 → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] + tomorrow at 10 send invoice → TASK · Send invoice | 2026-09-24 | 10:00 | - | none | - | -
+[parse] + #work !! send invoice tomorrow → TASK · Send invoice | 2026-09-24 | - | work | medium | - | -
+[parse] + every Friday 17 send status report #work → TASK · 17 send status report | 2026-09-25 | - | work | none | weekly 6 | -
+[parse] + call mum tomorrow remind 15m before → TASK · Call mum | 2026-09-24 | - | - | none | - | 15m
+[reject] tomorrow → NOT TASK ·  | 2026-09-24 | - | - | none | - | -
+[reject] next week → NOT TASK ·  | 2026-09-28 | - | - | none | - | -
+[reject] next Friday → NOT TASK ·  | 2026-10-02 | - | - | none | - | -
+[reject] 10 am → NOT TASK ·  | 2026-09-24 | 10:00 | - | none | - | -
+[reject] Friday 10 am → NOT TASK ·  | 2026-09-25 | 10:00 | - | none | - | -
+[reject] October → NOT TASK ·  | 2026-10-01 | - | - | none | - | -
+[reject] October 10 → NOT TASK ·  | 2026-10-10 | - | - | none | - | -
+[reject] this month → NOT TASK ·  | 2026-09-01 | - | - | none | - | -
+[reject] end of next week → NOT TASK ·  | 2026-10-04 | - | - | none | - | -
+[reject] three days from now → NOT TASK ·  | 2026-09-26 | - | - | none | - | -
+[ambiguous] invoice tomorrow → TASK · Invoice | 2026-09-24 | - | - | none | - | -
+[ambiguous] John Friday → TASK · John | 2026-09-25 | - | - | none | - | -
+[ambiguous] dentist 10 → NOT TASK · Dentist 10 | - | - | - | none | - | -
+[ambiguous] meeting with Tom Friday at 10 → TASK · Meeting with Tom | 2026-09-25 | 10:00 | - | none | - | -
+[ambiguous] lunch with Tom Friday 12-13 → TASK · Lunch with Tom | 2026-09-25 | 12:00–13:00 | - | none | - | -
+[ambiguous] flight to London Friday 18:30 → TASK · Flight to London | 2026-09-25 | 18:30 | - | none | - | -
+[ambiguous] gym every Monday 18-19 → TASK · Gym | 2026-09-28 | 18:00–19:00 | - | none | weekly 2 | -
+[ambiguous] birthday John May 5 → TASK · Birthday John | 2027-05-05 | - | - | none | - | -
+[ambiguous] vacation next week → TASK · Vacation | 2026-09-28 | - | - | none | - | -
+[wild] !! #work next Friday at 10am remind me 45m before and then every second Friday send the damn invoice to John about project May 10 → TASK · And then send the damn invoice to John about project | 2026-10-02 | 10:00 | work | medium | weekly×2 6 | 45m

@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+.DS_Store
+# Xcode: the project is tracked, per-user state isn't.
+xcuserdata/
+DerivedData/
+build/
+.idea/
+*.iml

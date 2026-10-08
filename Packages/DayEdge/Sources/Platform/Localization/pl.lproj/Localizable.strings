@@ -1,0 +1,16 @@
+/* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
+"calendareventmapper.no.title" = "(bez tytułu)";
+"calendareventmapper.unknown" = "Nieznane";
+"eventkitremindersource.a.reminder.needs.a.title" = "Przypomnienie musi mieć tytuł.";
+"holidayproviding.public.holiday" = "Święto";
+"openmeteoweatherservice.clear" = "Bezchmurnie";
+"openmeteoweatherservice.drizzle" = "Mżawka";
+"openmeteoweatherservice.foggy" = "Mgła";
+"openmeteoweatherservice.overcast" = "Zachmurzenie całkowite";
+"openmeteoweatherservice.partly.cloudy" = "Częściowe zachmurzenie";
+"openmeteoweatherservice.rain" = "Deszcz";
+"openmeteoweatherservice.rain.showers" = "Przelotny deszcz";
+"openmeteoweatherservice.snow" = "Śnieg";
+"openmeteoweatherservice.snow.showers" = "Przelotny śnieg";
+"openmeteoweatherservice.thunderstorm" = "Burza";
+"recurrence.until" = "%@, do %@";

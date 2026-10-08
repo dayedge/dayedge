@@ -1,0 +1,7 @@
+/* System permission prompts. DayEdge is the product name. */
+"NSLocationUsageDescription" = "DayEdge shows the weather where you are.";
+"NSLocationWhenInUseUsageDescription" = "DayEdge shows the weather where you are.";
+"NSCalendarsUsageDescription" = "DayEdge reads your calendar events to show them in its toolbar view, and can remove a cancelled event you choose to clean up.";
+"NSCalendarsFullAccessUsageDescription" = "DayEdge reads your calendar events to show them in its toolbar view, and can remove a cancelled event you choose to clean up.";
+"NSRemindersUsageDescription" = "DayEdge shows your reminders in its toolbar view and lets you complete and edit them.";
+"NSRemindersFullAccessUsageDescription" = "DayEdge shows your reminders in its toolbar view and lets you complete and edit them.";
