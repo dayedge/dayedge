@@ -119,10 +119,10 @@ package enum PaletteActions {
     package static func build(dateIntent: SearchIntent?, task: QuickAddDraft?, lists: [CalendarSource],
                               calendars: [CalendarSource] = [], conflict: EventConflict? = nil,
                               isSearchable: Bool = true, referenceDate: Date, calendar: Calendar,
-                              format: TimeFormat = .twentyFourHour) -> [PaletteAction] {
+                              format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> [PaletteAction] {
         var actions: [PaletteAction] = []
         if let dateIntent, dateIntent.isNavigation {
-            let title = SearchSuggestion.make(for: dateIntent, referenceDate: referenceDate, calendar: calendar).title
+            let title = SearchSuggestion.make(for: dateIntent, referenceDate: referenceDate, calendar: calendar, dates: dates).title
             actions.append(PaletteAction(kind: .goToDate, title: title, subtitle: nil, isEnabled: true,
                                          supportsRefinement: false, accessibilityLabel: title))
         } else if let task {
@@ -140,7 +140,7 @@ package enum PaletteActions {
                         ) : L10n.tr(
                             "paletteaction.create.618d1a", "Create “\(String(describing: task.title))”"
                         ),
-                        subtitle: summary(of: task, lists: lists, referenceDate: referenceDate, calendar: calendar, format: format),
+                        subtitle: summary(of: task, lists: lists, referenceDate: referenceDate, calendar: calendar, format: format, dates: dates),
                         isEnabled: true, supportsRefinement: true, accessibilityLabel: L10n.tr("paletteaction.create.task.cc3d84", "Create task, \(String(describing: task.title))")
                     ))
                 case .event:
@@ -148,7 +148,7 @@ package enum PaletteActions {
                     actions.append(PaletteAction(
                         kind: .createEvent, title: L10n.tr("paletteaction.create.event", "Create event “\(String(describing: event.title))”"),
                         subtitle: summary(of: event, recurrence: task.recurrence, calendars: calendars,
-                                          referenceDate: referenceDate, calendar: calendar, format: format),
+                                          referenceDate: referenceDate, calendar: calendar, format: format, dates: dates),
                         isEnabled: true, supportsRefinement: true, accessibilityLabel: L10n.tr(
                             "paletteaction.create.event.8833bc", "Create event, \(String(describing: event.title))"
                         ),
@@ -163,8 +163,9 @@ package enum PaletteActions {
     /// An event's line: "Friday, 2 Oct 10:00–11:00 · Work · Office" — the
     /// end shown even when defaulted, so its length is never a surprise.
     package static func summary(of event: EventDraft, recurrence: TaskRecurrenceRule?, calendars: [CalendarSource],
-                                referenceDate: Date, calendar: Calendar, format: TimeFormat = .twentyFourHour) -> String {
-        let day = { (date: Date) in SearchSuggestion.dayLabel(for: date, referenceDate: referenceDate, calendar: calendar) }
+                                referenceDate: Date, calendar: Calendar, format: TimeFormat = .twentyFourHour,
+                                dates: DatePresentationFormatter = .current) -> String {
+        let day = { (date: Date) in SearchSuggestion.dayLabel(for: date, referenceDate: referenceDate, calendar: calendar, dates: dates) }
         let hm = { (date: Date) in format.time(date, calendar: calendar) }
         var when = recurrence?.summary ?? day(event.start)
         if event.isAllDay {
@@ -187,13 +188,13 @@ package enum PaletteActions {
     /// High Priority" (when and its time read as one block). nil when there
     /// is nothing beyond the title.
     package static func summary(of task: QuickAddDraft, lists: [CalendarSource], referenceDate: Date, calendar: Calendar,
-                                format: TimeFormat = .twentyFourHour) -> String? {
+                                format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> String? {
         var parts: [String] = []
         var when: [String] = []
         if let rule = task.recurrence {
             when.append(rule.summary)
         } else if let day = task.day {
-            when.append(SearchSuggestion.dayLabel(for: day, referenceDate: referenceDate, calendar: calendar))
+            when.append(SearchSuggestion.dayLabel(for: day, referenceDate: referenceDate, calendar: calendar, dates: dates))
         }
         if let start = task.startTime, let hour = start.hour {
             if let end = task.endTime, let endHour = end.hour {

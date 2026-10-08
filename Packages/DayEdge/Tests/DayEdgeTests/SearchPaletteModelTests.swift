@@ -21,6 +21,9 @@ final class SearchPaletteModelTests: XCTestCase {
     private func model() -> SearchPaletteModel {
         let model = SearchPaletteModel()
         model.calendar = calendar
+        let dates = DatePresentationFormatter(regionalLocale: Locale(identifier: "en_GB"), displayLocale: Locale(identifier: "en"), calendar: calendar)
+        model.dates = { dates }
+        model.timeFormat = { .twentyFourHour }
         model.now = { [reference] in reference }
         model.taskLists = { [lists] in lists }
         model.commitBeat = .zero

@@ -4,6 +4,7 @@ import XCTest
 @testable import UI
 
 final class RepeatPresetsTests: XCTestCase {
+    private var dates: DatePresentationFormatter { DatePresentationFormatter(regionalLocale: Locale(identifier: "en_GB"), displayLocale: Locale(identifier: "en"), calendar: calendar) }
     private let calendar: Calendar = {
         var c = Calendar(identifier: .gregorian)
         c.timeZone = TimeZone(identifier: "Europe/Warsaw")!
@@ -12,13 +13,13 @@ final class RepeatPresetsTests: XCTestCase {
     private var friday: Date { calendar.date(from: DateComponents(year: 2026, month: 10, day: 2, hour: 11))! }
 
     func testPresetsReadFromTheItemsDate() {
-        let titles = RepeatPresets.options(anchor: friday, calendar: calendar).map(\.title)
+        let titles = RepeatPresets.options(anchor: friday, calendar: calendar, dates: dates).map(\.title)
         XCTAssertEqual(titles, ["Never", "Every Day", "Every Weekday", "Every Friday", "Every 2 Weeks",
                                 "Every month on the 2nd", "Every year on 2 Oct"])
     }
 
     func testCurrentRulesFindTheirPreset() {
-        let options = RepeatPresets.options(anchor: friday, calendar: calendar)
+        let options = RepeatPresets.options(anchor: friday, calendar: calendar, dates: dates)
         func match(_ rule: TaskRecurrenceRule?) -> String? {
             RepeatPresets.option(matching: rule, in: options, anchor: friday, calendar: calendar)?.id
         }

@@ -127,6 +127,8 @@ package final class SearchPaletteModel {
     @ObservationIgnored package var commitBeat: Duration = .milliseconds(80)
     @ObservationIgnored package var calendar: Calendar = .autoupdatingCurrent
     @ObservationIgnored package var now: () -> Date = { Date() }
+    @ObservationIgnored package var dates: () -> DatePresentationFormatter = { .current }
+    @ObservationIgnored package var timeFormat: () -> TimeFormat = { .current }
 
     package init(
         resolveDate: @escaping (String, Date, Calendar) async -> SearchIntent = { text, date, calendar in

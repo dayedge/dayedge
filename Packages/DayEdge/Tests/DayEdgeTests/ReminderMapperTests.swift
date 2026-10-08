@@ -53,6 +53,25 @@ final class ReminderMapperTests: XCTestCase {
         XCTAssertFalse(result.hasDueTime)
     }
 
+    func testFloatingDueUsesTheReadersZoneDespiteEventKitCalendarMetadata() {
+        var metadataCalendar = Calendar(identifier: .gregorian)
+        metadataCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let components = DateComponents(calendar: metadataCalendar, year: 2026, month: 9, day: 28)
+        let result = ReminderMapper.dueDate(from: components, calendar: calendar)
+        XCTAssertEqual(result.date, date(2026, 9, 28))
+        XCTAssertFalse(result.hasTime)
+    }
+
+    func testTimedDueUsesItsExplicitZoneDespiteTheReadersZone() {
+        let zone = TimeZone(secondsFromGMT: 0)!
+        let components = DateComponents(timeZone: zone, year: 2026, month: 9, day: 28, hour: 14, minute: 30)
+        var utc = calendar
+        utc.timeZone = zone
+        let result = ReminderMapper.dueDate(from: components, calendar: calendar)
+        XCTAssertEqual(result.date, utc.date(from: DateComponents(year: 2026, month: 9, day: 28, hour: 14, minute: 30)))
+        XCTAssertTrue(result.hasTime)
+    }
+
     func testTimedDueKeepsTimeAndZone() throws {
         let reminder = reminder()
         try write(.due(date(2026, 9, 28, 14, 30), hasTime: true), to: reminder)

@@ -15,18 +15,19 @@ package struct SearchSuggestion: Equatable {
     /// available yet." `nil` for an enabled one.
     package let secondaryText: String?
 
-    package static func make(for intent: SearchIntent, referenceDate: Date, calendar: Calendar) -> SearchSuggestion {
+    package static func make(for intent: SearchIntent, referenceDate: Date, calendar: Calendar,
+                             dates: DatePresentationFormatter = .current) -> SearchSuggestion {
         switch intent {
         case .jumpToDate(let date):
             return SearchSuggestion(
                 intent: intent, systemImageName: "calendar",
-                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: dayLabel(for: date, referenceDate: referenceDate, calendar: calendar)))"),
+                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: dayLabel(for: date, referenceDate: referenceDate, calendar: calendar, dates: dates)))"),
                 isEnabled: true, secondaryText: nil
             )
         case .jumpToMonth(let date):
             return SearchSuggestion(
                 intent: intent, systemImageName: "calendar",
-                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: monthLabel(for: date, calendar: calendar)))"),
+                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: dates.with(calendar).monthYear(date)))"),
                 isEnabled: true, secondaryText: nil
             )
         case .freeTextSearch(let query):
@@ -44,14 +45,10 @@ package struct SearchSuggestion: Equatable {
     /// "Today" / "Tomorrow" / "Yesterday", else "Friday 25 Sep" — or
     /// "Friday 25 Sep 2027" if `date`'s year differs from
     /// `referenceDate`'s (the region's order).
-    package static func dayLabel(for date: Date, referenceDate: Date, calendar: Calendar) -> String {
-        let dates = DatePresentationFormatter.current.with(calendar)
+    package static func dayLabel(for date: Date, referenceDate: Date, calendar: Calendar,
+                                 dates: DatePresentationFormatter = .current) -> String {
+        let dates = dates.with(calendar)
         return dates.relativeDay(date, relativeTo: referenceDate)
             ?? dates.format(date, .compact, relativeTo: referenceDate)
-    }
-
-    /// "September 2024".
-    private static func monthLabel(for date: Date, calendar: Calendar) -> String {
-        DatePresentationFormatter.current.with(calendar).monthYear(date)
     }
 }

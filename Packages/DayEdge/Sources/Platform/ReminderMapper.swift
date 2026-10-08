@@ -58,9 +58,11 @@ package enum ReminderMapper {
         guard let components, components.year != nil || components.month != nil || components.day != nil else {
             return (nil, false)
         }
-        var calendar = components.calendar ?? calendar
-        if let timeZone = components.timeZone { calendar.timeZone = timeZone }
-        guard let date = calendar.date(from: components) else { return (nil, false) }
+        var dueCalendar = components.calendar ?? calendar
+        // EventKit can attach its own calendar to floating date components.
+        // Their day belongs to the caller's current zone, not that metadata's zone.
+        dueCalendar.timeZone = components.timeZone ?? calendar.timeZone
+        guard let date = dueCalendar.date(from: components) else { return (nil, false) }
         return (date, components.hour != nil)
     }
 

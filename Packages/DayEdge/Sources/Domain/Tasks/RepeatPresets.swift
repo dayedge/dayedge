@@ -12,7 +12,7 @@ package struct RepeatOption: Identifiable, Hashable {
 /// The Repeat editor's choices for an item starting on `anchor`, shared by
 /// events and tasks (EventKit's rules are the same for both).
 package enum RepeatPresets {
-    package static func options(anchor: Date, calendar: Calendar) -> [RepeatOption] {
+    package static func options(anchor: Date, calendar: Calendar, dates: DatePresentationFormatter = .current) -> [RepeatOption] {
         let weekday = calendar.component(.weekday, from: anchor)
         let day = calendar.component(.day, from: anchor)
         return [
@@ -27,7 +27,9 @@ package enum RepeatPresets {
             RepeatOption(id: "monthly", title: L10n.tr(
                 "repeatpresets.every.month.on.the", "Every month on the \(String(describing: ordinal(day)))"
             ), rule: TaskRecurrenceRule(frequency: .monthly)),
-            RepeatOption(id: "yearly", title: L10n.tr("repeatpresets.every.year.on", "Every year on \(String(describing: dayAndMonth(anchor, calendar: calendar)))"),
+            RepeatOption(id: "yearly", title: L10n.tr(
+                "repeatpresets.every.year.on", "Every year on \(String(describing: dates.with(calendar).format(anchor, .short, relativeTo: anchor)))"
+            ),
                          rule: TaskRecurrenceRule(frequency: .yearly))
         ]
     }
@@ -54,10 +56,6 @@ package enum RepeatPresets {
 
     package static func ordinal(_ day: Int) -> String {
         RecurrencePresentation.ordinal(day)
-    }
-
-    private static func dayAndMonth(_ date: Date, calendar: Calendar) -> String {
-        DatePresentationFormatter.current.with(calendar).format(date, .short, relativeTo: date)
     }
 }
 

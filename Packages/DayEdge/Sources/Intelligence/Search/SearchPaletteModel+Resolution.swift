@@ -92,7 +92,7 @@ extension SearchPaletteModel {
                                        conflict: conflict,
                                        isSearchable: SearchSession.isSearchable(query),
                                        referenceDate: referenceDate, calendar: calendar,
-                                       format: .current)
+                                       format: timeFormat(), dates: dates())
         // The first real action owns the selection; placeholders never do.
         chosen = actions.first(where: \.isEnabled).map { .action($0.kind) }
         resetQuickAdd()

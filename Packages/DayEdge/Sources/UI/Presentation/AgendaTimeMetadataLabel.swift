@@ -20,7 +20,7 @@ package enum AgendaTimeMetadataLabel: Equatable {
     case endsHere(until: String)
 
     package static func build(event: AgendaEventModel, day: Date, calendar: Calendar,
-                              format: TimeFormat = .twentyFourHour) -> AgendaTimeMetadataLabel? {
+                              format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> AgendaTimeMetadataLabel? {
         guard !event.isAllDay, let start = event.startDate, let end = event.endDate,
               let segment = MultiDaySegment.classify(start: start, end: end, day: day, calendar: calendar)
         else { return nil }
@@ -32,7 +32,7 @@ package enum AgendaTimeMetadataLabel: Equatable {
             }
             return .startsHereEndsLater(start: event.startText(format, calendar: calendar) ?? "", destination: L10n.tr("agendatimemetadatalabel.midnight", "Midnight"))
         case .startsHereEndsLater:
-            let dayReference = RelativeDayLabelFormatter.dayReference(for: end, relativeTo: day, calendar: calendar)
+            let dayReference = RelativeDayLabelFormatter.dayReference(for: end, relativeTo: day, calendar: calendar, dates: dates)
             let endTime = event.endText(format, calendar: calendar) ?? ""
             return .startsHereEndsLater(start: event.startText(format, calendar: calendar) ?? "",
                                         destination: "\(dayReference) \(endTime)")

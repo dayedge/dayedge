@@ -33,6 +33,7 @@ final class SearchRelevanceTests: XCTestCase {
 }
 
 final class SearchDateFilterTests: XCTestCase {
+    private var dates: DatePresentationFormatter { DatePresentationFormatter(regionalLocale: Locale(identifier: "en_GB"), displayLocale: Locale(identifier: "en"), calendar: calendar) }
     private let reference = Date(timeIntervalSince1970: 1_791_028_800)  // 3 Oct 2026, noon UTC
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -50,7 +51,7 @@ final class SearchDateFilterTests: XCTestCase {
     func testDaySplitsOffAsThatDay() {
         let query = "standup tomorrow"
         let parts = SearchDateFilter.split(query, spans: [span(query, "tomorrow", DateComponents(year: 2026, month: 10, day: 4), day: true)],
-                                           referenceDate: reference, calendar: calendar)
+                                           referenceDate: reference, calendar: calendar, dates: dates)
         XCTAssertEqual(parts.text, "standup")
         XCTAssertEqual(parts.interval?.start, calendar.date(from: DateComponents(year: 2026, month: 10, day: 4)))
         XCTAssertEqual(parts.interval?.duration, 86400)

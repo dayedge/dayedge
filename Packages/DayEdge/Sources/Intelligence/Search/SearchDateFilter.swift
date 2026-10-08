@@ -11,7 +11,8 @@ package enum SearchDateFilter {
         return split(query, spans: spans, referenceDate: referenceDate, calendar: calendar)
     }
 
-    package static func split(_ query: String, spans: [ChronoSpan], referenceDate: Date, calendar: Calendar) -> SearchQueryParts {
+    package static func split(_ query: String, spans: [ChronoSpan], referenceDate: Date, calendar: Calendar,
+                              dates: DatePresentationFormatter = .current) -> SearchQueryParts {
         let utf16 = Array(query.utf16)
         for span in spans where span.isDayCertain || span.isMonthCertain {
             var start = span.utf16Offset
@@ -28,7 +29,7 @@ package enum SearchDateFilter {
             guard let interval = interval(for: span, calendar: calendar) else { continue }
             let rest = String(utf16CodeUnits: Array(utf16[..<start]) + [32] + Array(utf16[end...]), count: utf16.count - (end - start) + 1)
             let text = rest.components(separatedBy: .whitespaces).filter { !$0.isEmpty }.joined(separator: " ")
-            return SearchQueryParts(text: text, interval: interval, label: label(for: span, interval: interval, calendar: calendar))
+            return SearchQueryParts(text: text, interval: interval, label: label(for: span, interval: interval, calendar: calendar, dates: dates))
         }
         return .plain(query)
     }
@@ -72,8 +73,8 @@ package enum SearchDateFilter {
         return calendar.dateInterval(of: .month, for: month)
     }
 
-    private static func label(for span: ChronoSpan, interval: DateInterval, calendar: Calendar) -> String {
-        let dates = DatePresentationFormatter.current.with(calendar)
+    private static func label(for span: ChronoSpan, interval: DateInterval, calendar: Calendar, dates: DatePresentationFormatter) -> String {
+        let dates = dates.with(calendar)
         return span.isDayCertain
             ? dates.format(interval.start, .compact, weekday: .abbreviated, year: .outsideCurrentYear)
             : dates.monthYear(interval.start)
