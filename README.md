@@ -26,10 +26,12 @@
   <a href="https://ko-fi.com/dayedge"><img alt="Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white"></a>
 </p>
 
-<p align="center">
-  <img src="docs/images/month.webp" width="300" alt="Month view with today's agenda">
-  <img src="docs/images/day.webp" width="300" alt="Day timeline with weather">
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/month.webp" width="300" alt="Month view with today's agenda"><br><sub>Your month ahead, with today's events close at hand.</sub></td>
+    <td align="center"><img src="docs/images/day.webp" width="300" alt="Day timeline with weather"><br><sub>Events, reminders, and weather on one daily timeline.</sub></td>
+  </tr>
+</table>
 
 ## What it does
 
@@ -46,14 +48,17 @@
 - **Keyboard-first.** Shortcuts for every view and the common actions, and you can change them.
 - **Made to feel at home.** Eight themes, light and dark, in English and Polish.
 
-<p align="center">
-  <img src="docs/images/tasks.webp" width="260" alt="Tasks grouped by attention and list">
-  <img src="docs/images/search.webp" width="260" alt="Search results grouped by day">
-  <img src="docs/images/chat.webp" width="260" alt="Chat proposing a change for approval">
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/tasks.webp" width="260" alt="Tasks grouped by attention and list"><br><sub>What needs doing, organised by list.</sub></td>
+    <td align="center"><img src="docs/images/search.webp" width="260" alt="Search results grouped by day"><br><sub>Find events and tasks in one search.</sub></td>
+    <td align="center"><img src="docs/images/chat.webp" width="260" alt="Chat proposing a change for approval"><br><sub>Talk through your day and review changes.</sub></td>
+  </tr>
+</table>
 
 <p align="center">
-  <img src="docs/images/meeting.webp" width="640" alt="Full-screen meeting alert with Join">
+  <img src="docs/images/meeting.webp" width="640" alt="Frosted-glass meeting reminder over the desktop"><br>
+  <sub>A full-screen nudge for the “one more minute” crowd.</sub>
 </p>
 
 ## Privacy
@@ -64,16 +69,20 @@ model. Optional external chat, weather and other services are described in [PRIV
 
 ## Install
 
-Download the latest version from [Releases](https://github.com/dayedge/dayedge/releases/latest), unzip
-it, and move **DayEdge** to Applications. It needs macOS 15 or later; chat needs macOS 26 with Apple
-Intelligence, or your own provider key.
+Requires macOS 15 or later. Homebrew selects the Apple Silicon or Intel build automatically:
 
-**These first releases are self-signed and not notarized by Apple.** After trying to open DayEdge,
-go to **System Settings → Privacy & Security → Open Anyway**, then confirm Open. See
-[Apple's instructions](https://support.apple.com/en-us/102445). You do not need to disable Gatekeeper.
+```sh
+brew install --cask dayedge/tap/dayedge
+```
 
-Homebrew installation will be documented here when the public tap is available. Until then, use the
-release archive above.
+DayEdge is self-signed and not notarized by Apple. The [Homebrew tap](https://github.com/dayedge/homebrew-tap)
+removes download quarantine from DayEdge.app after installation and upgrades; global macOS security settings stay unchanged.
+
+For manual installation, download the matching archive from [Releases](https://github.com/dayedge/dayedge/releases/latest),
+unzip it, and move DayEdge to Applications. After trying to open it, use **System Settings → Privacy & Security → Open Anyway**
+if macOS blocks it. See [Apple's instructions](https://support.apple.com/en-us/102445).
+
+Chat needs macOS 26 with Apple Intelligence, or your own provider key.
 
 The interface follows your Mac's language: English or Polish. Natural-language event/task entry and
 search date expressions are currently English. Apple's on-device chat does not currently support
