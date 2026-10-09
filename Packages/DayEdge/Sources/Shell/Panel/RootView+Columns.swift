@@ -44,15 +44,8 @@ extension RootView {
                 // fresh scroll-to-selection animation replaying on
                 // every round trip. See `displayedViewMode`'s doc
                 // comment.
-                // `.zIndex` explicitly puts whichever column is actually
-                // visible on top of the z-stack. Without this, the
-                // later-declared `dayColumn` stays frontmost even at
-                // opacity 0 while Month is showing — and macOS 26's
-                // Liquid Glass scroll-edge blur (`.scrollEdgeEffectStyle`
-                // on each column's own `ScrollView`) samples whatever's
-                // frontmost under the floating footer bar, so it was
-                // picking up the invisible Day scroll view instead of
-                // the visible Month one and rendering no blur at all.
+                // Keep the visible scroll surface above the mounted,
+                // hidden columns so its backdrop samples that content.
                 monthColumn
                     .opacity(isColumnShown(.month) ? 1 : 0)
                     .allowsHitTesting(isColumnShown(.month))
@@ -92,7 +85,7 @@ extension RootView {
                         .transition(.opacity)
                 }
             }
-            .floatingFooterBar {
+            .floatingFooterBar(usesNativeEffect: !searchPalette.isResultsViewShown && agendaNavigation.displayedViewMode == .tasks) {
                 // A decision owns the bottom while it's up: no footer under
                 // it. Nor under Ask, which has its own (this view stays
                 // mounted beneath it, and its pill showed through).
@@ -177,7 +170,7 @@ extension RootView {
                 onEventDetailActionFocusChange: { eventID, action in
                     eventDetail.actionFocusChanged(eventID: eventID, action: action)
                 },
-                isActive: agendaNavigation.displayedViewMode == .month,
+                isActive: isColumnShown(.month) && !isAskShown,
                 onScrollPrepared: { target in
                     agendaNavigation.scrollPrepared(target: target)
                 }
@@ -193,7 +186,7 @@ extension RootView {
         let calendarTasks = models.calendarTasks
         let inputs = snapshot.inputs
         let dayDate = inputs.date
-        let isDayShown = agendaNavigation.displayedViewMode == .day
+        let isDayShown = isColumnShown(.day) && !isAskShown
         DayAgendaView(
             date: dayDate,
             isToday: Calendar.autoupdatingCurrent.isDateInToday(dayDate),

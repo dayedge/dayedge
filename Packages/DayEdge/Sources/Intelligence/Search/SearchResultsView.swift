@@ -80,7 +80,7 @@ package struct SearchResultsView: View {
         // same results, even while the query swaps them underneath.
         let index = session.index
         return ScrollViewReader { proxy in
-            ThemedScrollView(appliesBottomEdgeEffect: true) {
+            ThemedScrollView(edgeDissolve: .bottom) {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: theme.agendaPinnedViews) {
                     // Only the window's days: a query matching years of
                     // days must not build years of sections.

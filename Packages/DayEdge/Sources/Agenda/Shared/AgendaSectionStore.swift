@@ -159,13 +159,7 @@ package final class AgendaSectionStore {
     }
 
     package func loadMoreIfNeeded(nearBottomOf visibleDate: Date, isAtLoadedContentEdge: Bool = false) async {
-        guard let loadedRange else { return }
-        let threshold = calendar.date(byAdding: .day, value: -AppConfiguration.agendaEdgeLoadThresholdDays, to: loadedRange.end) ?? loadedRange.end
-        guard isAtLoadedContentEdge || visibleDate >= threshold else { return }
-
-        let newEnd = calendar.date(byAdding: .day, value: AppConfiguration.agendaChunkDays, to: loadedRange.end) ?? loadedRange.end
-        let extendedRange = DateInterval(start: loadedRange.end, end: newEnd)
-        guard !isCovered(extendedRange) else { return }
+        guard let extendedRange = bottomExtension(nearBottomOf: visibleDate, isAtLoadedContentEdge: isAtLoadedContentEdge) else { return }
 
         isLoadingAtBottom = true
         // Scrolling down: days far above are dropped in the same write
@@ -176,6 +170,20 @@ package final class AgendaSectionStore {
                                      to: calendar.startOfDay(for: visibleDate))
         await load(range: extendedRange, merging: true, trim: keepFrom.map(Trim.before))
         isLoadingAtBottom = false
+    }
+
+    package func wouldLoadMore(nearBottomOf visibleDate: Date, isAtLoadedContentEdge: Bool = false) -> Bool {
+        bottomExtension(nearBottomOf: visibleDate, isAtLoadedContentEdge: isAtLoadedContentEdge) != nil
+    }
+
+    private func bottomExtension(nearBottomOf visibleDate: Date, isAtLoadedContentEdge: Bool) -> DateInterval? {
+        guard let loadedRange else { return nil }
+        let threshold = calendar.date(byAdding: .day, value: -AppConfiguration.agendaEdgeLoadThresholdDays, to: loadedRange.end) ?? loadedRange.end
+        guard isAtLoadedContentEdge || visibleDate >= threshold else { return nil }
+
+        let newEnd = calendar.date(byAdding: .day, value: AppConfiguration.agendaChunkDays, to: loadedRange.end) ?? loadedRange.end
+        let extendedRange = DateInterval(start: loadedRange.end, end: newEnd)
+        return isCovered(extendedRange) ? nil : extendedRange
     }
 
     /// True when `date` already falls within the currently loaded window —

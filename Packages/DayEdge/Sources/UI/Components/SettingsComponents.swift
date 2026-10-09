@@ -122,6 +122,8 @@ package struct SettingsToggleRow: View {
 
 /// A row with a pop-up menu of values.
 package struct SettingsPickerRow<Value: Hashable>: View {
+    @Environment(\.themePalette) private var theme
+
     package let title: String
     package var subtitle: String?
     @Binding package var selection: Value
@@ -142,6 +144,7 @@ package struct SettingsPickerRow<Value: Hashable>: View {
                 }
             }
             .labelsHidden()
+            .tint(theme.settings.primaryText)
             // A long menu option must not determine the width of the whole row.
             .frame(maxWidth: 220, alignment: .trailing)
             .fixedSize(horizontal: false, vertical: true)

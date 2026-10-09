@@ -59,31 +59,64 @@ extension View {
     /// `ZStack` overlay everywhere else, so this project stays buildable
     /// without Xcode's SDK even though that path won't render the glass
     /// effect.
+    /// With a custom dissolve, use a plain safe-area inset instead of native bar optics.
     @ViewBuilder
-    package func floatingFooterBar<Footer: View>(@ViewBuilder footer: @escaping () -> Footer) -> some View {
+    package func floatingFooterBar<Footer: View>(usesNativeEffect: Bool = true, @ViewBuilder footer: @escaping () -> Footer) -> some View {
         #if HAS_MACOS26_SDK
         if #available(macOS 26.0, *) {
-            self.safeAreaBar(edge: .bottom, spacing: 0, content: footer)
+            // Keep the content's identity when switching calendar modes.
+            self.safeAreaBar(edge: .bottom, spacing: 0) {
+                if usesNativeEffect { footer() }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !usesNativeEffect { footer() }
+            }
         } else {
-            ZStack(alignment: .bottom) { self; footer() }
+            ZStack(alignment: .bottom) {
+                self.safeAreaInset(edge: .bottom, spacing: 0) {
+                    if !usesNativeEffect { footer() }
+                }
+                if usesNativeEffect { footer() }
+            }
         }
         #else
-        ZStack(alignment: .bottom) { self; footer() }
+        ZStack(alignment: .bottom) {
+            self.safeAreaInset(edge: .bottom, spacing: 0) {
+                if !usesNativeEffect { footer() }
+            }
+            if usesNativeEffect { footer() }
+        }
         #endif
     }
 
     /// Registers a compact header as a native top bar so scrolling content
     /// receives the same system edge blend used by the floating footer.
+    /// `usesNativeEffect: false` reserves the same space without native bar optics.
     @ViewBuilder
-    package func floatingTopBar<Header: View>(@ViewBuilder header: @escaping () -> Header) -> some View {
+    package func floatingTopBar<Header: View>(usesNativeEffect: Bool = true, @ViewBuilder header: @escaping () -> Header) -> some View {
         #if HAS_MACOS26_SDK
         if #available(macOS 26.0, *) {
-            self.safeAreaBar(edge: .top, spacing: 0, content: header)
+            self.safeAreaBar(edge: .top, spacing: 0) {
+                if usesNativeEffect { header() }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if !usesNativeEffect { header() }
+            }
         } else {
-            VStack(spacing: 0) { header(); self }
+            VStack(spacing: 0) {
+                if usesNativeEffect { header() }
+                self.safeAreaInset(edge: .top, spacing: 0) {
+                    if !usesNativeEffect { header() }
+                }
+            }
         }
         #else
-        VStack(spacing: 0) { header(); self }
+        VStack(spacing: 0) {
+            if usesNativeEffect { header() }
+            self.safeAreaInset(edge: .top, spacing: 0) {
+                if !usesNativeEffect { header() }
+            }
+        }
         #endif
     }
 }

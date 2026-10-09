@@ -137,7 +137,13 @@ final class MenuBarStatusItemController {
         item.target = self
         item.representedObject = RowBox(row)
         // The title says it; AppKit sizes, tints and highlights the symbol.
-        if let symbol = row.symbolName { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
+        if let symbol = row.symbolName {
+            item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            if #available(macOS 27.0, *) {
+                // Public ImageVisibility.visible = 1; KVC keeps the Xcode 26 SDK and CLT buildable.
+                item.setValue(1, forKey: "preferredImageVisibility")
+            }
+        }
         switch row {
         case .settings:
             item.keyEquivalent = ","

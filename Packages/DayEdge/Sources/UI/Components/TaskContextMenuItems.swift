@@ -25,6 +25,7 @@ package struct TaskContextMenuItems: View {
                         }
                     } label: {
                         Label(title, systemImage: symbol)
+                            .labelStyle(.titleAndIcon)
                     }
                 case .divider:
                     Divider()

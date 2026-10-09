@@ -114,7 +114,8 @@ package struct AgendaListView: View {
     package var body: some View {
         ScrollViewReader { proxy in
             ThemedScrollView(
-                appliesBottomEdgeEffect: true,
+                edgeDissolve: .bottom,
+                isDissolveActive: isActive,
                 onScrollerTracking: { tracking in
                     scroll.scrollerTrackingChanged(tracking, proxy: proxy, onCurrentSectionChange: onCurrentSectionChange)
                 },

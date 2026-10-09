@@ -14,6 +14,9 @@
 - Theme tokens only (`docs/theming.md`). Every hosting tree wrapped in `ThemedRoot`.
 - One `PanelToolbar` + `LargeTitleHeader` at the root, shared by all views. Panel stays flat.
 - Search's expanded surface is opaque (`AppTheme.searchSurface`) — overlay bugs there came from translucency.
+- Day timeline and chat use the shared dissolve at both scroll edges; Month agenda and search results use it at the bottom. Their bars use plain safe-area insets, with native edge effects hidden. Settings keeps its system treatment.
+- `ThemedScrollView(edgeDissolve:)` selects the edges: separate AppKit blur and fade views become direct siblings above its native scroll, outside the SwiftUI probe. Visibility updates only during the 64 pt transition; inactive surfaces and Reduce Transparency / Increase Contrast disable the blur.
+- `topDissolve` / `bottomDissolve` configure fade strength, fully opaque height, transparent overscan, blur radius and an optional surface role. Defaults preserve the compact 80 pt profile; Day and chat use `AppTheme.ScrollEdge.tallHeader`, reusing the window surface's material and tint for uniform coverage. Reduce Transparency uses the token's solid tint.
 
 ## Decisions
 - `TransientNotice`: already happened, with Undo. `DecisionCard`: choice needed. System alerts: OS-level only.
@@ -30,7 +33,7 @@
 
 ## Menus
 - One plan per menu (`EventContextMenuPlan`, `TaskContextMenuPlan`, `StatusMenuPlan`), grouped like Apple Calendar, dividers only between non-empty groups.
-- Items are `Label`s with SF Symbols; menus reset tint (`.tint(nil)`).
+- Items are `Label`s with SF Symbols and explicit `.titleAndIcon`; menus reset tint (`.tint(nil)`). The AppKit status menu opts into `preferredImageVisibility` on macOS 27, whose automatic policy hides symbols. Its public setter is called through KVC to keep the Xcode 26 / CLT builds compatible.
 - Item shortcuts come from `KeyboardShortcutSettings`. No key deletes an event.
 - "Show in Calendar ⇥" appears only on search results (`\.searchResultReveal`).
 

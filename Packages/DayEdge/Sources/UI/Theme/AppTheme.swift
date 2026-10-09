@@ -2,6 +2,14 @@ import SwiftUI
 
 /// Shared geometry, typography and symbols. Colors live in ThemePalette.
 package enum AppTheme {
+    package enum ScrollEdge {
+        package static let effectHeight: CGFloat = 64
+        package static let totalHeight: CGFloat = effectHeight + 16
+        package static let blurRadius: CGFloat = 1
+        package static let tallHeader = ScrollEdgeDissolve.Configuration(fadeStrength: 3, opaqueHeight: 32, overscan: 8,
+                                                                        blurRadius: 4, surfaceRole: .window)
+    }
+
     /// A new event's time: overlaps an accepted event / one not accepted /
     /// free.
     package enum Conflict {

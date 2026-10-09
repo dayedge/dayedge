@@ -49,7 +49,7 @@ package struct ScrollIndicatorStyle: Equatable {
 
 /// Shared native scroll surface for every calendar-facing view, with the
 /// themed AppKit scroller (`NativeThemedScrollIndicator`). Scroll geometry
-/// is observed only when a caller asks for it (`onMetricsChange`) — a
+/// is observed only for `onMetricsChange` or the custom dissolve — a
 /// per-frame observer costs on long lists. A caller only supplies a
 /// position binding when it needs programmatic scrolling.
 package struct ThemedScrollView<Content: View>: View {
@@ -59,12 +59,17 @@ package struct ThemedScrollView<Content: View>: View {
     private let configuredIndicatorStyle: ScrollIndicatorStyle?
     private let appliesTopEdgeEffect: Bool
     private let appliesBottomEdgeEffect: Bool
+    private let edgeDissolve: VerticalEdge.Set
+    private let topDissolve: ScrollEdgeDissolve.Configuration
+    private let bottomDissolve: ScrollEdgeDissolve.Configuration
+    private let isDissolveActive: Bool
     private let onMetricsChange: ((ScrollMetrics) -> Void)?
     private let onScrollerTracking: ((Bool) -> Void)?
     private let content: Content
 
     @State private var internalPosition = ScrollPosition()
     @State private var metrics = ScrollMetricsBox()
+    @State private var dissolveVisibility = ScrollEdgeDissolve.Visibility(metrics: ScrollMetrics())
 
     /// `onScrollerTracking`: true while the scroller's knob or track is
     /// dragged — SwiftUI reports no scroll phase for that.
@@ -73,6 +78,10 @@ package struct ThemedScrollView<Content: View>: View {
         indicatorStyle: ScrollIndicatorStyle? = nil,
         appliesTopEdgeEffect: Bool = false,
         appliesBottomEdgeEffect: Bool = false,
+        edgeDissolve: VerticalEdge.Set = [],
+        topDissolve: ScrollEdgeDissolve.Configuration = .init(),
+        bottomDissolve: ScrollEdgeDissolve.Configuration = .init(),
+        isDissolveActive: Bool = true,
         onMetricsChange: ((ScrollMetrics) -> Void)? = nil,
         onScrollerTracking: ((Bool) -> Void)? = nil,
         @ViewBuilder content: () -> Content
@@ -81,6 +90,10 @@ package struct ThemedScrollView<Content: View>: View {
         self.configuredIndicatorStyle = indicatorStyle
         self.appliesTopEdgeEffect = appliesTopEdgeEffect
         self.appliesBottomEdgeEffect = appliesBottomEdgeEffect
+        self.edgeDissolve = edgeDissolve
+        self.topDissolve = topDissolve
+        self.bottomDissolve = bottomDissolve
+        self.isDissolveActive = isDissolveActive
         self.onMetricsChange = onMetricsChange
         self.onScrollerTracking = onScrollerTracking
         self.content = content()
@@ -104,11 +117,19 @@ package struct ThemedScrollView<Content: View>: View {
                 .background {
                     NativeThemedScrollIndicator(style: indicatorStyle, onTracking: onScrollerTracking)
                 }
+                .background {
+                    if !edgeDissolve.isEmpty {
+                        NativeScrollEdgeDissolve(visibility: isDissolveActive ? dissolveVisibility : .init(metrics: ScrollMetrics()),
+                                                topConfiguration: topDissolve, bottomConfiguration: bottomDissolve)
+                    }
+                }
         }
         .scrollPosition(position)
 
         let measuredScrollView = reportingMetrics(scrollView)
-        if appliesTopEdgeEffect && appliesBottomEdgeEffect {
+        if !edgeDissolve.isEmpty {
+            measuredScrollView.hidingNativeScrollEdges()
+        } else if appliesTopEdgeEffect && appliesBottomEdgeEffect {
             measuredScrollView
                 .liquidGlassTopScrollEdge()
                 .liquidGlassBottomScrollEdge()
@@ -123,7 +144,7 @@ package struct ThemedScrollView<Content: View>: View {
 
     @ViewBuilder
     private func reportingMetrics<Surface: View>(_ surface: Surface) -> some View {
-        if let onMetricsChange {
+        if onMetricsChange != nil || !edgeDissolve.isEmpty {
             surface.onScrollGeometryChange(for: ScrollMetrics.self) { geometry in
                 let insetHeight = geometry.contentInsets.top + geometry.contentInsets.bottom
                 return ScrollMetrics(
@@ -132,7 +153,13 @@ package struct ThemedScrollView<Content: View>: View {
                     viewportHeight: geometry.containerSize.height
                 )
             } action: { _, newMetrics in
-                metrics.post(newMetrics, then: onMetricsChange)
+                metrics.post(newMetrics) { value in
+                    if !edgeDissolve.isEmpty {
+                        let visibility = ScrollEdgeDissolve.Visibility(metrics: value, edges: edgeDissolve)
+                        if visibility != dissolveVisibility { dissolveVisibility = visibility }
+                    }
+                    onMetricsChange?(value)
+                }
             }
         } else {
             surface

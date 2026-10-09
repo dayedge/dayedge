@@ -131,6 +131,8 @@ extension AgendaScrollCoordinator {
             guard contentBottomDate != lastBottomPagingContentDate else { return }
             lastBottomPagingContentDate = contentBottomDate
         }
+        guard store.wouldLoadMore(nearBottomOf: lastVisible, isAtLoadedContentEdge: isAtContentBottom) else { return }
+
         // Appending below doesn't move anything — but once the agenda is
         // over its limit, the same load drops far days above, and then the
         // view is re-anchored on the day at its top.

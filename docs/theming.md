@@ -4,6 +4,7 @@
 - `ThemePalette`: the semantic colour/typography/surface contract. `AppTheme`: shared fonts, dimensions, spacing, symbols.
 - Views read `@Environment(\.themePalette)`. Never read the theme id in a view, never cache palette colours in statics, never hard-code colours.
 - Use the specific token groups (`content`, `editor`, `sourcePresentation`, `calendarHeader`, …) over generic chrome tokens.
+- Settings picker values use `settings.primaryText`; switches and accent actions use `settings.tint`.
 - Calendar/list/service identity colours come from the source; the palette controls only their presentation.
 - Every independent hosting tree (windows, tooltips, HUD) is wrapped in `ThemedRoot`; keep its identity stable across theme changes.
 - Liquid Glass (macOS 26) only on Frost's floating/elevated controls; must degrade to blur, and to solid with Reduce Transparency. Increase Contrast: denser tints, no optical decoration.

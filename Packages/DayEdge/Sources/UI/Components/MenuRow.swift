@@ -20,7 +20,12 @@ package struct MenuRow: View {
 
     package var body: some View {
         Button(role: role, action: action) {
-            if let symbol { Label(title, systemImage: symbol) } else { Text(title) }
+            if let symbol {
+                Label(title, systemImage: symbol)
+                    .labelStyle(.titleAndIcon)
+            } else {
+                Text(title)
+            }
         }
         .keyboardShortcut(shortcut)
     }

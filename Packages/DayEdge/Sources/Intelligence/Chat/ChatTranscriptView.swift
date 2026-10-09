@@ -21,6 +21,7 @@ package struct ChatTranscriptView: View {
     package var isComposerEmpty = true
     /// Whether the jump-to-latest arrow shows; shared with the button.
     package let follow: ChatScrollFollow
+    package var isActive = true
 
     @State private var position = ScrollPosition(edge: .top)
     @State private var rowCache = ChatTranscriptRowCache()
@@ -38,11 +39,9 @@ package struct ChatTranscriptView: View {
         // The approval card, if one waits: it belongs to the newest answer,
         // which is now at the top.
         let latestPendingID = rows.first { if case .pending(true) = $0.kind { true } else { false } }?.id
-        // The shared calendar scroll surface: it keeps the native scroller
-        // alive, which macOS 26's Liquid Glass edges need — so messages
-        // dissolve under the floating composer and footer like the Day view.
-        ThemedScrollView(position: $position, appliesTopEdgeEffect: true,
-                         appliesBottomEdgeEffect: true, onMetricsChange: {
+        ThemedScrollView(position: $position, edgeDissolve: .all,
+                         topDissolve: AppTheme.ScrollEdge.tallHeader,
+                         isDissolveActive: isActive, onMetricsChange: {
             follow.observe($0)
             anchors.observe(offset: $0.offset)
         }, onScrollerTracking: { tracking in

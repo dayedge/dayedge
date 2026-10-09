@@ -36,7 +36,7 @@ package struct ChatView<Footer: View>: View {
 
     package var body: some View {
         ChatTranscriptView(messages: session.messages, objects: objects, approvals: session.approvals,
-                           isComposerEmpty: session.draft.isEmpty, follow: follow)
+                           isComposerEmpty: session.draft.isEmpty, follow: follow, isActive: isPresented)
             .frame(maxHeight: .infinity)
             // Scrolled well down: a way back to the newest message,
             // floating over the conversation just under the composer (the
@@ -48,10 +48,7 @@ package struct ChatView<Footer: View>: View {
             }
             .opacity(isRevealed ? 1 : 0)
             .animation(timing(isRevealed ? 0.16 : 0.12), value: isRevealed)
-            // The composer and the footer float over the conversation
-            // (macOS 26: native bars), so messages dissolve under both
-            // through the system's Liquid Glass edges — like the Day view.
-            .floatingTopBar {
+            .floatingTopBar(usesNativeEffect: false) {
                 VStack(alignment: .leading, spacing: AppTheme.Chat.chipsToComposer) {
                     ChatComposerView(
                         draft: Binding(get: { session.draft }, set: { session.draft = $0 }),
@@ -93,7 +90,7 @@ package struct ChatView<Footer: View>: View {
                 .padding(.top, PanelToolbarMetrics.topInset)
                 .padding(.bottom, AppTheme.Chat.composerInset)
             }
-            .floatingFooterBar {
+            .floatingFooterBar(usesNativeEffect: false) {
                 footer()
                     .opacity(isRevealed ? 1 : 0)
                     .animation(timing(0.16), value: isRevealed)

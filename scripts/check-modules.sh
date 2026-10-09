@@ -23,7 +23,7 @@ allow Domain Foundation Observation
 # The system and the index behind Domain's contracts: no UI.
 allow Platform Foundation Observation AppKit EventKit CoreLocation CalendarIndex CalendarIndexEventKit Domain
 # What every feature draws with: no EventKit, no index, never Platform.
-allow UI Foundation Observation SwiftUI AppKit CoreGraphics CoreText Domain
+allow UI Foundation Observation SwiftUI AppKit CoreGraphics CoreText CoreImage QuartzCore Domain
 # Features: Domain and UI only — no Platform, no other feature.
 allow Agenda Foundation Observation SwiftUI AppKit CoreGraphics Domain UI
 allow Tasks Foundation Observation SwiftUI AppKit CoreGraphics Domain UI

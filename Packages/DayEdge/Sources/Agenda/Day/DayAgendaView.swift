@@ -111,8 +111,9 @@ package struct DayAgendaView: View {
             ScrollViewReader { proxy in
             ThemedScrollView(
                 position: $scrollPosition,
-                appliesTopEdgeEffect: true,
-                appliesBottomEdgeEffect: true,
+                edgeDissolve: .all,
+                topDissolve: AppTheme.ScrollEdge.tallHeader,
+                isDissolveActive: isActive,
                 onMetricsChange: { metrics in
                     scrollOffset = metrics.offset
                     scrollMetrics = metrics
@@ -142,7 +143,7 @@ package struct DayAgendaView: View {
                 guard isActive, request != nil else { return }
                 completeSelectedTask(proxy: proxy)
             }
-            .floatingTopBar {
+            .floatingTopBar(usesNativeEffect: false) {
                 VStack(spacing: 0) {
                     if showsWeather, let weather {
                         WeatherStripView(summary: weather)
