@@ -81,12 +81,27 @@ package struct TransientNotice: Identifiable {
 @Observable
 package final class NoticeCenter {
     package private(set) var currentNotice: TransientNotice?
-    private var dismissalTask: Task<Void, Never>?
+    private var cancelDismissal: (@MainActor () -> Void)?
+    private let now: @MainActor () -> Date
+    private let schedule: @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> (@MainActor () -> Void)
     private var deadline: Date?
     private var remaining: TimeInterval = 0
     private var isHovering = false
 
-    package init() {}
+    package init(
+        now: @escaping @MainActor () -> Date = { Date() },
+        schedule: @escaping @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> (@MainActor () -> Void) = { delay, action in
+            let task = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: UInt64(max(delay, 0) * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                action()
+            }
+            return { task.cancel() }
+        }
+    ) {
+        self.now = now
+        self.schedule = schedule
+    }
 
     package func show(_ notice: TransientNotice) {
         if let currentNotice, currentNotice.hasSameContent(as: notice) {
@@ -103,8 +118,8 @@ package final class NoticeCenter {
     }
 
     package func dismiss() {
-        dismissalTask?.cancel()
-        dismissalTask = nil
+        cancelDismissal?()
+        cancelDismissal = nil
         deadline = nil
         isHovering = false
         currentNotice = nil
@@ -119,9 +134,9 @@ package final class NoticeCenter {
         guard currentNotice?.id == id, currentNotice?.action != nil, isHovering != hovering else { return }
         isHovering = hovering
         if hovering {
-            if let deadline { remaining = max(deadline.timeIntervalSinceNow, 0) }
-            dismissalTask?.cancel()
-            dismissalTask = nil
+            if let deadline { remaining = max(deadline.timeIntervalSince(now()), 0) }
+            cancelDismissal?()
+            cancelDismissal = nil
             deadline = nil
         } else {
             startTimer()
@@ -135,13 +150,12 @@ package final class NoticeCenter {
     }
 
     private func startTimer() {
-        dismissalTask?.cancel()
+        cancelDismissal?()
+        cancelDismissal = nil
         guard let id = currentNotice?.id, !isHovering else { return }
-        deadline = Date().addingTimeInterval(remaining)
-        let delay = remaining
-        dismissalTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(max(delay, 0) * 1_000_000_000))
-            guard !Task.isCancelled, self?.currentNotice?.id == id else { return }
+        deadline = now().addingTimeInterval(remaining)
+        cancelDismissal = schedule(remaining) { [weak self] in
+            guard self?.currentNotice?.id == id else { return }
             self?.dismiss()
         }
     }

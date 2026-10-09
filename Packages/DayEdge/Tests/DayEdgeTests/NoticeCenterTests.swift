@@ -38,28 +38,30 @@ final class NoticeCenterTests: XCTestCase {
         XCTAssertNotEqual(center.currentNotice?.id, firstID)
     }
 
-    func testAutoDismissAndRepeatedNoticeResetsTimer() async throws {
-        let center = NoticeCenter()
-        center.show(TransientNotice(style: .information, title: "Short", duration: 0.08))
-        try await Task.sleep(nanoseconds: 50_000_000)
-        center.show(TransientNotice(style: .information, title: "Short", duration: 0.08))
-        try await Task.sleep(nanoseconds: 50_000_000)
+    func testAutoDismissAndRepeatedNoticeResetsTimer() {
+        let clock = NoticeTestClock()
+        let center = NoticeCenter(now: clock.now, schedule: clock.schedule)
+        center.show(TransientNotice(style: .information, title: "Short", duration: 8))
+        clock.advance(by: 5)
+        center.show(TransientNotice(style: .information, title: "Short", duration: 8))
+        clock.advance(by: 5)
         XCTAssertNotNil(center.currentNotice)
-        try await Task.sleep(nanoseconds: 55_000_000)
+        clock.advance(by: 3)
         XCTAssertNil(center.currentNotice)
     }
 
-    func testHoverPausesActionableNoticeAndActionRunsOnce() async throws {
-        let center = NoticeCenter()
+    func testHoverPausesActionableNoticeAndActionRunsOnce() throws {
+        let clock = NoticeTestClock()
+        let center = NoticeCenter(now: clock.now, schedule: clock.schedule)
         var activations = 0
         center.show(TransientNotice(
             style: .success, title: "Removed",
             action: NoticeAction(title: "Undo", handler: { activations += 1 }),
-            duration: 0.07
+            duration: 7
         ))
         let id = try XCTUnwrap(center.currentNotice?.id)
         center.setHovering(true, for: id)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        clock.advance(by: 10)
         XCTAssertNotNil(center.currentNotice)
         center.performAction(for: id)
         center.performAction(for: id)
@@ -67,19 +69,22 @@ final class NoticeCenterTests: XCTestCase {
         XCTAssertNil(center.currentNotice)
     }
 
-    func testHoverResumesRemainingTime() async throws {
-        let center = NoticeCenter()
+    func testHoverResumesRemainingTime() throws {
+        let clock = NoticeTestClock()
+        let center = NoticeCenter(now: clock.now, schedule: clock.schedule)
         center.show(TransientNotice(
             style: .success, title: "Saved",
-            action: NoticeAction(title: "Undo", handler: {}), duration: 0.08
+            action: NoticeAction(title: "Undo", handler: {}), duration: 8
         ))
         let id = try XCTUnwrap(center.currentNotice?.id)
-        try await Task.sleep(nanoseconds: 30_000_000)
+        clock.advance(by: 3)
         center.setHovering(true, for: id)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        clock.advance(by: 10)
         XCTAssertNotNil(center.currentNotice)
         center.setHovering(false, for: id)
-        try await Task.sleep(nanoseconds: 65_000_000)
+        clock.advance(by: 4)
+        XCTAssertNotNil(center.currentNotice)
+        clock.advance(by: 1)
         XCTAssertNil(center.currentNotice)
     }
 
@@ -92,5 +97,28 @@ final class NoticeCenterTests: XCTestCase {
         center.show(.success(title: "Removed", action: NoticeAction(title: "Undo", handler: {})))
         center.dismissIfPassive()
         XCTAssertNotNil(center.currentNotice)
+    }
+}
+
+@MainActor
+private final class NoticeTestClock {
+    private var current = Date(timeIntervalSince1970: 0)
+    private var pending: [UUID: (deadline: Date, action: @MainActor () -> Void)] = [:]
+
+    func now() -> Date { current }
+
+    func schedule(after delay: TimeInterval, action: @escaping @MainActor () -> Void) -> (@MainActor () -> Void) {
+        let id = UUID()
+        pending[id] = (current.addingTimeInterval(delay), action)
+        return { [weak self] in self?.pending[id] = nil }
+    }
+
+    func advance(by interval: TimeInterval) {
+        current = current.addingTimeInterval(interval)
+        let due = pending.filter { $0.value.deadline <= current }
+        for (id, entry) in due {
+            pending[id] = nil
+            entry.action()
+        }
     }
 }
