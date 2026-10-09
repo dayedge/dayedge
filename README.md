@@ -26,12 +26,11 @@
   <a href="https://ko-fi.com/dayedge"><img alt="Ko-fi" src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white"></a>
 </p>
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/month.webp" width="300" alt="Month view with today's agenda"><br><sub>Your month ahead, with today's events close at hand.</sub></td>
-    <td align="center"><img src="docs/images/day.webp" width="300" alt="Day timeline with weather"><br><sub>Events, reminders, and weather on one daily timeline.</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/images/graphite-pro-840.webp" width="300" alt="Month view with today's agenda">
+  <img src="docs/images/agenda-840.webp" width="300" alt="Day timeline with weather"><br>
+  <sub>Your month ahead and your daily timeline, with events, reminders, and weather.</sub>
+</p>
 
 ## What it does
 
@@ -48,16 +47,15 @@
 - **Keyboard-first.** Shortcuts for every view and the common actions, and you can change them.
 - **Made to feel at home.** Eight themes, light and dark, in English and Polish.
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/tasks.webp" width="260" alt="Tasks grouped by attention and list"><br><sub>What needs doing, organised by list.</sub></td>
-    <td align="center"><img src="docs/images/search.webp" width="260" alt="Search results grouped by day"><br><sub>Find events and tasks in one search.</sub></td>
-    <td align="center"><img src="docs/images/chat.webp" width="260" alt="Chat proposing a change for approval"><br><sub>Talk through your day and review changes.</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/images/tasks-932.webp" width="240" alt="Tasks grouped by attention and list">
+  <img src="docs/images/search-840.webp" width="240" alt="Five search results grouped by day">
+  <img src="docs/images/ask-840.webp" width="240" alt="Calendar chat proposing to move lunch exactly 20 minutes"><br>
+  <sub>Organise your tasks, find the right event, and talk through a change of plans.</sub>
+</p>
 
 <p align="center">
-  <img src="docs/images/meeting.webp" width="640" alt="Frosted-glass meeting reminder over the desktop"><br>
+  <img src="docs/images/meeting-1920.webp" width="640" alt="Frosted-glass meeting reminder over the desktop"><br>
   <sub>A full-screen nudge for the “one more minute” crowd.</sub>
 </p>
 
