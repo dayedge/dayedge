@@ -64,7 +64,7 @@ Shell ─┬─ Agenda ───────┐
 ## Tests
 - Small and focused: one behaviour per test, named for it. No multi-scenario tests.
 - Test pure logic (layouts, plans, parsers, projections, rules) — keep it out of views so it can be.
-- Deterministic: inject clock, calendar, locale, defaults. No network, no API keys, no real EventKit. Use the mocks/fakes.
+- Deterministic: tests must pass across machines, dates, time zones, and locales. Fix or inject the clock, calendar, time zone, locale, and defaults; never rely on real sleeps or ambient system defaults. No network, no API keys, no real EventKit. Use mocks/fakes.
 - Fast: no sleeps, no polling in normal tests. Live model tests require `DAYEDGE_LIVE_APPLE_MODEL=1`; read-only live EventKit tests require `DAYEDGE_LIVE_EVENTKIT=1` and Calendar access.
 - New logic ⇒ new tests. Bug fix ⇒ a test that fails without it.
 - App tests: `DayEdgeTests`; CalendarIndex has its own test targets. `@testable import` only the modules a file needs.
