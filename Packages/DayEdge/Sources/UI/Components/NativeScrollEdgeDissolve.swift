@@ -24,7 +24,7 @@ package struct NativeScrollEdgeDissolve: NSViewRepresentable {
     package func updateNSView(_ probe: NativeThemedScrollIndicator.ProbeView, context: Context) {
         context.coordinator.apply(topSurface: surface(for: topConfiguration), bottomSurface: surface(for: bottomConfiguration), visibility: visibility,
                                   blurs: !reduceTransparency && contrast != .increased,
-                                  topConfiguration: topConfiguration, bottomConfiguration: bottomConfiguration)
+                                  configurations: (top: topConfiguration, bottom: bottomConfiguration))
     }
 
     private func surface(for configuration: ScrollEdgeDissolve.Configuration) -> (color: NSColor, material: NSVisualEffectView.Material?) {
@@ -83,13 +83,13 @@ package struct NativeScrollEdgeDissolve: NSViewRepresentable {
         package func apply(topSurface: (color: NSColor, material: NSVisualEffectView.Material?),
                            bottomSurface: (color: NSColor, material: NSVisualEffectView.Material?),
                            visibility: ScrollEdgeDissolve.Visibility, blurs: Bool,
-                           topConfiguration: ScrollEdgeDissolve.Configuration, bottomConfiguration: ScrollEdgeDissolve.Configuration) {
+                           configurations: (top: ScrollEdgeDissolve.Configuration, bottom: ScrollEdgeDissolve.Configuration)) {
             self.topSurface = topSurface
             self.bottomSurface = bottomSurface
             self.visibility = visibility
             self.blurs = blurs
-            self.topConfiguration = topConfiguration
-            self.bottomConfiguration = bottomConfiguration
+            self.topConfiguration = configurations.top
+            self.bottomConfiguration = configurations.bottom
             applyEffects()
         }
 
