@@ -91,31 +91,42 @@ jobs:
           printf 'SIGN_KEYCHAIN_PASSWORD=%s\n' "$password" >> "$GITHUB_ENV"
           rm -f "$certificate"
 
-      - name: Build universal Release app
-        run: make build SIGN_KEYCHAIN="$SIGN_KEYCHAIN"
-
-      - name: Verify and package
+      - name: Build, verify and package each architecture
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.value }}
         run: |
-          app=build/DayEdge.app
-          codesign --verify --deep --strict "$app"
-          codesign -d --extract-certificates="$RUNNER_TEMP/dayedge-cert-" "$app"
-          actual="$(shasum -a 1 "$RUNNER_TEMP/dayedge-cert-0" | awk '{print toupper($1)}')"
-          test "$actual" = "$SIGNING_CERTIFICATE_SHA1"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" = "$RELEASE_VERSION"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")" = com.dayedge.app
-          lipo "$app/Contents/MacOS/DayEdge" -verify_arch arm64 x86_64
           mkdir -p build/release
-          ditto -c -k --keepParent "$app" "build/release/DayEdge-$RELEASE_VERSION.zip"
-          cd build/release
-          shasum -a 256 "DayEdge-$RELEASE_VERSION.zip" > "DayEdge-$RELEASE_VERSION.zip.sha256"
+          for architecture in arm64 x86_64; do
+            make build ARCHS="$architecture" SIGN_KEYCHAIN="$SIGN_KEYCHAIN"
+            app=build/DayEdge.app
+            codesign --verify --deep --strict "$app"
+            codesign -d --extract-certificates="$RUNNER_TEMP/dayedge-cert-$architecture-" "$app"
+            actual="$(shasum -a 1 "$RUNNER_TEMP/dayedge-cert-$architecture-0" | awk '{print toupper($1)}')"
+            test "$actual" = "$SIGNING_CERTIFICATE_SHA1"
+            test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" = "$RELEASE_VERSION"
+            test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")" = com.dayedge.app
+            test "$(lipo -archs "$app/Contents/MacOS/DayEdge")" = "$architecture"
+            ditto -c -k --keepParent "$app" "build/release/DayEdge-$RELEASE_VERSION-$architecture.zip"
+            (
+              cd build/release
+              shasum -a 256 "DayEdge-$RELEASE_VERSION-$architecture.zip" > "DayEdge-$RELEASE_VERSION-$architecture.zip.sha256"
+            )
+          done
 
-      - name: Upload build for testing
+      - name: Upload Apple Silicon build for testing
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: DayEdge-${{ steps.version.outputs.value }}
-          path: build/release/*
+          name: DayEdge-${{ steps.version.outputs.value }}-arm64
+          path: build/release/DayEdge-${{ steps.version.outputs.value }}-arm64.zip*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Upload Intel build for testing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: DayEdge-${{ steps.version.outputs.value }}-x86_64
+          path: build/release/DayEdge-${{ steps.version.outputs.value }}-x86_64.zip*
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
@@ -127,7 +138,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.version.outputs.value }}
         run: |
           cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
-          Requires macOS 15 or later. Universal app for Apple Silicon and Intel.
+          Requires macOS 15 or later. Download arm64 for Apple Silicon (M-series) or x86_64 for Intel.
 
           This build uses DayEdge's stable self-signed certificate. It is not Apple Developer ID signed or notarized.
           See the [installation instructions](https://github.com/dayedge/dayedge#install) for Gatekeeper guidance.
@@ -135,8 +146,10 @@ jobs:
           Before publishing: add the release highlights and smoke-test the downloaded archive on another Mac or user account.
           NOTES
           gh release create "$GITHUB_REF_NAME" \
-            "build/release/DayEdge-$RELEASE_VERSION.zip" \
-            "build/release/DayEdge-$RELEASE_VERSION.zip.sha256" \
+            "build/release/DayEdge-$RELEASE_VERSION-arm64.zip" \
+            "build/release/DayEdge-$RELEASE_VERSION-arm64.zip.sha256" \
+            "build/release/DayEdge-$RELEASE_VERSION-x86_64.zip" \
+            "build/release/DayEdge-$RELEASE_VERSION-x86_64.zip.sha256" \
             --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
             --title "DayEdge $RELEASE_VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
 

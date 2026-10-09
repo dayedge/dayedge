@@ -2,6 +2,8 @@
 
 ## Build
 - `make build` → `build/DayEdge.app`. `CONFIGURATION=Debug` → `build/DayEdge Dev.app`.
+- Release builds are universal by default. `make build ARCHS=arm64` builds only for Apple Silicon;
+  `make build ARCHS=x86_64` builds only for Intel.
 - `make run` builds, quits the running copy, opens it.
 - Smoke test: `make run`, check Console for crashes.
 

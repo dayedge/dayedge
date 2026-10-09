@@ -38,9 +38,10 @@ on a separate Mac/user account; a local build does not exercise download quarant
 ## GitHub Actions
 
 `.github/workflows/release.yml` builds with Xcode 26.6 on `macos-26`. It runs lint and tests, imports
-the existing signing identity, builds a universal Release app, and verifies its signature, certificate
-fingerprint, version, bundle identifier, and architectures before packaging it. No Apple account or
-provisioning profile is required for these self-signed builds; they remain non-notarized.
+the existing signing identity, builds separate `arm64` (Apple Silicon) and `x86_64` (Intel) Release apps,
+and verifies each app's signature, certificate fingerprint, version, bundle identifier, and exact
+architecture before packaging it. No Apple account or provisioning profile is required for these
+self-signed builds; they remain non-notarized.
 
 ### One-time signing setup
 
@@ -78,22 +79,24 @@ git tag -a v1.0.0 -m "DayEdge 1.0.0"
 git push origin v1.0.0
 ```
 
-A tag push creates a **draft** GitHub Release containing `DayEdge-1.0.0.zip` and its `.sha256` file.
+A tag push creates a **draft** GitHub Release containing `DayEdge-1.0.0-arm64.zip` and
+`DayEdge-1.0.0-x86_64.zip`, each with its own `.sha256` file.
 The tag must match the checked-in app version. Existing releases are never overwritten; remove a failed
 draft explicitly before retrying its creation. Download and smoke-test the archive, replace the draft
-notes with release highlights, then publish and update the tap.
+notes with release highlights, then publish and update the tap for both architecture-specific assets.
 
 For a test build, choose **Actions → Release → Run workflow** and select a branch or tag. Manual runs
-upload the archive as an Actions artifact retained for 14 days and do not create a GitHub Release.
-After extracting the downloaded artifact, run `shasum -a 256 -c DayEdge-1.0.0.zip.sha256` alongside the
-inner app archive. Private repository assets require repository access; public Homebrew distribution
-needs a public release download URL.
+upload separate `DayEdge-1.0.0-arm64` and `DayEdge-1.0.0-x86_64` Actions artifacts retained for 14 days
+and do not create a GitHub Release. Choose `arm64` for Apple Silicon (M-series) or `x86_64` for Intel.
+After extracting the downloaded artifact, run `shasum -a 256 -c DayEdge-1.0.0-arm64.zip.sha256` (or the
+`x86_64` equivalent) alongside the inner app archive. Private repository assets require repository
+access; public Homebrew distribution needs a public release download URL.
 
 ## Homebrew tap
 
 Keep the cask in the project's separate tap repository. For each release:
 
-1. Update its version, release archive URL and SHA-256 digest together.
+1. Update its version and both architecture-specific release archive URLs and SHA-256 digests together.
 2. Keep `app "DayEdge.app"` and the macOS 15 minimum consistent with the archive.
 3. Include the self-signed/not-notarized caveat. Homebrew installation does not provide notarization.
 4. Test the published cask with a fresh install and an upgrade, including Calendar/Reminders grants.

@@ -5,6 +5,7 @@
 #                  (signed with "DayEdge Self-Signed" when it exists, else ad hoc;
 #                  CONFIGURATION=Debug → build/DayEdge Dev.app, com.dayedge.app.dev,
 #                  which runs beside the installed app with its own settings)
+#                  ARCHS=arm64 or ARCHS=x86_64 → single-architecture app
 #   make signing-identity   create that identity, once (scripts/create-signing-identity.sh)
 #   make run       build, then open it
 #   make test      all package tests             (Command Line Tools are enough)
@@ -37,6 +38,10 @@ CONFIGURATION ?= Release
 PRODUCT  := $(if $(filter Debug,$(CONFIGURATION)),DayEdge Dev,DayEdge)
 APP      := $(BUILD)/$(PRODUCT).app
 
+ifdef ARCHS
+ARCHITECTURES := ARCHS="$(ARCHS)" ONLY_ACTIVE_ARCH=NO
+endif
+
 # One stable identity keeps macOS's permission grants across builds.
 SIGN_IDENTITY := DayEdge Self-Signed
 SIGN_KEYCHAIN := $(HOME)/Library/Keychains/dayedge-signing.keychain-db
@@ -56,7 +61,7 @@ else
 	@security unlock-keychain -p "$(SIGN_KEYCHAIN_PASSWORD)" "$(SIGN_KEYCHAIN)"
 endif
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIGURATION) \
-		-derivedDataPath $(DERIVED) $(SIGNING) build
+		-derivedDataPath $(DERIVED) $(ARCHITECTURES) $(SIGNING) build
 	rm -rf "$(APP)"
 	cp -R "$(DERIVED)/Build/Products/$(CONFIGURATION)/$(PRODUCT).app" "$(APP)"
 	@echo "Built $(APP)"
