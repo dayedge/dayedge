@@ -72,13 +72,28 @@ package final class CalendarIndexActivity {
 
     @ObservationIgnored private let revealDelay: Duration
     @ObservationIgnored private let minimumVisible: Duration
-    @ObservationIgnored private var revealTask: Task<Void, Never>?
-    @ObservationIgnored private var hideTask: Task<Void, Never>?
+    @ObservationIgnored private var cancelReveal: (@MainActor () -> Void)?
+    @ObservationIgnored private var cancelHide: (@MainActor () -> Void)?
     @ObservationIgnored private var shownAt: ContinuousClock.Instant?
+    private let now: @MainActor () -> ContinuousClock.Instant
+    private let schedule: @MainActor (Duration, @escaping @MainActor () -> Void) -> (@MainActor () -> Void)
 
-    package init(revealDelay: Duration = .milliseconds(600), minimumVisible: Duration = .milliseconds(900)) {
+    package init(
+        revealDelay: Duration = .milliseconds(600), minimumVisible: Duration = .milliseconds(900),
+        now: @escaping @MainActor () -> ContinuousClock.Instant = { .now },
+        schedule: @escaping @MainActor (Duration, @escaping @MainActor () -> Void) -> (@MainActor () -> Void) = { delay, action in
+            let task = Task { @MainActor in
+                if delay > .zero { try? await Task.sleep(for: delay) }
+                guard !Task.isCancelled else { return }
+                action()
+            }
+            return { task.cancel() }
+        }
+    ) {
         self.revealDelay = revealDelay
         self.minimumVisible = minimumVisible
+        self.now = now
+        self.schedule = schedule
     }
 
     /// The footer button is up while filling (after the reveal delay) or
@@ -124,22 +139,20 @@ package final class CalendarIndexActivity {
         self.isIndexing = isIndexing
         if isIndexing {
             isNearReady = false
-            hideTask?.cancel()
+            cancelHide?()
             guard !isIndicatorVisible else { return }
-            revealTask?.cancel()
-            revealTask = Task { [weak self, revealDelay] in
-                try? await Task.sleep(for: revealDelay)
-                guard let self, !Task.isCancelled, self.isIndexing else { return }
+            cancelReveal?()
+            cancelReveal = schedule(revealDelay) { [weak self] in
+                guard let self, self.isIndexing else { return }
                 self.isIndicatorVisible = true
-                self.shownAt = .now
+                self.shownAt = self.now()
             }
         } else {
-            revealTask?.cancel()
+            cancelReveal?()
             guard isIndicatorVisible else { return }
-            let remaining = shownAt.map { minimumVisible - (.now - $0) } ?? .zero
-            hideTask = Task { [weak self] in
-                if remaining > .zero { try? await Task.sleep(for: remaining) }
-                guard let self, !Task.isCancelled, !self.isIndexing else { return }
+            let remaining = shownAt.map { minimumVisible - (now() - $0) } ?? .zero
+            cancelHide = schedule(remaining) { [weak self] in
+                guard let self, !self.isIndexing else { return }
                 self.isIndicatorVisible = false
             }
         }
