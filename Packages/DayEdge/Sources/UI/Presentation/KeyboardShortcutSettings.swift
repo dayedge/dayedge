@@ -50,7 +50,7 @@ package enum ShortcutOwner: Equatable {
 @Observable
 package final class KeyboardShortcutSettings {
     package static let shared = KeyboardShortcutSettings()
-    package static let defaultsKey = "com.dayedge.shortcuts"
+    package nonisolated static let defaultsKey = "com.dayedge.shortcuts"
     /// What a stored entry says for "the user removed this shortcut".
     static let cleared = "none"
 

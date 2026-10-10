@@ -60,7 +60,7 @@ final class TachikomaBackendTests: XCTestCase {
         let clock = TestClock(calendar.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 16))!)
         var responder = backend(provider)
         responder.now = { clock.date }
-        responder.instructions = { AssistantInstructions.isoDay($0, calendar) }
+        responder.instructions = { [calendar] in AssistantInstructions.isoDay($0, calendar) }
         let chat = ChatSession(responder: responder, calendar: calendar, now: { clock.date })
 
         chat.start(with: "what's tomorrow?")

@@ -48,7 +48,9 @@ package final class EventKitReminderSource: @unchecked Sendable {
     /// The callback runs on an arbitrary thread; mapping happens there so no
     /// `EKReminder` crosses a concurrency boundary.
     private func fetch(_ predicate: NSPredicate, calendar: Calendar) async -> [TaskItem] {
-        await withCheckedContinuation { continuation in
+        // Built for this one fetch and never mutated.
+        nonisolated(unsafe) let predicate = predicate
+        return await withCheckedContinuation { continuation in
             queue.async {
                 self.eventStore.fetchReminders(matching: predicate) { reminders in
                     continuation.resume(returning: (reminders ?? []).map { ReminderMapper.taskItem(from: $0, calendar: calendar) })
