@@ -3,12 +3,21 @@ import Domain
 import UI
 
 extension DayAgendaView {
-    /// `anchored` records the grid-relative target so it survives the task
-    /// area above resizing (see `untimedTaskArea`).
+    /// Shared by scroll repositioning and the bar above the grid, so they move together.
+    static let positioningAnimation = Animation.smooth(duration: 0.25)
+
+    /// Keeps whatever the grid was positioned on in place after something
+    /// above it resized — only on screen; a hidden Day view never scrolls itself.
+    func reanchor(animated: Bool = false) {
+        guard isActive, let gridAnchoredY else { return }
+        setScrollTarget(gridTopOffset + gridAnchoredY, animated: animated, anchored: gridAnchoredY)
+    }
+
+    /// `anchored` records the grid-relative target for `reanchor`.
     func setScrollTarget(_ y: CGFloat, animated: Bool = false, anchored: CGFloat? = nil) {
         gridAnchoredY = anchored
         if animated {
-            withAnimation(.smooth(duration: 0.25)) { scrollPosition.scrollTo(y: y) }
+            withAnimation(Self.positioningAnimation) { scrollPosition.scrollTo(y: y) }
         } else {
             scrollPosition.scrollTo(y: y)
         }

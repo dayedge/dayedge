@@ -40,12 +40,17 @@ package struct DayHeaderView: View {
             .hoverTooltip(KeyboardCommandAction.today.title,
                              shortcut: KeyboardShortcutSettings.shared.shortcut(for: .action(.today))?.displayLabel, edge: .bottom)
         } subtitle: {
-            if let countLabel = DayCountLabel.text(events: eventCount, tasks: taskCount) {
-                PeriodHeaderSubtitle(text: countLabel)
-            }
+            PeriodHeaderSubtitle(text: Self.countText(events: eventCount, tasks: taskCount))
         } trailing: {
             PeriodStepper(onPrevious: onPrevious, onNext: onNext)
         }
+    }
+
+    /// The day's counts, or Month's "No events" on an empty day — so an
+    /// empty day reads as empty without scrolling its 24 hours.
+    static func countText(events: Int, tasks: Int, locale: Locale = AppLocalization.displayLocale) -> String {
+        DayCountLabel.text(events: events, tasks: tasks, locale: locale)
+            ?? L10n.tr("agendalistview.rows.no.events", "No events", locale: locale)
     }
 
     private func titleText(weekday: String, dayMonth: String) -> some View {

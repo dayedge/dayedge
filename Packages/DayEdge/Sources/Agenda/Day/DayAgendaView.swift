@@ -6,6 +6,7 @@ package struct DayAgendaView: View {
     @Environment(\.themePalette) var theme
     @Environment(\.timeFormat) var timeFormat
     @Environment(\.weatherProvider) private var weatherProvider
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     package let date: Date
     package let isToday: Bool
@@ -62,8 +63,9 @@ package struct DayAgendaView: View {
     /// Height of the untimed-task area above the grid; every grid position
     /// is offset by it, so the grid (and its Now line) stays self-contained.
     @State var gridTopOffset: CGFloat = 0
-    /// The last programmatic position, in grid coordinates — re-applied when
-    /// the task area above the grid changes height, until the user scrolls.
+    /// The last programmatic position, in grid coordinates — re-applied
+    /// (`reanchor`) when something above the grid changes height, until the
+    /// user scrolls or the view is hidden.
     @State var gridAnchoredY: CGFloat?
     @State var keyboardAnchor: AgendaScrollAnchor?
 
@@ -144,25 +146,23 @@ package struct DayAgendaView: View {
                 completeSelectedTask(proxy: proxy)
             }
             .floatingTopBar(usesNativeEffect: false) {
-                VStack(spacing: 0) {
-                    if showsWeather, let weather {
-                        WeatherStripView(summary: weather)
-                            .padding(.top, AppTheme.Metrics.dayWeatherTopGap)
-                            .padding(.bottom, AppTheme.Metrics.dayWeatherContentGap)
-                    }
-
-                    AllDayRowView(
-                        date: date,
-                        events: allDayEvents,
-                        topPadding: showsWeather && weather != nil ? 0 : 10,
-                        selectedEventID: selectedAllDayEventID,
-                        detailPresentationRequest: detailPresentationRequest,
-                        onDetailPresentationChange: onEventDetailPresentationChange
-                    )
+                DayTopBar(
+                    date: date,
+                    weather: showsWeather ? weather : nil,
+                    allDayEvents: allDayEvents,
+                    // Hidden, it follows Month's selected day: no motion for nobody.
+                    animation: isActive && !reduceMotion ? Self.positioningAnimation : nil,
+                    selectedEventID: selectedAllDayEventID,
+                    detailPresentationRequest: detailPresentationRequest,
+                    onDetailPresentationChange: onEventDetailPresentationChange
+                )
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { _ in
+                    reanchor(animated: !reduceMotion)
                 }
             }
             }
         }
+        .modifier(DayAdvance(date: date, isActive: isActive))
         .task(id: isActive ? "\(date.timeIntervalSince1970)-\(dayStartHour)" : nil) {
             guard isActive else { return }
             if let request = matchingPositioningRequest {
@@ -177,7 +177,15 @@ package struct DayAgendaView: View {
             )
             let anchorY = CGFloat(anchorMinutes) / 60 * AppTheme.Metrics.timelineHourHeight
             let target = max(anchorY - 100, 0)
-            setScrollTarget(gridTopOffset + target, anchored: target)
+            // Already anchored there: the grid only follows the bar above it,
+            // and a jump would cut that short.
+            if gridAnchoredY != target {
+                setScrollTarget(gridTopOffset + target, anchored: target)
+            }
+        }
+        // Hidden, nothing keeps the anchor true.
+        .onChange(of: isActive) { _, active in
+            if !active { gridAnchoredY = nil }
         }
         .onChange(of: positioningRequest) { _, request in
             guard let request, Calendar.autoupdatingCurrent.isDate(request.date, inSameDayAs: date) else { return }

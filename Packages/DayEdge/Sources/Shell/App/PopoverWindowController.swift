@@ -162,7 +162,7 @@ final class PopoverWindowController {
             // window server may still route it as if another app were
             // frontmost) — even though it lands on the popover. Only a click
             // on a window that isn't ours is outside.
-            if self.isOwnWindow(NSApp.window(withWindowNumber: event.windowNumber)) { return }
+            if self.isInside(NSApp.window(withWindowNumber: event.windowNumber), at: NSEvent.mouseLocation) { return }
             self.hide()
         }
         localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
@@ -173,30 +173,33 @@ final class PopoverWindowController {
             // those is its own child `NSWindow`, not `window` itself)
             // isn't "outside." Without the descendant check, a click on
             // anything inside one of those — e.g. the attendee copy
-            // button — read as "outside" and closed the whole app. A
-            // click on the anchoring status item's own button is handled
-            // by that button's own action (toggling this window), so it's
-            // deliberately excluded here — closing first would make that
-            // click reopen it instead of closing it; `isExcludedFromOutsideDismissal`
-            // lets the caller name that window without this controller
-            // needing to know a status item exists.
-            if self.isOwnWindow(event.window) { return event }
+            // button — read as "outside" and closed the whole app. The
+            // anchoring status item is excluded too (`anchorScreenFrame`).
+            if self.isInside(event.window, at: NSEvent.mouseLocation) { return event }
             self.hide()
             return event
         }
     }
 
-    /// Set by `AppDelegate` to the status item button's own window, so a
-    /// click there isn't treated as "outside" — see `installClickOutsideMonitors`.
-    var isExcludedFromOutsideDismissal: (NSWindow?) -> Bool = { _ in false }
+    /// Set by `AppDelegate` to the status item button's frame on screen. A
+    /// click there belongs to the button's own action, never "outside":
+    /// closing on its mouse-down made the mouse-up reopen the panel. By
+    /// position, so it holds whichever window the click is reported on.
+    var anchorScreenFrame: () -> CGRect? = { nil }
 
-    /// The popover, one of its nested popovers, or the excluded status item.
+    private func isInside(_ candidate: NSWindow?, at point: CGPoint) -> Bool {
+        Self.isInside(clickAt: point, onOwnWindow: isOwnWindow(candidate), anchorFrame: anchorScreenFrame())
+    }
+
+    static func isInside(clickAt point: CGPoint, onOwnWindow: Bool, anchorFrame: CGRect?) -> Bool {
+        onOwnWindow || anchorFrame?.contains(point) == true
+    }
+
+    /// The popover or one of its nested popovers.
     private func isOwnWindow(_ candidate: NSWindow?) -> Bool {
         // An app-modal alert of ours is never "outside".
         if let candidate, candidate === NSApp.modalWindow { return true }
-        return candidate === window
-            || isExcludedFromOutsideDismissal(candidate)
-            || Self.isWindow(candidate, descendantOf: window)
+        return candidate === window || Self.isWindow(candidate, descendantOf: window)
     }
 
     /// Up through child windows (popovers, panels) *and* sheets — a

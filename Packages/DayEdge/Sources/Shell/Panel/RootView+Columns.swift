@@ -44,19 +44,9 @@ extension RootView {
                 // fresh scroll-to-selection animation replaying on
                 // every round trip. See `displayedViewMode`'s doc
                 // comment.
-                // Keep the visible scroll surface above the mounted,
-                // hidden columns so its backdrop samples that content.
-                monthColumn
-                    .opacity(isColumnShown(.month) ? 1 : 0)
-                    .allowsHitTesting(isColumnShown(.month))
-                    .accessibilityHidden(!isColumnShown(.month))
-                    .zIndex(isColumnShown(.month) ? 1 : 0)
+                monthColumn.panelColumn(isShown: isColumnShown(.month))
 
-                dayColumn
-                    .opacity(isColumnShown(.day) ? 1 : 0)
-                    .allowsHitTesting(isColumnShown(.day))
-                    .accessibilityHidden(!isColumnShown(.day))
-                    .zIndex(isColumnShown(.day) ? 1 : 0)
+                dayColumn.panelColumn(isShown: isColumnShown(.day))
 
                 TasksView(
                     store: taskStore,
@@ -64,10 +54,7 @@ extension RootView {
                     isActive: agendaNavigation.selectedViewMode == .tasks,
                     navigationRequest: verticalNavigationRequest
                 )
-                .opacity(isColumnShown(.tasks) ? 1 : 0)
-                .allowsHitTesting(isColumnShown(.tasks))
-                .accessibilityHidden(!isColumnShown(.tasks))
-                .zIndex(isColumnShown(.tasks) ? 1 : 0)
+                .panelColumn(isShown: isColumnShown(.tasks))
 
                 if isAccessCardShown {
                     PermissionStateView(subject: .calendar, status: models.calendarAccess.status) {

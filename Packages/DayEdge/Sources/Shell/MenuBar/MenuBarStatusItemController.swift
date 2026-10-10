@@ -58,8 +58,7 @@ final class MenuBarStatusItemController {
     /// `NSStatusBarButton`'s leading inset and `MenuBarBadgeIcon`'s canvas
     /// margins.
     var screenAnchor: CGPoint? {
-        guard let button = statusItem?.button, let buttonWindow = button.window else { return nil }
-        let buttonFrameOnScreen = buttonWindow.convertToScreen(button.bounds)
+        guard let buttonFrameOnScreen = buttonScreenFrame else { return nil }
         // The calendar badge is always the leading element of the combined
         // status item image (see `CombinedMenuBarIcon`) — when the
         // right-hand accessory (contextual event text, or the call icon)
@@ -78,11 +77,11 @@ final class MenuBarStatusItemController {
         return CGPoint(x: calendarIconMidX, y: buttonFrameOnScreen.minY)
     }
 
-    /// The status item button's own window — excluded from "click
-    /// outside" dismissal by `PopoverWindowController`, since this
-    /// button's own action already toggles the popover; closing it first
-    /// would make that click reopen it instead of closing it.
-    var buttonWindow: NSWindow? { statusItem?.button?.window }
+    /// The status item button's frame on screen.
+    var buttonScreenFrame: CGRect? {
+        guard let button = statusItem?.button, let buttonWindow = button.window else { return nil }
+        return buttonWindow.convertToScreen(button.bounds)
+    }
 
     @objc private func statusItemClicked() {
         guard let event = NSApp.currentEvent else { return }

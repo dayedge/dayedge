@@ -183,9 +183,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.reminderSuppression.muteAll(until: option.endDate(now: .now, calendar: .autoupdatingCurrent), chosen: option)
         }
         statusItemController.install()
-        popoverWindow.isExcludedFromOutsideDismissal = { [weak statusItemController] candidate in
-            candidate != nil && candidate === statusItemController?.buttonWindow
-        }
+        popoverWindow.anchorScreenFrame = { [weak statusItemController] in statusItemController?.buttonScreenFrame }
         self.statusItemController = statusItemController
         startMenuBarState(statusItemController)
         startMeetingHUD()
