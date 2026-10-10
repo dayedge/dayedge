@@ -225,8 +225,8 @@
 "assistantreplyerror.unavailable" = "The on-device model isn't available right now.";
 "assistantreplyerror.declined" = "The on-device model can't answer that.";
 "assistantreplyerror.unsupported.language" = "The on-device model doesn't support this language yet — try English, or choose a provider in Settings → Intelligence.";
-"intelligence.privacy.local" = "Your requests and relevant calendar and reminder data are processed on this Mac.";
-"intelligence.privacy.external" = "Your requests and relevant calendar and reminder data leave this Mac and may be processed by third-party AI providers.";
+"intelligence.privacy.local" = "Your requests and relevant calendar and task data are processed on this Mac.";
+"intelligence.privacy.external" = "Your requests and relevant calendar and task data leave this Mac and may be processed by third-party AI providers.";
 "intelligence.provider.key.storage" = "Your key is stored on this Mac, in DayEdge's settings file.";
 "intelligence.context.window" = "Context window";
 "intelligence.languages" = "Languages";

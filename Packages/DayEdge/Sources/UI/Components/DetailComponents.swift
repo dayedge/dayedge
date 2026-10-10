@@ -319,12 +319,6 @@ package struct DetailCheckButton: View {
     }
 }
 
-// MARK: - Property editors
-
-// MARK: - Calendar / list selector
-
-// MARK: - Settings from inside a card
-
 private struct DetailSurfaceModifier: ViewModifier {
     @Environment(\.themePalette) private var theme
     func body(content: Content) -> some View {

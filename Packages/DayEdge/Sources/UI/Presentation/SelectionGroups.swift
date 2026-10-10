@@ -12,7 +12,7 @@ package enum SelectionKind {
     package var accessibilityName: String {
         switch self {
         case .calendar: return "calendar"
-        case .reminderList: return L10n.tr("selectiongroups.reminders.list", "reminders list")
+        case .reminderList: return L10n.tr("selectiongroups.reminders.list", "task list")
         case .smart: return L10n.tr("selectiongroups.smart.section", "smart section")
         }
     }

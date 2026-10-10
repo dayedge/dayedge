@@ -2,8 +2,8 @@
 /* App-owned presentation text. %@ placeholders are verbatim values in source order. */
 "tasksortmenuview.sort.tasks" = "Sort tasks";
 "tasksortmenuview.sort.tasks.80abde" = "Sort Tasks";
-"tasksview.no.matching.reminders" = "No matching reminders";
-"tasksview.no.reminders" = "No reminders";
+"tasksview.no.matching.reminders" = "No matching tasks";
+"tasksview.no.reminders" = "No tasks";
 "tasksview.show.less" = "Show less";
 "tasksview.show.more" = "Show more";
 "tasksview.show.more.45f9a2" = "Show %@ more";

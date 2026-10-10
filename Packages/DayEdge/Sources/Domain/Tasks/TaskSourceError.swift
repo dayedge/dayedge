@@ -13,11 +13,11 @@ package enum TaskSourceError: Error, Equatable, Sendable {
 
     package func title(locale: Locale) -> String {
         switch self {
-        case .notFound: return L10n.tr("tasksourceerror.reminder.not.found", "Reminder not found", locale: locale)
+        case .notFound: return L10n.tr("tasksourceerror.reminder.not.found", "Task not found", locale: locale)
         case .readOnlyList: return L10n.tr("tasksourceerror.this.list.is.read.only", "This list is read-only", locale: locale)
         case .accessDenied: return L10n.tr("tasksourceerror.no.access.to.reminders", "No access to Reminders", locale: locale)
         case .unsupported: return L10n.tr("tasksourceerror.not.supported.yet", "Not supported yet", locale: locale)
-        case .saveFailed: return L10n.tr("tasksourceerror.couldn.t.update.reminder", "Couldn't update reminder", locale: locale)
+        case .saveFailed: return L10n.tr("tasksourceerror.couldn.t.update.reminder", "Couldn't update task", locale: locale)
         }
     }
 
@@ -26,7 +26,7 @@ package enum TaskSourceError: Error, Equatable, Sendable {
     package func message(locale: Locale) -> String? {
         switch self {
         case .notFound: return L10n.tr("tasksourceerror.it.may.have.been.deleted.in.reminders", "It may have been deleted in Reminders.", locale: locale)
-        case .readOnlyList: return L10n.tr("tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved", "Changes to reminders in this list can't be saved.", locale: locale)
+        case .readOnlyList: return L10n.tr("tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved", "Changes to tasks in this list can't be saved.", locale: locale)
         case .accessDenied: return L10n.tr(
             "tasksourceerror.allow.access.in.system.settings.0f2f4e",
             "Allow access in System Settings › Privacy & Security › Reminders.",

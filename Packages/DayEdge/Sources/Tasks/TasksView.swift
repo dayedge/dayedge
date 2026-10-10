@@ -175,7 +175,7 @@ package struct TasksView: View {
     }
 
     private var emptyState: some View {
-        Text(isSearching ? L10n.tr("tasksview.no.matching.reminders", "No matching reminders") : L10n.tr("tasksview.no.reminders", "No reminders"))
+        Text(isSearching ? L10n.tr("tasksview.no.matching.reminders", "No matching tasks") : L10n.tr("tasksview.no.reminders", "No tasks"))
             .font(AppTheme.TextStyle.eventSubtitle)
             .foregroundStyle(theme.secondaryText)
             .frame(maxWidth: .infinity)

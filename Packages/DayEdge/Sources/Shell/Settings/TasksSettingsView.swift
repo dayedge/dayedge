@@ -40,7 +40,7 @@ struct TasksSettingsView: View {
             footer: access == .granted ? nil
                 : L10n.tr(
                     "taskssettingsview.dayedge.needs.full.access.to.f8a770",
-                    "DayEdge needs full access to your reminders to show and update them. You can change this in System Settings › Privacy & Security › Reminders."
+                    "DayEdge needs full access to Reminders to show and update your tasks. You can change this in System Settings › Privacy & Security › Reminders."
                 )
         ) {
             SettingsRow(title: L10n.tr("taskssettingsview.reminders", "Reminders")) {
@@ -107,10 +107,10 @@ struct TasksSettingsView: View {
             header: L10n.tr("taskssettingsview.calendar", "Calendar"),
             footer: L10n.tr(
                 "taskssettingsview.reminders.with.a.due.date.bf4594",
-                "Reminders with a due date appear in the agenda and the day view. Completed ones stay in Tasks."
+                "Tasks with a due date appear in the agenda and the day view. Completed ones stay in Tasks."
             )
         ) {
-            SettingsToggleRow(title: L10n.tr("taskssettingsview.show.reminders.in.calendar", "Show reminders in calendar"), isOn: $showsInCalendar)
+            SettingsToggleRow(title: L10n.tr("taskssettingsview.show.reminders.in.calendar", "Show tasks in calendar"), isOn: $showsInCalendar)
         }
     }
 
@@ -118,12 +118,12 @@ struct TasksSettingsView: View {
         SettingsGroup(
             header: L10n.tr("taskssettingsview.display", "Display"),
             footer: L10n.tr(
-                "taskssettingsview.older.completed.reminders.stay.569b5b", "Older completed reminders stay in Reminders; they just aren't loaded here."
+                "taskssettingsview.older.completed.reminders.stay.569b5b", "Older completed tasks stay in Reminders; they just aren't loaded here."
             )
         ) {
             SettingsToggleRow(
                 title: L10n.tr("taskssettingsview.show.attention.section", "Show Attention section"),
-                subtitle: L10n.tr("taskssettingsview.overdue.due.today.and.high.d06e50", "Overdue, due today and high-priority reminders, on top."),
+                subtitle: L10n.tr("taskssettingsview.overdue.due.today.and.high.d06e50", "Overdue, due today and high-priority tasks, on top."),
                 isOn: showsAttention
             )
             SettingsPickerRow(

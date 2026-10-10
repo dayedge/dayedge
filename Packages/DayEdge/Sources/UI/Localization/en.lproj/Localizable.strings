@@ -154,7 +154,7 @@
 "permissionstateview.updating.calendars" = "Updating calendars…";
 "propertyeditor.cancel" = "Cancel";
 "propertyeditor.done" = "Done";
-"selectiongroups.reminders.list" = "reminders list";
+"selectiongroups.reminders.list" = "task list";
 "selectiongroups.smart" = "Smart";
 "selectiongroups.smart.section" = "smart section";
 "settingscomponents.off" = "Off";
@@ -169,7 +169,7 @@
 "takeoverbackdropstyle.frosted.glass" = "Frosted Glass";
 "takeoverbackdropstyle.graphite" = "Graphite";
 "takeoverbackdropstyle.theme" = "Theme";
-"taskactions.couldn.t.create.reminder" = "Couldn't create reminder";
+"taskactions.couldn.t.create.reminder" = "Couldn't create task";
 "taskactions.no.next.occurrence.found" = "No next occurrence found";
 "taskactions.no.previous.occurrence.found" = "No previous occurrence found";
 "taskactions.not.shown.in.tasks" = "Not shown in Tasks";
@@ -185,7 +185,7 @@
 "taskbuckets.tomorrow" = "Tomorrow";
 "taskbuckets.yesterday" = "Yesterday";
 "taskcontextmenuplan.copy.title" = "Copy Title";
-"taskcontextmenuplan.delete.reminder" = "Delete Reminder…";
+"taskcontextmenuplan.delete.reminder" = "Delete Task…";
 "taskcontextmenuplan.due" = "Due Date";
 "taskcontextmenuplan.go.to.next.occurrence" = "Go to Next Occurrence";
 "taskcontextmenuplan.go.to.previous.occurrence" = "Go to Previous Occurrence";

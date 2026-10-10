@@ -1,7 +1,7 @@
 /* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
 "calendareventmapper.no.title" = "(bez tytułu)";
 "calendareventmapper.unknown" = "Nieznane";
-"eventkitremindersource.a.reminder.needs.a.title" = "Przypomnienie musi mieć tytuł.";
+"eventkitremindersource.a.reminder.needs.a.title" = "Zadanie musi mieć tytuł.";
 "holidayproviding.public.holiday" = "Święto";
 "openmeteoweatherservice.clear" = "Bezchmurnie";
 "openmeteoweatherservice.drizzle" = "Mżawka";

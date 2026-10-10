@@ -39,5 +39,5 @@
 
 ## Words
 - "Show in Calendar/Tasks" = inside DayEdge. "Open in Apple Calendar / Reminders" = Apple's apps. Polish: "w aplikacji Kalendarz".
-- Event alerts are "alerts"; Reminders are "tasks".
+- Items are "tasks" ("Delete Task…", "No tasks"); "Reminders" (capitalised) names only Apple's app and its permission. Event alerts are "alerts".
 - Multi-day labels: en dash ("Continues – 16:45"), never arrows.

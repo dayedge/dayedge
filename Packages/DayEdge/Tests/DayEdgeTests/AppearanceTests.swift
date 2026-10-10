@@ -160,7 +160,6 @@ final class AppearanceTests: XCTestCase {
         let original_SecondaryControl_divider = Color.white.opacity(0.07)
         let original_accentRed = Color(red: 0.93, green: 0.23, blue: 0.23)
         let original_currentTimeCapsule = original_accentRed.opacity(0.8)
-        let original_destructiveRed = Color(nsColor: .systemRed)
         let original_accentBlue = Color(red: 0.30, green: 0.62, blue: 1.0)
         let original_successGreen = Color.green
         let original_Conflict_busy = Color(nsColor: .systemRed)
@@ -191,22 +190,14 @@ final class AppearanceTests: XCTestCase {
         let original_DateTile_dayTint = original_primaryText
         let original_DateTile_todayTint = original_accentBlue
         let original_DateTile_monthTint = original_secondaryText.opacity(0.8)
-        let original_Search_groupLabelTint = original_secondaryText
         let original_PeriodHeader_color = Color.white.opacity(0.6)
-        let original_Chat_toolbarIcon = Color.white.opacity(0.70)
-        let original_Chat_toolbarIconHover = Color.white.opacity(0.90)
-        let original_Chat_toolbarIconDisabled = Color.white.opacity(0.25)
-        let original_Chat_inlineTitle = Color.white.opacity(0.85)
         let original_Chat_jumpButtonBorder = Color.white.opacity(0.12)
         let original_Chat_dateHoverFill = Color.white.opacity(0.05)
         let original_Chat_assistantText = Color.white.opacity(0.84)
         let original_Chat_userBubbleFill = original_accentBlue.mix(with: .black, by: 0.28)
         let original_Chat_userBubbleText = Color.white
         let original_Chat_accent = original_Chat_userBubbleFill
-        let original_Chat_composerFill = Color.white.opacity(0.06)
-        let original_Chat_composerStroke = Color.white.opacity(0.10)
         let original_Chat_composerStrokeIncreased = Color.white.opacity(0.20)
-        let original_Chat_composerFocusedStroke = Color.white.opacity(0.16)
         let original_Chat_composerText = Color.white.opacity(0.90)
         let original_Chat_composerPlaceholder = Color.white.opacity(0.40)
         let original_Chat_sendEnabledGlyph = Color.white
@@ -264,7 +255,6 @@ final class AppearanceTests: XCTestCase {
         assertColor(p.secondaryControl.border, original_SecondaryControl_border)
         assertColor(p.secondaryControl.divider, original_SecondaryControl_divider)
         assertColor(p.accentRed, original_accentRed)
-        assertColor(p.destructiveRed, original_destructiveRed)
         assertColor(p.controlAccent, original_accentBlue)
         assertColor(p.successGreen, original_successGreen)
         assertColor(p.conflict.busy, original_Conflict_busy)
@@ -295,22 +285,14 @@ final class AppearanceTests: XCTestCase {
         assertColor(p.dateTile.dayTint, original_DateTile_dayTint)
         assertColor(p.dateTile.todayTint, original_DateTile_todayTint)
         assertColor(p.dateTile.monthTint, original_DateTile_monthTint)
-        assertColor(p.search.groupLabelTint, original_Search_groupLabelTint)
         assertColor(p.periodHeader.color, original_PeriodHeader_color)
-        assertColor(p.chat.toolbarIcon, original_Chat_toolbarIcon)
-        assertColor(p.chat.toolbarIconHover, original_Chat_toolbarIconHover)
-        assertColor(p.chat.toolbarIconDisabled, original_Chat_toolbarIconDisabled)
-        assertColor(p.chat.inlineTitle, original_Chat_inlineTitle)
         assertColor(p.chat.jumpButtonBorder, original_Chat_jumpButtonBorder)
         assertColor(p.chat.dateHoverFill, original_Chat_dateHoverFill)
         assertColor(p.chat.assistantText, original_Chat_assistantText)
         assertColor(p.chat.userBubbleFill, original_Chat_userBubbleFill)
         assertColor(p.chat.userBubbleText, original_Chat_userBubbleText)
         assertColor(p.chat.accent, original_Chat_accent)
-        assertColor(p.chat.composerFill, original_Chat_composerFill)
-        assertColor(p.chat.composerStroke, original_Chat_composerStroke)
         assertColor(p.chat.composerStrokeIncreased, original_Chat_composerStrokeIncreased)
-        assertColor(p.chat.composerFocusedStroke, original_Chat_composerFocusedStroke)
         assertColor(p.chat.composerText, original_Chat_composerText)
         assertColor(p.chat.composerPlaceholder, original_Chat_composerPlaceholder)
         assertColor(p.chat.sendEnabledGlyph, original_Chat_sendEnabledGlyph)
@@ -363,8 +345,10 @@ final class AppearanceTests: XCTestCase {
         assertColor(p.chrome.rowHover, Color.white.opacity(0.06))
         assertColor(p.chrome.rowSelection, Color.white.opacity(0.09))
         assertColor(p.chrome.gridRule, Color.white.opacity(0.08))
-        assertColor(p.chrome.inputFill, Color.white.opacity(0.065))
-        assertColor(p.chrome.inputFocus, Color.white.opacity(0.11))
+        assertColor(p.editor.fieldFill, Color.white.opacity(0.065))
+        assertColor(p.editor.fieldHoverFill, Color.white.opacity(0.09))
+        assertColor(p.editor.fieldFocusedFill, Color.white.opacity(0.11))
+        assertColor(p.editor.fieldKeyline, Color.white.opacity(0.09))
         assertColor(p.chrome.slotSelected, Color.white.opacity(0.20))
         assertColor(p.chrome.slotSelectedPressed, Color.white.opacity(0.28))
         assertColor(p.chrome.searchScrim, Color.black.opacity(0.10))
@@ -537,18 +521,18 @@ final class AppearanceTests: XCTestCase {
         var edited = original
         edited.background = .red
         edited.calendarHeader.yearText = .red
-        edited.chat.toolbarIcon = .red
+        edited.chat.assistantText = .red
         edited.sourcePresentation.joinFillOpacity = 0.9
         XCTAssertFalse(edited.sharesStorage(with: original))
-        for color in [edited.background, edited.calendarHeader.yearText, edited.chat.toolbarIcon] {
+        for color in [edited.background, edited.calendarHeader.yearText, edited.chat.assistantText] {
             assertColor(color, .red, appearance: .aqua)
         }
         XCTAssertEqual(edited.sourcePresentation.joinFillOpacity, 0.9)
         assertColor(ThemePalette.appleLight.background, .white, appearance: .aqua)
         assertColor(ThemePalette.appleLight.calendarHeader.yearText,
                     ThemePalette.appleSystemLight.calendarHeader.yearText, appearance: .aqua)
-        assertColor(ThemePalette.appleLight.chat.toolbarIcon,
-                    ThemePalette.appleSystemLight.chat.toolbarIcon, appearance: .aqua)
+        assertColor(ThemePalette.appleLight.chat.assistantText,
+                    ThemePalette.appleSystemLight.chat.assistantText, appearance: .aqua)
         XCTAssertEqual(ThemePalette.appleLight.sourcePresentation.joinFillOpacity, 0.15)
         // Derived themes built from the same base stay their own.
         XCTAssertFalse(ThemePalette.quartzPro.sharesStorage(with: .appleLight))
@@ -633,8 +617,6 @@ final class AppearanceTests: XCTestCase {
             let pairs: [(Color, Color)] = [
                 (p.editor.titleText, p.primaryText), (p.editor.labelText, p.secondaryText),
                 (p.editor.placeholderText, p.secondaryText), (p.editor.panelFill, p.chrome.rowHover),
-                (p.editor.fieldFill, p.chrome.inputFill), (p.editor.fieldHoverFill, p.chrome.inputHover),
-                (p.editor.fieldFocusedFill, p.chrome.inputFocus), (p.editor.fieldKeyline, p.chrome.inputKeyline),
                 (p.editor.overlapBusyText, p.secondaryText), (p.editor.overlapUnconfirmedText, p.secondaryText)
             ]
             for (actual, expected) in pairs { assertColor(actual, expected, appearance: appearance) }

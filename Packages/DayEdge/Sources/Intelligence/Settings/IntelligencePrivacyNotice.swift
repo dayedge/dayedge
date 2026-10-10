@@ -11,9 +11,9 @@ struct IntelligencePrivacyNotice: View {
 
     private var text: String {
         isLocal
-            ? L10n.tr("intelligence.privacy.local", "Your requests and relevant calendar and reminder data are processed on this Mac.")
+            ? L10n.tr("intelligence.privacy.local", "Your requests and relevant calendar and task data are processed on this Mac.")
             : L10n.tr("intelligence.privacy.external",
-                      "Your requests and relevant calendar and reminder data leave this Mac and may be processed by third-party AI providers.")
+                      "Your requests and relevant calendar and task data leave this Mac and may be processed by third-party AI providers.")
     }
 
     var body: some View {

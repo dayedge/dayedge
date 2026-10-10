@@ -79,29 +79,18 @@ extension ThemePaletteValues {
         package var monthTint: Color
     }
 
-    package struct SearchColors {
-        package var groupLabelTint: Color
-    }
-
     package struct PeriodHeaderColors {
         package var color: Color
     }
 
     package struct ChatColors {
-        package var toolbarIcon: Color
-        package var toolbarIconHover: Color
-        package var toolbarIconDisabled: Color
-        package var inlineTitle: Color
         package var jumpButtonBorder: Color
         package var dateHoverFill: Color
         package var assistantText: Color
         package var userBubbleFill: Color
         package var userBubbleText: Color
         package var accent: Color
-        package var composerFill: Color
-        package var composerStroke: Color
         package var composerStrokeIncreased: Color
-        package var composerFocusedStroke: Color
         package var composerText: Color
         package var composerPlaceholder: Color
         package var sendEnabledGlyph: Color
@@ -162,10 +151,6 @@ extension ThemePaletteValues {
         package var badgeFill: Color
         package var mutedText: Color
         package var placeholderText: Color
-        package var inputFill: Color
-        package var inputHover: Color
-        package var inputFocus: Color
-        package var inputKeyline: Color
         package var slotSelected: Color
         package var slotSelectedPressed: Color
         package var slotHover: Color

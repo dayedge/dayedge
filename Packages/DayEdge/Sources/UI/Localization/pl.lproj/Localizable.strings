@@ -153,7 +153,7 @@
 "permissionstateview.updating.calendars" = "Aktualizowanie kalendarzy…";
 "propertyeditor.cancel" = "Anuluj";
 "propertyeditor.done" = "Gotowe";
-"selectiongroups.reminders.list" = "lista przypomnień";
+"selectiongroups.reminders.list" = "lista zadań";
 "selectiongroups.smart" = "Inteligentne";
 "selectiongroups.smart.section" = "sekcja inteligentna";
 "settingscomponents.off" = "Wyłączone";
@@ -168,7 +168,7 @@
 "takeoverbackdropstyle.frosted.glass" = "Matowe szkło";
 "takeoverbackdropstyle.graphite" = "Grafit";
 "takeoverbackdropstyle.theme" = "Motyw";
-"taskactions.couldn.t.create.reminder" = "Nie udało się utworzyć przypomnienia";
+"taskactions.couldn.t.create.reminder" = "Nie udało się utworzyć zadania";
 "taskactions.no.next.occurrence.found" = "Nie znaleziono następnego wystąpienia";
 "taskactions.no.previous.occurrence.found" = "Nie znaleziono poprzedniego wystąpienia";
 "taskactions.not.shown.in.tasks" = "Niewidoczne w Zadaniach";
@@ -184,7 +184,7 @@
 "taskbuckets.tomorrow" = "Jutro";
 "taskbuckets.yesterday" = "Wczoraj";
 "taskcontextmenuplan.copy.title" = "Kopiuj tytuł";
-"taskcontextmenuplan.delete.reminder" = "Usuń przypomnienie…";
+"taskcontextmenuplan.delete.reminder" = "Usuń zadanie…";
 "taskcontextmenuplan.due" = "Termin";
 "taskcontextmenuplan.go.to.next.occurrence" = "Przejdź do następnego wystąpienia";
 "taskcontextmenuplan.go.to.previous.occurrence" = "Przejdź do poprzedniego wystąpienia";

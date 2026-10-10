@@ -74,10 +74,6 @@ extension PaletteBase {
     }
 
     var chat: ThemePaletteValues.ChatColors {
-        let Chat_toolbarIcon = ink.opacity(0.70)
-        let Chat_toolbarIconHover = ink.opacity(0.90)
-        let Chat_toolbarIconDisabled = ink.opacity(0.25)
-        let Chat_inlineTitle = ink.opacity(0.85)
         let Chat_jumpButtonBorder = ink.opacity(0.12)
         let Chat_dateHoverFill = ink.opacity(0.05)
         let Chat_assistantText = ink.opacity(0.84)
@@ -88,10 +84,7 @@ extension PaletteBase {
             ? Color(nsColor: .systemBlue).mix(with: .gray, by: 0.08).mix(with: .black, by: light ? 0.10 : 0.18)
             : Chat_accent
         let Chat_userBubbleText = Color.white
-        let Chat_composerFill = ink.opacity(0.06)
-        let Chat_composerStroke = ink.opacity(0.10)
         let Chat_composerStrokeIncreased = ink.opacity(0.20)
-        let Chat_composerFocusedStroke = ink.opacity(0.16)
         let Chat_composerText = ink.opacity(0.90)
         let Chat_composerPlaceholder = ink.opacity(0.40)
         let Chat_sendEnabledGlyph = Color.white
@@ -115,13 +108,10 @@ extension PaletteBase {
         let Chat_chipIcon = ink.opacity(0.55)
         let Chat_chipIconHover = ink.opacity(0.75)
         return ThemePaletteValues.ChatColors(
-            toolbarIcon: Chat_toolbarIcon, toolbarIconHover: Chat_toolbarIconHover,
-            toolbarIconDisabled: Chat_toolbarIconDisabled, inlineTitle: Chat_inlineTitle,
             jumpButtonBorder: Chat_jumpButtonBorder, dateHoverFill: Chat_dateHoverFill,
             assistantText: Chat_assistantText, userBubbleFill: Chat_userBubbleFill,
-            userBubbleText: Chat_userBubbleText, accent: Chat_accent, composerFill: Chat_composerFill,
-            composerStroke: Chat_composerStroke, composerStrokeIncreased: Chat_composerStrokeIncreased,
-            composerFocusedStroke: Chat_composerFocusedStroke, composerText: Chat_composerText,
+            userBubbleText: Chat_userBubbleText, accent: Chat_accent,
+            composerStrokeIncreased: Chat_composerStrokeIncreased, composerText: Chat_composerText,
             composerPlaceholder: Chat_composerPlaceholder, sendEnabledGlyph: Chat_sendEnabledGlyph,
             sendDisabledFill: Chat_sendDisabledFill, sendDisabledGlyph: Chat_sendDisabledGlyph,
             stopFill: Chat_stopFill, stopGlyph: Chat_stopGlyph, cardFill: Chat_cardFill,
@@ -174,8 +164,7 @@ extension PaletteBase {
             rowHover: ink.opacity(apple ? (light ? 0.035 : 0.045) : 0.06),
             rowSelection: ink.opacity(apple ? (light ? 0.05 : 0.065) : 0.09), divider: ink.opacity(0.10),
             gridRule: ink.opacity(0.08), pressedFill: ink.opacity(0.12), badgeFill: ink.opacity(0.15),
-            mutedText: ink.opacity(0.55), placeholderText: ink.opacity(0.40), inputFill: ink.opacity(0.065),
-            inputHover: ink.opacity(0.09), inputFocus: ink.opacity(0.11), inputKeyline: ink.opacity(0.09),
+            mutedText: ink.opacity(0.55), placeholderText: ink.opacity(0.40),
             slotSelected: ink.opacity(apple ? (light ? 0.08 : 0.12) : 0.20),
             slotSelectedPressed: ink.opacity(apple ? (light ? 0.12 : 0.18) : 0.28),
             slotHover: ink.opacity(apple ? (light ? 0.045 : 0.06) : 0.07),

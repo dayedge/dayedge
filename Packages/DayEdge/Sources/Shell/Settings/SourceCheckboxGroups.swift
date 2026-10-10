@@ -57,7 +57,7 @@ struct SourceCheckboxGroups: View {
                 Label(L10n.tr("sourcecheckboxgroups.read.only", "Read-only"), systemImage: "lock.fill")
                     .font(.system(size: 11))
                     .foregroundStyle(theme.settings.secondaryText)
-                    .help(L10n.tr("sourcecheckboxgroups.reminders.in.this.list.can.d00b81", "Reminders in this list can be viewed but not changed."))
+                    .help(L10n.tr("sourcecheckboxgroups.reminders.in.this.list.can.d00b81", "Tasks in this list can be viewed but not changed."))
             }
         }
         .padding(.horizontal, 12)

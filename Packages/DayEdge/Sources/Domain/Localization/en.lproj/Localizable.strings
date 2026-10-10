@@ -74,12 +74,12 @@
 "tasksorter.soonest.first" = "Soonest First";
 "tasksorter.title" = "Title";
 "tasksourceerror.allow.access.in.system.settings.0f2f4e" = "Allow access in System Settings › Privacy & Security › Reminders.";
-"tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved" = "Changes to reminders in this list can't be saved.";
-"tasksourceerror.couldn.t.update.reminder" = "Couldn't update reminder";
+"tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved" = "Changes to tasks in this list can't be saved.";
+"tasksourceerror.couldn.t.update.reminder" = "Couldn't update task";
 "tasksourceerror.it.may.have.been.deleted.in.reminders" = "It may have been deleted in Reminders.";
 "tasksourceerror.no.access.to.reminders" = "No access to Reminders";
 "tasksourceerror.not.supported.yet" = "Not supported yet";
-"tasksourceerror.reminder.not.found" = "Reminder not found";
+"tasksourceerror.reminder.not.found" = "Task not found";
 "tasksourceerror.this.list.is.read.only" = "This list is read-only";
 "videoconferenceservice.video.call" = "Video Call";
 "viewmode.agenda" = "Agenda";
