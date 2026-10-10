@@ -106,14 +106,13 @@ package final class TaskRepository {
         if visibilityObserver == nil {
             // Registered synchronously (not via an async sequence) so a change
             // posted right after `start()` can't be missed.
-            let store = listVisibility
             visibilityObserver = NotificationCenter.default.addObserver(
-                forName: .sourceVisibilityDidChange, object: store, queue: .main
+                forName: .sourceVisibilityDidChange, object: listVisibility, queue: .main
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
                     // The footer's hide/show is a view filter; only Settings'
                     // exclusions change what is worth fetching.
-                    guard let self, self.fetchedExcludedIDs != store.excludedIDs else { return }
+                    guard let self, self.fetchedExcludedIDs != self.listVisibility.excludedIDs else { return }
                     self.scheduleReload()
                 }
             }

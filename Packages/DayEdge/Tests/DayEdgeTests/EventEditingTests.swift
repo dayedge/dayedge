@@ -69,13 +69,13 @@ final class EventEditingTests: XCTestCase {
         let notices = NoticeCenter()
         let coordinator = makeCoordinator(editor: editor, notices: notices)
 
-        await coordinator.edit(event(), EventChange(title: "Retro"))?.value
+        _ = await coordinator.edit(event(), EventChange(title: "Retro"))?.value
         XCTAssertEqual(editor.updates.map(\.change.title), ["Retro"])
         XCTAssertEqual(editor.updates.first?.span, .thisEvent)
         XCTAssertEqual(notices.currentNotice?.title, "Event updated")
         XCTAssertEqual(notices.currentNotice?.action?.title, "Undo")
 
-        await coordinator.edit(event(recurring: true), EventChange(start: start.addingTimeInterval(3600)), span: .futureEvents)?.value
+        _ = await coordinator.edit(event(recurring: true), EventChange(start: start.addingTimeInterval(3600)), span: .futureEvents)?.value
         XCTAssertEqual(editor.updates.last?.span, .futureEvents)
         XCTAssertTrue(notices.currentNotice?.title.hasPrefix("Event moved to") == true)
         XCTAssertNil(notices.currentNotice?.action, "all future events: no Undo, like Calendar")
@@ -110,7 +110,7 @@ final class EventEditingTests: XCTestCase {
         XCTAssertTrue(EventEditability.of(invitation).canEditAlerts)
         XCTAssertFalse(EventEditability.readOnly.canEditAlerts)
 
-        await coordinator.edit(invitation, EventChange(alerts: [.before(minutes: 10)]))?.value
+        _ = await coordinator.edit(invitation, EventChange(alerts: [.before(minutes: 10)]))?.value
         XCTAssertEqual(editor.updates.map(\.change.alerts), [[.before(minutes: 10)]])
         XCTAssertEqual(notices.currentNotice?.title, "Alert changed")
         XCTAssertNil(coordinator.edit(invitation, EventChange(title: "Mine now", alerts: [])), "an alert plus anything else is refused")
@@ -120,7 +120,7 @@ final class EventEditingTests: XCTestCase {
         let editor = FakeEventEditor()
         let notices = NoticeCenter()
         let coordinator = makeCoordinator(editor: editor, notices: notices)
-        await coordinator.edit(event(), EventChange(recurrence: .weekly))?.value
+        _ = await coordinator.edit(event(), EventChange(recurrence: .weekly))?.value
         XCTAssertEqual(editor.updates.first?.change.recurrence, .weekly)
         XCTAssertEqual(notices.currentNotice?.title, "Repeat changed")
         XCTAssertNil(notices.currentNotice?.action)
@@ -131,7 +131,7 @@ final class EventEditingTests: XCTestCase {
         let notices = NoticeCenter()
         let coordinator = makeCoordinator(editor: editor, notices: notices)
         let rule = TaskRecurrenceRule(frequency: .weekly, interval: 2, weekdays: [.init(weekday: 2), .init(weekday: 4)])
-        await coordinator.edit(event(), EventChange(recurrenceRule: rule))?.value
+        _ = await coordinator.edit(event(), EventChange(recurrenceRule: rule))?.value
         XCTAssertEqual(editor.updates.first?.change.recurrenceRule, rule)
         XCTAssertEqual(notices.currentNotice?.title, "Repeat changed")
         XCTAssertNil(notices.currentNotice?.action)
