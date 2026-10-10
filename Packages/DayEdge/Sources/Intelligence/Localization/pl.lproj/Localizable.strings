@@ -222,8 +222,8 @@
 "assistantreplyerror.unavailable" = "Model na tym Macu jest teraz niedostępny.";
 "assistantreplyerror.declined" = "Model na tym Macu nie może na to odpowiedzieć.";
 "assistantreplyerror.unsupported.language" = "Model na tym Macu nie obsługuje jeszcze tego języka — spróbuj po angielsku albo wybierz dostawcę w Ustawieniach → Inteligencja.";
-"intelligence.privacy.local" = "Twoje pytania i potrzebne do odpowiedzi dane z kalendarza i przypomnień są przetwarzane na tym Macu.";
-"intelligence.privacy.external" = "Twoje pytania i potrzebne do odpowiedzi dane z kalendarza i przypomnień opuszczają tego Maca i mogą być przetwarzane przez zewnętrznych dostawców AI.";
+"intelligence.privacy.local" = "Twoje pytania i potrzebne do odpowiedzi dane z kalendarza i zadań są przetwarzane na tym Macu.";
+"intelligence.privacy.external" = "Twoje pytania i potrzebne do odpowiedzi dane z kalendarza i zadań opuszczają tego Maca i mogą być przetwarzane przez zewnętrznych dostawców AI.";
 "intelligence.provider.key.storage" = "Klucz jest przechowywany na tym Macu, w pliku ustawień DayEdge.";
 "intelligence.context.window" = "Okno kontekstu";
 "intelligence.languages" = "Języki";

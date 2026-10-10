@@ -84,7 +84,7 @@ package final class EventKitReminderSource: @unchecked Sendable {
     package func create(_ draft: TaskDraft, calendar: Calendar) async throws -> TaskItem {
         try await onQueueThrowing {
             let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !title.isEmpty else { throw TaskSourceError.saveFailed(L10n.tr("eventkitremindersource.a.reminder.needs.a.title", "A reminder needs a title.")) }
+            guard !title.isEmpty else { throw TaskSourceError.saveFailed(L10n.tr("eventkitremindersource.a.reminder.needs.a.title", "A task needs a title.")) }
             let list: EKCalendar
             if let id = draft.listID {
                 guard let found = self.eventStore.calendars(for: .reminder).first(where: { $0.calendarIdentifier == id }) else {

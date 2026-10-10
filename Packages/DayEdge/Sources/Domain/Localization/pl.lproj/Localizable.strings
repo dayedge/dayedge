@@ -73,12 +73,12 @@
 "tasksorter.soonest.first" = "Najbliższe najpierw";
 "tasksorter.title" = "Tytuł";
 "tasksourceerror.allow.access.in.system.settings.0f2f4e" = "Zezwól na dostęp w Ustawieniach systemowych › Prywatność i ochrona › Przypomnienia.";
-"tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved" = "Zmian przypomnień z tej listy nie można zachować.";
-"tasksourceerror.couldn.t.update.reminder" = "Nie udało się zaktualizować przypomnienia";
+"tasksourceerror.changes.to.reminders.in.this.list.can.t.be.saved" = "Zmian zadań z tej listy nie można zachować.";
+"tasksourceerror.couldn.t.update.reminder" = "Nie udało się zaktualizować zadania";
 "tasksourceerror.it.may.have.been.deleted.in.reminders" = "Mogło zostać usunięte w Przypomnieniach.";
 "tasksourceerror.no.access.to.reminders" = "Brak dostępu do Przypomnień";
 "tasksourceerror.not.supported.yet" = "Jeszcze nieobsługiwane";
-"tasksourceerror.reminder.not.found" = "Nie znaleziono przypomnienia";
+"tasksourceerror.reminder.not.found" = "Nie znaleziono zadania";
 "tasksourceerror.this.list.is.read.only" = "Ta lista jest tylko do odczytu";
 "videoconferenceservice.video.call" = "Rozmowa wideo";
 "viewmode.agenda" = "Agenda";

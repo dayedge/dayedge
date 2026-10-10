@@ -113,7 +113,7 @@ package enum TaskContextMenuPlan {
         case .previousOccurrence: return L10n.tr("taskcontextmenuplan.go.to.previous.occurrence", "Go to Previous Occurrence")
         case .nextOccurrence: return L10n.tr("taskcontextmenuplan.go.to.next.occurrence", "Go to Next Occurrence")
         case .copyTitle: return L10n.tr("taskcontextmenuplan.copy.title", "Copy Title")
-        case .delete: return L10n.tr("taskcontextmenuplan.delete.reminder", "Delete Reminder…")
+        case .delete: return L10n.tr("taskcontextmenuplan.delete.reminder", "Delete Task…")
         }
     }
 }

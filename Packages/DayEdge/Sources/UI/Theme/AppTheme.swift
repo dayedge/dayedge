@@ -30,7 +30,6 @@ package enum AppTheme {
         package static let actionSlotHeight: CGFloat = 154
         package static let joinWidth: CGFloat = 450
         package static let joinHeight: CGFloat = 72
-        package static let secondaryHeight: CGFloat = 50
     }
 
     package static let cornerRadius: CGFloat = 18
@@ -84,8 +83,6 @@ package enum AppTheme {
         package static let timeColumnWidth: CGFloat = 112
         /// The palette preview leaves Join out: time plus a glyph or two.
         package static let timeColumnWidthWithoutJoin: CGFloat = 100
-        /// "No Date" above undated tasks — quiet.
-        package static let groupLabelFont = Font.system(size: 10.5, weight: .medium)
     }
 
     /// The mixed agenda's row geometry: two fixed anchors, one for every
@@ -160,7 +157,6 @@ package enum AppTheme {
         /// Header → first message: the same breathing room other views have.
         package static let headerToContent: CGFloat = 8
         package static let messageSpacing: CGFloat = 14
-        package static let inlineTitleFont = Font.system(size: 13, weight: .semibold)
         /// Between prose and a day's object rows (and between days) inside
         /// one assistant turn.
         package static let partSpacing: CGFloat = 12
@@ -264,7 +260,6 @@ package enum AppTheme {
 
     package enum TextStyle {
         package static let monthTitle = Font.system(size: 26, weight: .bold, design: .rounded)
-        package static let dayCountBadge = Font.system(size: 12, weight: .bold)
         package static let weekNumber = Font.system(size: 9, weight: .medium).monospacedDigit()
         package static let weekdayLabel = Font.system(size: 10, weight: .semibold)
         package static let dayNumber = Font.system(size: 13, weight: .medium)
@@ -273,9 +268,6 @@ package enum AppTheme {
         package static let eventTitle = Font.system(size: 13, weight: .semibold)
         package static let eventSubtitle = Font.system(size: 12, weight: .regular)
         package static let footer = Font.system(size: 13, weight: .medium)
-        package static let confirmationTitle = Font.system(size: 16, weight: .semibold)
-        package static let confirmationMessage = Font.system(size: 12.5, weight: .regular)
-        package static let confirmationButton = Font.system(size: 12.5, weight: .medium)
     }
 }
 

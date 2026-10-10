@@ -148,16 +148,15 @@ package struct DecisionCard: View {
     package let selectedID: DecisionAction.ID?
     /// Show the selection's focus ring (after ← / →).
     package var showsSelectionRing = false
-    package var placement: DecisionPlacement = .docked
     package let onChoose: (DecisionAction) -> Void
 
     package var body: some View {
         DecisionCardSurface(title: request.title, symbol: request.symbol,
                             isDestructive: request.kind == .destructive && request.symbol == nil,
-                            placement: placement) {
+                            placement: .docked) {
             if let message = request.message {
                 Text(message)
-                    .font(placement == .docked ? AppTheme.TextStyle.eventSubtitle : AppTheme.Chat.cardDetailFont)
+                    .font(AppTheme.Chat.cardDetailFont)
                     .foregroundStyle(theme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }

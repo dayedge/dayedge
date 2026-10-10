@@ -2,7 +2,7 @@
 /* App-owned presentation text. %@ placeholders are verbatim values in source order. */
 "calendareventmapper.no.title" = "(no title)";
 "calendareventmapper.unknown" = "Unknown";
-"eventkitremindersource.a.reminder.needs.a.title" = "A reminder needs a title.";
+"eventkitremindersource.a.reminder.needs.a.title" = "A task needs a title.";
 "holidayproviding.public.holiday" = "Public holiday";
 "openmeteoweatherservice.clear" = "Clear";
 "openmeteoweatherservice.drizzle" = "Drizzle";

@@ -47,7 +47,6 @@ extension ThemePalette {
         p.controlSurface = deep
         p.searchSurface = deep
         p.accentRed = red
-        p.destructiveRed = filledRed
         p.nativeControlAccent = filledBlue
         p.controlAccent = filledBlue
         p.successGreen = green
@@ -69,7 +68,6 @@ extension ThemePalette {
         p.chrome = .init(
             rowHover: raised, rowSelection: selection, divider: border.opacity(0.6), gridRule: border.opacity(0.4),
             pressedFill: selection, badgeFill: selection, mutedText: secondary, placeholderText: muted,
-            inputFill: surface, inputHover: raised, inputFocus: raised, inputKeyline: border,
             slotSelected: selection, slotSelectedPressed: border, slotHover: raised,
             selectionKeyline: blue, ongoingEventKeyline: red.opacity(0.7), keyboardEventKeyline: blue,
             searchScrim: .black.opacity(0.15), searchShadow: .black.opacity(0.25),
@@ -85,7 +83,6 @@ extension ThemePalette {
             fieldFill: surface, fieldHoverFill: raised, fieldFocusedFill: raised, fieldKeyline: border,
             overlapBusyText: secondary, overlapUnconfirmedText: secondary)
         p.periodHeader.color = secondary
-        p.search.groupLabelTint = secondary
         p.dateTile = .init(
             tileFill: surface, tileBorder: border, weekdayBand: filledRed, weekdayTint: .white,
             dayTint: text, todayTint: red, monthTint: secondary)
@@ -102,11 +99,9 @@ extension ThemePalette {
             attentionTint: red, timelineCardFill: surface, timelineCardHoverFill: raised,
             timelineCardSelectedFill: selection, timelineCardKeyline: border, timelineDueTick: cyan)
         p.chat = .init(
-            toolbarIcon: secondary, toolbarIconHover: text, toolbarIconDisabled: muted,
-            inlineTitle: text, jumpButtonBorder: border, dateHoverFill: raised, assistantText: text,
+            jumpButtonBorder: border, dateHoverFill: raised, assistantText: text,
             userBubbleFill: filledBlue, userBubbleText: .white, accent: filledBlue,
-            composerFill: surface, composerStroke: border, composerStrokeIncreased: secondary,
-            composerFocusedStroke: blue.opacity(0.7), composerText: text, composerPlaceholder: muted,
+            composerStrokeIncreased: secondary, composerText: text, composerPlaceholder: muted,
             sendEnabledGlyph: .white, sendDisabledFill: selection, sendDisabledGlyph: muted,
             stopFill: selection, stopGlyph: text, cardFill: surface, cardStroke: border,
             cardHeadline: secondary, destructive: red, receiptDone: green, receiptMuted: muted,

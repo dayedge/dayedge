@@ -71,7 +71,7 @@ final class TaskRepositoryTests: XCTestCase {
         await repository.flush()
 
         XCTAssertEqual(repository.tasks.first { $0.id == target.id }?.title, "Clean up old branches")
-        XCTAssertEqual(notices.currentNotice?.title, "Couldn't update reminder")
+        XCTAssertEqual(notices.currentNotice?.title, "Couldn't update task")
         XCTAssertEqual(notices.currentNotice?.message, "Disk full")
         XCTAssertEqual(repository.lastError, .saveFailed("Disk full"))
     }

@@ -42,7 +42,6 @@ package struct ThemePaletteValues {
     package var controlSurface: Color
     package var searchSurface: Color
     package var accentRed: Color
-    package var destructiveRed: Color
     package var nativeControlAccent: Color
     package var controlAccent: Color
     package var successGreen: Color
@@ -55,7 +54,6 @@ package struct ThemePaletteValues {
     package var meetingTakeover: MeetingTakeoverColors
     package var keycap: KeycapColors
     package var dateTile: DateTileColors
-    package var search: SearchColors
     package var periodHeader: PeriodHeaderColors
     package var chat: ChatColors
     package var settings: SettingsColors
@@ -129,7 +127,6 @@ package struct ThemePaletteValues {
         let SecondaryControl_border = ink.opacity(0.08)
         let SecondaryControl_divider = ink.opacity(0.07)
         let accentRed = apple ? red : Color(red: 0.93, green: 0.23, blue: 0.23)
-        let destructiveRed = Color(nsColor: .systemRed)
         let controlAccent = apple ? blue : Color(red: 0.30, green: 0.62, blue: 1.0)
         let successGreen = apple ? Color(nsColor: .systemGreen) : Color.green
         let Conflict_busy = Color(nsColor: .systemRed)
@@ -139,7 +136,6 @@ package struct ThemePaletteValues {
         let weekendDayTint = apple ? secondaryText : controlAccent.opacity(0.9)
         let dotOrange = Color(red: 0.95, green: 0.66, blue: 0.16)
         let detailSelectionAccent = apple ? blue : Color(red: 1.0, green: 0.84, blue: 0.3)
-        let Search_groupLabelTint = secondaryText
         let PeriodHeader_color = ink.opacity(0.6)
         let base = PaletteBase(
             apple: apple,
@@ -177,7 +173,6 @@ package struct ThemePaletteValues {
             controlSurface: controlSurface,
             searchSurface: searchSurface,
             accentRed: accentRed,
-            destructiveRed: destructiveRed,
             nativeControlAccent: apple ? blue : Color.accentColor,
             controlAccent: controlAccent,
             successGreen: successGreen,
@@ -192,7 +187,6 @@ package struct ThemePaletteValues {
             meetingTakeover: base.meetingTakeover,
             keycap: base.keycap,
             dateTile: base.dateTile,
-            search: SearchColors(groupLabelTint: Search_groupLabelTint),
             periodHeader: PeriodHeaderColors(color: PeriodHeader_color),
             chat: base.chat,
             settings: base.settings,

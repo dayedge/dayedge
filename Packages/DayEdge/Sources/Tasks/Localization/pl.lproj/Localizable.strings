@@ -1,8 +1,8 @@
 /* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
 "tasksortmenuview.sort.tasks" = "Sortuj zadania";
 "tasksortmenuview.sort.tasks.80abde" = "Sortuj zadania";
-"tasksview.no.matching.reminders" = "Brak pasujących przypomnień";
-"tasksview.no.reminders" = "Brak przypomnień";
+"tasksview.no.matching.reminders" = "Brak pasujących zadań";
+"tasksview.no.reminders" = "Brak zadań";
 "tasksview.show.less" = "Pokaż mniej";
 "tasksview.show.more" = "Pokaż więcej";
 "tasksview.show.more.45f9a2" = "Pokaż jeszcze %@";

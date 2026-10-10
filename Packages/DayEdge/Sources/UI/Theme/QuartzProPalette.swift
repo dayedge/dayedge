@@ -63,7 +63,6 @@ extension ThemePalette {
         p.persistentChromeMaterial = .ultraThinMaterial
         p.persistentChromeTintOpacity = 0.85
         p.accentRed = red
-        p.destructiveRed = red
         p.nativeControlAccent = accent
         p.controlAccent = accent
         p.successGreen = green
@@ -88,7 +87,6 @@ extension ThemePalette {
         p.chrome = .init(
             rowHover: hover, rowSelection: selection, divider: divider, gridRule: .black.opacity(0.06),
             pressedFill: pressed, badgeFill: selection, mutedText: secondary, placeholderText: muted,
-            inputFill: field, inputHover: hover, inputFocus: white, inputKeyline: keyline,
             slotSelected: selection, slotSelectedPressed: pressed, slotHover: hover,
             selectionKeyline: secondary, ongoingEventKeyline: red.opacity(0.6), keyboardEventKeyline: secondary,
             searchScrim: .black.opacity(0.05), searchShadow: .black.opacity(0.08),
@@ -105,7 +103,6 @@ extension ThemePalette {
             fieldHoverFill: hex(0xededee), fieldFocusedFill: white, fieldKeyline: keyline,
             overlapBusyText: red, overlapUnconfirmedText: amber)
         p.periodHeader.color = secondary
-        p.search.groupLabelTint = secondary
         p.dateTile = .init(
             tileFill: white, tileBorder: keyline, weekdayBand: red, weekdayTint: .white,
             dayTint: text, todayTint: red, monthTint: secondary)
@@ -122,10 +119,6 @@ extension ThemePalette {
             attentionTint: red, timelineCardFill: white, timelineCardHoverFill: working,
             timelineCardSelectedFill: selection, timelineCardKeyline: keyline, timelineDueTick: cyan)
         // The user bubble keeps Apple Light's (no more saturated).
-        p.chat.toolbarIcon = secondary
-        p.chat.toolbarIconHover = text
-        p.chat.toolbarIconDisabled = muted
-        p.chat.inlineTitle = text
         p.chat.jumpButtonBorder = keyline
         p.chat.dateHoverFill = hover
         p.chat.assistantText = text

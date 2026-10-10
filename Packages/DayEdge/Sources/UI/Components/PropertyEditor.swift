@@ -49,8 +49,7 @@ package struct PropertyEditor<Content: View>: View {
         .padding(12)
         .frame(width: width.points, alignment: .leading)
         .fixedSize(horizontal: width.points == nil, vertical: false)
-        .themedSurface(.elevated, fill: theme.surfaces == nil ? (theme.workingSurface ?? .clear) : theme.background,
-                         in: Rectangle())
+        .selectorPopoverSurface(theme)
     }
 }
 

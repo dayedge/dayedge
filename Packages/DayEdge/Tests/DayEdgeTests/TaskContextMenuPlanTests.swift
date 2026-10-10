@@ -17,7 +17,7 @@ final class TaskContextMenuPlanTests: XCTestCase {
         let entries = TaskContextMenuPlan.entries(for: TaskItem(id: "1", title: "A", listID: "l"))
         XCTAssertTrue(entries.contains(.action(.showInReminders)))
         XCTAssertEqual(entries.last, .action(.delete))
-        XCTAssertEqual(TaskContextMenuPlan.title(for: .delete), "Delete Reminder…")
+        XCTAssertEqual(TaskContextMenuPlan.title(for: .delete), "Delete Task…")
         XCTAssertEqual(TaskContextMenuPlan.title(for: .showInReminders), "Open in Reminders")
         XCTAssertTrue(entries.contains(.action(.copyTitle)))
         let titles = entries.compactMap { entry -> String? in

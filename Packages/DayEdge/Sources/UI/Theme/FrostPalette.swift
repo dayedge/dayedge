@@ -109,7 +109,6 @@ extension ThemePalette {
         p.timelineCapsule = t.base.opacity(0.94)
         p.weekendDayTint = t.secondary
         p.periodHeader.color = t.secondary
-        p.search.groupLabelTint = t.secondary
         p.chrome.rowHover = t.hover
         p.chrome.rowSelection = t.selection
         p.chrome.pressedFill = t.selection
@@ -117,10 +116,6 @@ extension ThemePalette {
         p.chrome.gridRule = t.keyline.opacity(0.45)
         p.chrome.mutedText = t.secondary
         p.chrome.placeholderText = t.tertiary
-        p.chrome.inputFill = t.nested
-        p.chrome.inputHover = t.raised
-        p.chrome.inputFocus = t.raised
-        p.chrome.inputKeyline = t.keyline
         p.chrome.slotSelected = light ? .white.opacity(0.50) : .white.opacity(0.16)
         p.chrome.slotSelectedPressed = light ? .white.opacity(0.68) : .white.opacity(0.22)
         p.chrome.slotHover = t.hover
@@ -160,18 +155,11 @@ extension ThemePalette {
         p.dateTile.todayTint = t.coralInk
         p.dateTile.monthTint = t.secondary
         p.tasks.attentionTint = t.coralInk
-        p.chat.inlineTitle = t.primary
         p.chat.assistantText = t.primary
-        p.chat.toolbarIcon = t.secondary
-        p.chat.toolbarIconHover = t.primary
-        p.chat.toolbarIconDisabled = t.tertiary.opacity(0.65)
-        p.chat.composerFill = t.nested
         p.chat.sendEnabledGlyph = t.primary
         p.chat.sendDisabledGlyph = t.tertiary
         p.chat.composerText = t.primary
         p.chat.composerPlaceholder = t.tertiary
-        p.chat.composerStroke = t.keyline
-        p.chat.composerFocusedStroke = t.secondary.opacity(0.45)
         p.chat.cardFill = t.nested
         p.chat.cardStroke = t.keyline
         p.chat.cardHeadline = t.secondary

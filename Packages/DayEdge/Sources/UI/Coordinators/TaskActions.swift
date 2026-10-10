@@ -65,7 +65,7 @@ package final class TaskActions {
             return item
         } catch {
             let failure = (error as? TaskSourceError) ?? .saveFailed(error.localizedDescription)
-            noticeCenter?.show(.error(title: L10n.tr("taskactions.couldn.t.create.reminder", "Couldn't create reminder"), message: failure.message))
+            noticeCenter?.show(.error(title: L10n.tr("taskactions.couldn.t.create.reminder", "Couldn't create task"), message: failure.message))
             throw failure
         }
     }

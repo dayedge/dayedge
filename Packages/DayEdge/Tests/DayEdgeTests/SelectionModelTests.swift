@@ -47,7 +47,7 @@ final class SelectionModelTests: XCTestCase {
         XCTAssertEqual(smart.items[1].accessibilityLabel, "Completed, smart section, not selected")
 
         let list = SelectionGroups.bySource(sources, kind: .reminderList) { _ in false }.first!.items[0]
-        XCTAssertTrue(list.accessibilityLabel.hasSuffix("reminders list, not selected"))
+        XCTAssertTrue(list.accessibilityLabel.hasSuffix("task list, not selected"))
     }
 
     // MARK: Summary

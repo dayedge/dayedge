@@ -16,8 +16,8 @@
     <key>NSCalendarsFullAccessUsageDescription</key>
     <string>DayEdge reads your calendar events to show them in its toolbar view, and can remove a cancelled event you choose to clean up.</string>
     <key>NSRemindersUsageDescription</key>
-    <string>DayEdge shows your reminders in its toolbar view and lets you complete and edit them.</string>
+    <string>DayEdge shows your tasks from Reminders in its toolbar view and lets you complete and edit them.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
-    <string>DayEdge shows your reminders in its toolbar view and lets you complete and edit them.</string>
+    <string>DayEdge shows your tasks from Reminders in its toolbar view and lets you complete and edit them.</string>
 </dict>
 </plist>
