@@ -13,10 +13,13 @@
 ## Look
 - Theme tokens only (`docs/theming.md`). Every hosting tree wrapped in `ThemedRoot`.
 - One `PanelToolbar` + `LargeTitleHeader` at the root, shared by all views. Panel stays flat.
+- Switching Month / Day / Tasks / Ask crossfades the content only (`panelColumn`, 0.15 s, opacity); toolbar, search field, switcher and footer never move.
 - Search's expanded surface is opaque (`AppTheme.searchSurface`) — overlay bugs there came from translucency.
 - Day timeline and chat use the shared dissolve at both scroll edges; Month agenda and search results use it at the bottom. Their bars use plain safe-area insets, with native edge effects hidden. Settings keeps its system treatment.
 - `ThemedScrollView(edgeDissolve:)` selects the edges: separate AppKit blur and fade views become direct siblings above its native scroll, outside the SwiftUI probe. Visibility updates only during the 64 pt transition; inactive surfaces and Reduce Transparency / Increase Contrast disable the blur.
 - `topDissolve` / `bottomDissolve` configure fade strength, fully opaque height, transparent overscan, blur radius and an optional surface role. Defaults preserve the compact 80 pt profile; Day and chat use `AppTheme.ScrollEdge.tallHeader`, reusing the window surface's material and tint for uniform coverage. Reduce Transparency uses the token's solid tint.
+- Day's bar above the timeline (`DayTopBar`: weather, all-day lane) fades panels in and out when one appears or disappears; a timeline still on its programmatic anchor follows the bar. Reduce Motion or hidden: instant.
+- Stepping days (`DayAdvance`): the new day arrives 12 pt from the side it lies on while fading in (0.17 s, ease-out); header, weather and timeline together, chrome fixed. Reduce Motion: a 0.1 s fade.
 
 ## Decisions
 - `TransientNotice`: already happened, with Undo. `DecisionCard`: choice needed. System alerts: OS-level only.

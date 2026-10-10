@@ -67,7 +67,7 @@ extension DayAgendaView {
         guard scroll else { return }
         switch anchor {
         case .task(_, let taskID) where !taskMarkers.contains(where: { $0.task.id == taskID }):
-            withAnimation(.smooth(duration: 0.25)) { proxy?.scrollTo(anchor, anchor: .center) }
+            withAnimation(Self.positioningAnimation) { proxy?.scrollTo(anchor, anchor: .center) }
             gridAnchoredY = nil
         default:
             guard let y = contentY(of: anchor) else { return }

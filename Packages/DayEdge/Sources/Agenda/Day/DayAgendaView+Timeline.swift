@@ -120,9 +120,7 @@ extension DayAgendaView {
         .padding(.top, tasks.allUntimed.isEmpty || taskCoordinator == nil ? 0 : 6)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
             gridTopOffset = height
-            // Keep whatever the grid was positioned on in place — only on
-            // screen; a hidden Day view never scrolls itself.
-            if isActive, let gridAnchoredY { setScrollTarget(gridTopOffset + gridAnchoredY, anchored: gridAnchoredY) }
+            reanchor()
         }
     }
 
