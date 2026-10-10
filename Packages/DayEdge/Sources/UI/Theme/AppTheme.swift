@@ -118,6 +118,7 @@ package enum AppTheme {
 
     package enum Metrics {
         package static let popoverWidth: CGFloat = 420
+        package static let popoverPointerInset: CGFloat = AppTheme.cornerRadius + 16
         package static let popoverHeight: CGFloat = 700
         package static let dayWeatherTopGap: CGFloat = PeriodHeader.subtitleToContent
         package static let dayWeatherContentGap: CGFloat = 14

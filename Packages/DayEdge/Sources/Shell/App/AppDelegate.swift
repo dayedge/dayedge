@@ -182,6 +182,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController.onMuteUntil = { [weak self] option in
             self?.reminderSuppression.muteAll(until: option.endDate(now: .now, calendar: .autoupdatingCurrent), chosen: option)
         }
+        statusItemController.onAnchorChange = { [weak popoverWindow] anchor in
+            popoverWindow?.reposition(anchoredTo: anchor)
+        }
         statusItemController.install()
         popoverWindow.anchorScreenFrame = { [weak statusItemController] in statusItemController?.buttonScreenFrame }
         self.statusItemController = statusItemController

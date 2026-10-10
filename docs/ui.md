@@ -11,6 +11,7 @@
 - New view/popover/long-lived object: run `scripts/memory-report.sh --compare` and report the delta.
 
 ## Look
+- The main menu-bar panel centers below the calendar icon, clamped horizontally to the status button's screen `visibleFrame`. Its arrow shifts independently, staying at least `cornerRadius + 16 pt` from either edge; at extreme edges, containment and corner clearance take priority over exact alignment. Status-item and display layout changes reposition it; manual panel dragging remains available.
 - Theme tokens only (`docs/theming.md`). Every hosting tree wrapped in `ThemedRoot`.
 - One `PanelToolbar` + `LargeTitleHeader` at the root, shared by all views. Panel stays flat.
 - Switching Month / Day / Tasks / Ask crossfades the content only (`panelColumn`, 0.15 s, opacity); toolbar, search field, switcher and footer never move.
