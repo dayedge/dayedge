@@ -128,7 +128,7 @@ struct RootView: View {
                                 .transition(.opacity)
                         }
                     }
-                    .offset(x: pointer.xOffset, y: 1)
+                    .offset(x: models.presentationCoordinator.pointerXOffset, y: 1)
                     .zIndex(0)
             }
 

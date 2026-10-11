@@ -5,7 +5,7 @@ import UI
 /// (centered, or anchored under a status item), hiding, and click-outside
 /// dismissal — split out of `AppDelegate`. Deliberately knows nothing about
 /// a status item or `MenuBarBadgeIcon`: `show(anchoredTo:)` takes a plain
-/// screen-space point already resolved by the caller, so this type stays
+/// screen-space geometry already resolved by the caller, so this type stays
 /// usable for any anchor, not just a menu-bar button.
 @MainActor
 final class PopoverWindowController {
@@ -68,7 +68,7 @@ final class PopoverWindowController {
     /// own visual center, in screen coordinates), then reveal per
     /// `presentationCoordinator`'s `.preserve`/`.todayNow` behavior.
     /// Shows the popover if needed, then runs `then` once it's on screen.
-    func open(anchoredTo screenAnchor: CGPoint, then: @escaping () -> Void) {
+    func open(anchoredTo screenAnchor: PopoverAnchor, then: @escaping () -> Void) {
         if isVisible {
             then()
             return
@@ -80,18 +80,8 @@ final class PopoverWindowController {
     /// Runs after the next reveal (see `open(anchoredTo:then:)`).
     private var onNextReveal: (() -> Void)?
 
-    func show(anchoredTo screenAnchor: CGPoint) {
-        let size = window.frame.size
-        let origin = NSPoint(
-            x: screenAnchor.x - size.width / 2,
-            // Sits almost flush under the status item — the pointer
-            // "cone" itself (drawn as part of the window's own content,
-            // see `BubblePointerShape`) already supplies the visual
-            // connection, so this only needs to clear the status bar
-            // itself, not add its own extra gap on top of that.
-            y: screenAnchor.y - size.height - 1
-        )
-        window.setFrameOrigin(origin)
+    func show(anchoredTo screenAnchor: PopoverAnchor) {
+        applyPlacement(anchoredTo: screenAnchor)
 
         let request = presentationCoordinator.willOpen()
         switch request.behavior {
@@ -125,12 +115,27 @@ final class PopoverWindowController {
         }
     }
 
-    func toggle(anchoredTo screenAnchor: CGPoint) {
+    func toggle(anchoredTo screenAnchor: PopoverAnchor) {
         if isVisible {
             hide()
         } else {
             show(anchoredTo: screenAnchor)
         }
+    }
+
+    func reposition(anchoredTo screenAnchor: PopoverAnchor) {
+        guard presentationCoordinator.isVisible else { return }
+        applyPlacement(anchoredTo: screenAnchor)
+    }
+
+    private func applyPlacement(anchoredTo screenAnchor: PopoverAnchor) {
+        let placement = PopoverPlacement(
+            anchor: screenAnchor,
+            windowSize: window.frame.size,
+            arrowInset: AppTheme.Metrics.popoverPointerInset
+        )
+        presentationCoordinator.pointerXOffset = placement.arrowX - window.frame.width / 2
+        window.setFrameOrigin(placement.windowOrigin)
     }
 
     private func revealWindow() {

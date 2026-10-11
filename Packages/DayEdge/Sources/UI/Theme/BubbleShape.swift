@@ -4,7 +4,6 @@ import SwiftUI
 /// toward whatever anchored it (a menu bar status item, say). Nil/absent
 /// for a freestanding window with nothing to point at.
 package struct BubblePointerConfig: Equatable {
-    package var xOffset: CGFloat = 0
     package var width: CGFloat = 22
     package var height: CGFloat = 9
 }

@@ -12,6 +12,7 @@ import Domain
 @MainActor
 final class MenuBarStatusItemController {
     var onCalendarClick: () -> Void = {}
+    var onAnchorChange: (PopoverAnchor) -> Void = { _ in }
     /// The right-click menu's rows, resolved fresh each time it opens.
     var menuPlan: () -> [[StatusMenuItem]] = { [[.settings], [.quit]] }
     /// A menu row was chosen (Quit and About are handled here).
@@ -22,6 +23,7 @@ final class MenuBarStatusItemController {
     private var statusItem: NSStatusItem?
     private var accessoryRegionMinX: CGFloat?
     private var onAccessoryClick: (() -> Void)?
+    private var anchorObservers: [NSObjectProtocol] = []
 
     func install() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -40,6 +42,7 @@ final class MenuBarStatusItemController {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         statusItem = item
+        observeAnchorChanges()
     }
 
     /// Sole way anything outside this controller changes what's shown.
@@ -53,12 +56,13 @@ final class MenuBarStatusItemController {
         self.onAccessoryClick = onAccessoryClick
     }
 
-    /// Screen-space point `PopoverWindowController` should anchor to — the
+    /// Screen-space geometry `PopoverWindowController` should anchor to — the
     /// calendar badge's own visual center, accounting for
     /// `NSStatusBarButton`'s leading inset and `MenuBarBadgeIcon`'s canvas
     /// margins.
-    var screenAnchor: CGPoint? {
-        guard let buttonFrameOnScreen = buttonScreenFrame else { return nil }
+    var screenAnchor: PopoverAnchor? {
+        guard let buttonFrameOnScreen = buttonScreenFrame,
+              let screen = statusItem?.button?.window?.screen else { return nil }
         // The calendar badge is always the leading element of the combined
         // status item image (see `CombinedMenuBarIcon`) — when the
         // right-hand accessory (contextual event text, or the call icon)
@@ -74,13 +78,42 @@ final class MenuBarStatusItemController {
         // nudge it further if it's still off.
         let buttonLeadingInset: CGFloat = 4
         let calendarIconMidX = buttonFrameOnScreen.minX + buttonLeadingInset + MenuBarBadgeIcon.totalCanvasWidth / 2
-        return CGPoint(x: calendarIconMidX, y: buttonFrameOnScreen.minY)
+        return PopoverAnchor(
+            point: CGPoint(x: calendarIconMidX, y: buttonFrameOnScreen.minY),
+            visibleFrame: screen.visibleFrame
+        )
     }
 
     /// The status item button's frame on screen.
     var buttonScreenFrame: CGRect? {
         guard let button = statusItem?.button, let buttonWindow = button.window else { return nil }
-        return buttonWindow.convertToScreen(button.bounds)
+        return buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
+    }
+
+    private func observeAnchorChanges() {
+        guard let button = statusItem?.button, let window = button.window else { return }
+        button.postsFrameChangedNotifications = true
+        button.postsBoundsChangedNotifications = true
+        let notifications: [(Notification.Name, AnyObject?)] = [
+            (NSView.frameDidChangeNotification, button),
+            (NSView.boundsDidChangeNotification, button),
+            (NSWindow.didMoveNotification, window),
+            (NSWindow.didResizeNotification, window),
+            (NSWindow.didChangeScreenNotification, window),
+            (NSApplication.didChangeScreenParametersNotification, nil)
+        ]
+        anchorObservers = notifications.map { name, object in
+            NotificationCenter.default.addObserver(forName: name, object: object, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self, let anchor = self.screenAnchor else { return }
+                    self.onAnchorChange(anchor)
+                }
+            }
+        }
+    }
+
+    deinit {
+        anchorObservers.forEach { NotificationCenter.default.removeObserver($0) }
     }
 
     @objc private func statusItemClicked() {

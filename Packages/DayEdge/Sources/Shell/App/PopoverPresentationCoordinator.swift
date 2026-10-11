@@ -48,6 +48,7 @@ final class PopoverPresentationCoordinator {
     /// so an open's today-positioning never overrides it.
     private(set) var command: PopoverCommandRequest?
     private(set) var isVisible = false
+    var pointerXOffset: CGFloat = 0
     private var lastHiddenAt: Date?
 
     /// Set by `AppDelegate` right after starting an open — called once the
