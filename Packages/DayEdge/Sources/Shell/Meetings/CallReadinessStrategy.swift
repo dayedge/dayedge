@@ -1,11 +1,7 @@
 import Foundation
 import Domain
 
-/// Decides, from today's agenda, which (if any) call-having event the menu
-/// bar's "join" icon should currently represent — and for how long it
-/// keeps representing that event once it's become current. A swappable
-/// strategy (in the same spirit as `MenuBarBadgeStrategy`) so a future
-/// Settings UI can offer alternatives without `AppDelegate` changing.
+/// Selects the joinable event represented by the meeting status item.
 enum CallReadinessStrategy: Equatable, Codable {
     /// Shows the join icon starting `minutes` before a call event's own
     /// start. Once "ready," that event stays current until either it ends
@@ -17,13 +13,8 @@ enum CallReadinessStrategy: Equatable, Codable {
 
     static let `default` = CallReadinessStrategy.leadTime(minutes: 15)
 
-    /// `events` are assumed to already be exactly one day's (see
-    /// `AppDelegate.refreshMenuBarState`). `calendar` is accepted for API
-    /// stability with existing callers but no longer used internally —
-    /// slot windowing now compares real `Date`s (`AgendaEventModel.startDate`/
-    /// `.endDate`) directly, which needs no calendar/timezone-component
-    /// extraction to compare correctly.
-    func readyEvent(events: [AgendaEventModel], now: Date, calendar: Calendar) -> AgendaEventModel? {
+    /// Events already belong to today's agenda.
+    func readyEvent(events: [AgendaEventModel], now: Date) -> AgendaEventModel? {
         switch self {
         case .leadTime(let minutes):
             return Self.leadTimeReadyEvent(events: events, now: now, leadMinutes: minutes)
@@ -43,9 +34,7 @@ enum CallReadinessStrategy: Equatable, Codable {
     }
 }
 
-/// Persisted choice of `CallReadinessStrategy` — the one seam a future
-/// Settings pane reads from and writes to; nothing else in the app should
-/// read/write this key directly.
+/// Quick Join's persisted lead window.
 enum CallReadinessSettings {
     static let leadMinutesKey = "com.dayedge.callReadinessLeadMinutes"
     static let leadMinuteOptions = [5, 10, 15, 30]

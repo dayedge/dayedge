@@ -3,15 +3,7 @@ import SwiftUI
 import Domain
 import UI
 
-/// The menu bar's "join this call" icon — the service's own brand glyph
-/// (falling back to a generic camera glyph for a service with no bundled
-/// icon). Sits immediately left of `MenuBarBadgeIcon` inside
-/// `CombinedMenuBarIcon`, so it matches that icon's *asymmetric*
-/// top/bottom canvas padding (more room above than below, reserved there
-/// for the badge's "+" overflow) rather than simple symmetric centering —
-/// otherwise, even with equal total canvas heights, this icon's centered
-/// content would visibly sit higher than the calendar frame's own
-/// off-center content next to it.
+/// Service glyph for the independent meeting status item.
 struct CallJoinIcon: View {
     let service: VideoConferenceService
     var inkColor: Color = .black
@@ -37,14 +29,10 @@ struct CallJoinIcon: View {
 }
 
 extension CallJoinIcon {
-    /// Renders to an `NSImage` marked as a template — see
-    /// `MenuBarBadgeIcon.render(value:cornerGlyph:)`, which this mirrors. Kept for
-    /// standalone use/testing; `AppDelegate` normally renders this
-    /// composed with the badge via `CombinedMenuBarIcon` instead.
     @MainActor
-    static func render(service: VideoConferenceService) -> NSImage? {
+    static func render(service: VideoConferenceService, scale: CGFloat = 2) -> NSImage? {
         let renderer = ImageRenderer(content: CallJoinIcon(service: service))
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
+        renderer.scale = scale
         guard let image = renderer.nsImage else { return nil }
         image.isTemplate = true
         return image

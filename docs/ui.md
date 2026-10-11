@@ -46,3 +46,8 @@
 - "Show in Calendar/Tasks" = inside DayEdge. "Open in Apple Calendar / Reminders" = Apple's apps. Polish: "w aplikacji Kalendarz".
 - Items are "tasks" ("Delete Task…", "No tasks"); "Reminders" (capitalised) names only Apple's app and its permission. Event alerts are "alerts".
 - Multi-day labels: en dash ("Continues – 16:45"), never arrows.
+
+## Menu-bar items
+- Primary status item: Icon, Date & Time, or Icon and Date & Time, selected in Menu Bar Item settings. Badge and Format rows appear only when relevant; their saved preferences survive mode changes. The former date/time toggle migrates to Icon or Icon and Date & Time. The cached calendar badge and native date/time title share one status item. Presets follow app language, system region and General's hour-cycle preference; Custom shares General's pattern editor and supports minute precision.
+- Meeting status has its own stable status item, hidden when the existing meeting resolver has no presentation. Join and right-click menu behavior are preserved. Text/countdown changes never render an icon bitmap.
+- Each item's image cache retains only its last key/image, including its screen scale. Date/time and meeting text are independent of these keys. Status-item autosave names use the app bundle identifier to keep Dev and Release separate.

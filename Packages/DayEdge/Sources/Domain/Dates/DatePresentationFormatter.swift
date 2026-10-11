@@ -111,6 +111,11 @@ package struct DatePresentationFormatter: Hashable {
             .string(from: date)
     }
 
+    /// Abbreviated weekday, month and day, in the region's order.
+    package func menuBarDate(_ date: Date) -> String {
+        formatter(localizedPattern("EEEdMMM")).string(from: date)
+    }
+
     /// "2026".
     package func year(_ date: Date) -> String {
         formatter("y").string(from: date)
@@ -156,21 +161,28 @@ package struct DatePresentationFormatter: Hashable {
         package var isValid: Bool { if case .valid = self { true } else { false } }
     }
 
-    /// Whether `pattern` can be saved as a display pattern: quotes
-    /// balanced, only ICU field letters outside them, at least one date
-    /// field, and it writes something. It needn't name a whole date — a
-    /// display pattern may leave out the year or the month.
+    package enum PatternPurpose { case date, menuBar }
+
+    /// Date styles require a date field; menu-bar patterns also allow time-only,
+    /// at minute precision. Quoted literals never count as fields.
     package static func validate(_ pattern: String, sample: Date = .now,
-                                 using formatter: DatePresentationFormatter = .init()) -> PatternCheck {
+                                 using formatter: DatePresentationFormatter = .init(), purpose: PatternPurpose = .date) -> PatternCheck {
         guard !pattern.trimmingCharacters(in: .whitespaces).isEmpty else { return .invalid(reason: L10n.tr("datepresentationformatter.enter.a.pattern", "Enter a pattern")) }
         guard let fields = fieldLetters(pattern) else { return .invalid(reason: L10n.tr("datepresentationformatter.unclosed.quote", "Unclosed quote")) }
         if fields.contains(where: { !fieldSymbols.contains($0) }) {
             return .invalid(reason: L10n.tr("datepresentationformatter.unknown.pattern.symbol", "Unknown pattern symbol"))
         }
-        guard fields.contains(where: dateFieldSymbols.contains) else {
+        if purpose == .menuBar, fields.contains(where: Set("sSA").contains) {
+            return .invalid(reason: L10n.tr("dateformat.seconds.unsupported", "Use hours and minutes; seconds are not supported"))
+        }
+        let required = purpose == .date ? dateFieldSymbols : dateFieldSymbols.union(Set("hHKkjJCm"))
+        guard fields.contains(where: required.contains) else {
+            if purpose == .menuBar {
+                return .invalid(reason: L10n.tr("dateformat.date.or.time.required", "Pattern must contain a date or time field"))
+            }
             return .invalid(reason: L10n.tr("datepresentationformatter.pattern.must.contain.a.date.field", "Pattern must contain a date field"))
         }
-        let preview = formatter.format(sample, .custom(pattern))
+        let preview = formatter.formatter(pattern, cached: false).string(from: sample)
         guard !preview.trimmingCharacters(in: .whitespaces).isEmpty else { return .invalid(reason: L10n.tr(
             "datepresentationformatter.pattern.writes.nothing", "Pattern writes nothing"
         )) }
@@ -261,16 +273,19 @@ package struct DatePresentationFormatter: Hashable {
     nonisolated(unsafe) private static var orders: [String: [Field]] = [:]
     nonisolated(unsafe) private static var formatters: [String: DateFormatter] = [:]
 
-    private func formatter(_ pattern: String) -> DateFormatter {
+    private func formatter(_ pattern: String, cached: Bool = true) -> DateFormatter {
         let key = "\(pattern)|\(displayLocale.identifier)|\(calendar.identifier)|\(calendar.timeZone.identifier)"
         Self.lock.lock(); defer { Self.lock.unlock() }
-        if let cached = Self.formatters[key] { return cached }
+        if cached, let existing = Self.formatters[key] { return existing }
         let formatter = DateFormatter()
         formatter.locale = displayLocale
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
         formatter.dateFormat = pattern
-        Self.formatters[key] = formatter
+        if cached {
+            if Self.formatters.count >= 64 { Self.formatters.removeAll(keepingCapacity: true) }
+            Self.formatters[key] = formatter
+        }
         return formatter
     }
 
@@ -300,7 +315,7 @@ package struct DatePresentationFormatter: Hashable {
 }
 
 extension GeneralSettings {
-    /// The user's date patterns (Settings → General → Date format, coming);
+    /// The user's date patterns (Settings → General → Date & time);
     /// empty or missing is System Default.
     package static let dateFormatStandardKey = "com.dayedge.general.dateFormat.standard"
     package static let dateFormatCompactKey = "com.dayedge.general.dateFormat.compact"

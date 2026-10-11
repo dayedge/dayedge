@@ -51,8 +51,6 @@
 "calendarssettingsview.workdays" = "Workdays";
 "chatcoordinator.all.chats" = "All Chats";
 "chatcoordinator.new.chat" = "New Chat";
-"combinedmenubaricon.free.until" = "Free until %@";
-"combinedmenubaricon.m.left" = "%@m left";
 "customsnoozepopover.minutes" = "Minutes";
 "customsnoozepopover.remind" = "Remind";
 "customsnoozepopover.remind.in" = "Remind in %@";
@@ -164,9 +162,7 @@
 "menubarbadgestrategy.remaining.events.today" = "Remaining Events Today";
 "menubarbadgestrategy.total.events.today" = "Total Events Today";
 "menubareventindicator.free.until" = "Free until %@";
-"menubareventindicator.in.m" = "in %@m";
 "menubareventindicator.m.left" = "%@m left";
-"menubareventindicator.soon" = "Soon";
 "menubarsettingsview.after.that.dayedge.opens.on.today" = "After that, DayEdge opens on today.";
 "menubarsettingsview.badge" = "Badge";
 "menubarsettingsview.between.events" = "Between events";
@@ -316,3 +312,15 @@
 "shortcutssettingsview.previous.next.week" = "Previous / Next Week";
 "shortcutssettingsview.open.selected.item" = "Open Selected Item";
 "shortcutssettingsview.show.search.result" = "Show Search Result";
+"menubar.datetime.compact" = "Compact";
+"menubar.datetime.date" = "Date";
+"menubar.datetime.time" = "Time";
+"menubar.datetime.long" = "Long";
+"menubar.datetime.format" = "Format";
+"menubar.datetime.custom.title" = "Custom Date & Time Format";
+"menubar.meeting.now" = "NOW";
+"menubar.meeting.minutes" = "%@m";
+"menubar.item.section" = "Menu Bar Item";
+"menubar.item.icon" = "Icon";
+"menubar.item.date.time" = "Date & Time";
+"menubar.item.icon.date.time" = "Icon and Date & Time";

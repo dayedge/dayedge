@@ -125,3 +125,5 @@
 "recurrence.weekday.thursday" = "Every Thursday";
 "recurrence.weekday.friday" = "Every Friday";
 "recurrence.weekday.saturday" = "Every Saturday";
+"dateformat.seconds.unsupported" = "Use hours and minutes; seconds are not supported";
+"dateformat.date.or.time.required" = "Pattern must contain a date or time field";

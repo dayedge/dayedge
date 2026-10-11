@@ -124,3 +124,5 @@
 "recurrence.weekday.thursday" = "Co czwartek";
 "recurrence.weekday.friday" = "Co piątek";
 "recurrence.weekday.saturday" = "Co sobotę";
+"dateformat.seconds.unsupported" = "Użyj godzin i minut; sekundy nie są obsługiwane";
+"dateformat.date.or.time.required" = "Wzorzec musi zawierać pole daty lub godziny";

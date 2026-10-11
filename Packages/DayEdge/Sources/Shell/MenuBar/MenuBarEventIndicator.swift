@@ -46,30 +46,28 @@ enum MenuBarEventIndicatorState: Equatable {
             return L10n.tr("menubareventindicator.free.until", "Free until \(String(describing: format.time(until, calendar: calendar)))")
 
         case .upcoming(let event, let minutes):
-            var parts = [minutes <= 0 ? L10n.tr("menubareventindicator.soon", "Soon") : L10n.tr("menubareventindicator.in.m", "in \(String(describing: minutes))m")]
-            appendEventDetails(event, to: &parts, configuration: configuration, calendar: calendar, format: format)
-            return parts.joined(separator: " · ")
+            let status = L10n.tr("menubar.meeting.minutes", "\(String(describing: minutes))m")
+            return eventLabel(status: status, event: event, configuration: configuration, calendar: calendar, format: format)
 
-        case .ongoing(let event, let minutesRemaining):
-            var parts = [minutesRemaining.map { L10n.tr("menubareventindicator.m.left", "\(String(describing: $0))m left") } ?? "NOW"]
-            appendEventDetails(event, to: &parts, configuration: configuration, calendar: calendar, format: format)
-            return parts.joined(separator: " · ")
+        case .ongoing(let event, let remaining):
+            let status = remaining.map { L10n.tr("menubareventindicator.m.left", "\(String(describing: $0))m left") }
+                ?? L10n.tr("menubar.meeting.now", "NOW")
+            return eventLabel(status: status, event: event, configuration: configuration, calendar: calendar, format: format)
         }
     }
 
-    private func appendEventDetails(
-        _ event: AgendaEventModel,
-        to parts: inout [String],
-        configuration: MenuBarEventIndicatorConfiguration,
-        calendar: Calendar,
-        format: TimeFormat
-    ) {
+    private func eventLabel(status: String, event: AgendaEventModel, configuration: MenuBarEventIndicatorConfiguration,
+                            calendar: Calendar, format: TimeFormat) -> String {
+        var result = status
         if configuration.showsEventTitle, !event.title.isEmpty {
-            parts.append(event.title)
+            let title = event.title.count > 13
+                ? String(event.title.prefix(13)).trimmingCharacters(in: .whitespaces) + "…" : event.title
+            result += " · \(title)"
         }
-        if configuration.showsEventEndTime, let endTime = event.endText(format, calendar: calendar) {
-            parts.append("→\(endTime)")
+        if configuration.showsEventEndTime, let end = event.endText(format, calendar: calendar) {
+            result += " →\(end)"
         }
+        return result
     }
 }
 

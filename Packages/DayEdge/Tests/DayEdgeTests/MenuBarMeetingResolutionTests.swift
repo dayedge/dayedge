@@ -2,7 +2,7 @@ import XCTest
 @testable import Shell
 @testable import Domain
 
-final class MenuBarAccessoryResolutionTests: XCTestCase {
+final class MenuBarMeetingResolutionTests: XCTestCase {
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
@@ -43,13 +43,13 @@ final class MenuBarAccessoryResolutionTests: XCTestCase {
 
     func testEnabledIndicatorWithResolvableStateReturnsContextualAccessoryAndMatchingReadyCallEvent() {
         let meeting = event("Planning", "10:00", "11:00", videoService: .zoom, videoURL: "https://zoom.us/j/1")
-        let resolution = resolveMenuBarAccessory(
+        let resolution = resolveMenuBarMeeting(
             events: [meeting], on: date(0), now: date(9, 50), calendar: calendar,
             indicatorConfiguration: enabledIndicatorConfiguration,
             callReadinessStrategy: .leadTime(minutes: 15)
         )
 
-        guard case .contextual = resolution.accessory else {
+        guard case .contextual = resolution.presentation else {
             return XCTFail("expected a contextual accessory")
         }
         XCTAssertEqual(resolution.readyCallEvent?.id, "Planning")
@@ -57,25 +57,25 @@ final class MenuBarAccessoryResolutionTests: XCTestCase {
 
     func testEnabledIndicatorWithNoResolvableStateReturnsNilAccessoryAndNilReadyCallEvent() {
         let meeting = event("Later", "10:00", "11:00", videoService: .zoom, videoURL: "https://zoom.us/j/1")
-        let resolution = resolveMenuBarAccessory(
+        let resolution = resolveMenuBarMeeting(
             events: [meeting], on: date(0), now: date(8, 0), calendar: calendar,
             indicatorConfiguration: enabledIndicatorConfiguration,
             callReadinessStrategy: .leadTime(minutes: 15)
         )
 
-        XCTAssertNil(resolution.accessory)
+        XCTAssertNil(resolution.presentation)
         XCTAssertNil(resolution.readyCallEvent)
     }
 
     func testDisabledIndicatorFallsBackToCallReadinessStrategyAndReturnsCallIconAccessory() {
         let meeting = event("Standup", "10:00", "10:30", videoService: .zoom, videoURL: "https://zoom.us/j/1")
-        let resolution = resolveMenuBarAccessory(
+        let resolution = resolveMenuBarMeeting(
             events: [meeting], on: date(0), now: date(9, 50), calendar: calendar,
             indicatorConfiguration: disabledIndicatorConfiguration,
             callReadinessStrategy: .leadTime(minutes: 15)
         )
 
-        guard case .callIcon(let service) = resolution.accessory else {
+        guard case .callIcon(let service) = resolution.presentation else {
             return XCTFail("expected a call-icon accessory")
         }
         XCTAssertEqual(service, .zoom)
@@ -84,13 +84,13 @@ final class MenuBarAccessoryResolutionTests: XCTestCase {
 
     func testDisabledIndicatorWithNothingReadyReturnsNilAccessoryAndNilReadyCallEvent() {
         let meeting = event("Standup", "10:00", "10:30", videoService: .zoom, videoURL: "https://zoom.us/j/1")
-        let resolution = resolveMenuBarAccessory(
+        let resolution = resolveMenuBarMeeting(
             events: [meeting], on: date(0), now: date(8, 0), calendar: calendar,
             indicatorConfiguration: disabledIndicatorConfiguration,
             callReadinessStrategy: .leadTime(minutes: 15)
         )
 
-        XCTAssertNil(resolution.accessory)
+        XCTAssertNil(resolution.presentation)
         XCTAssertNil(resolution.readyCallEvent)
     }
 }

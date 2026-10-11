@@ -34,6 +34,7 @@ Paths relative to `Packages/DayEdge/Sources/`.
 - `@Observable` coordinators own non-view work: `PanelRouter` (all cross-feature routes), `ChatCoordinator`, `PanelRefreshCoordinator`, `EventActionCoordinator`.
 - `RootView` is presentation only; triggers in `RootView+Lifecycle`, keys in `RootView+Keyboard`.
 - Transient `NSPanel`s guard async completions with `presentationGeneration`.
+- Menu bar: `MenuBarStateController` drives separate primary and meeting status-item controllers. Shared readiness-window logic lives in `Shell/Meetings`, used by the menu bar and Meeting HUD.
 - Status menu: pure `StatusMenuPlan`, rebuilt on each open; navigation sends `PopoverCommand` after the popover is revealed.
 - Global meeting-alert pause (`ReminderSuppressionStore`) outranks per-occurrence mutes.
 

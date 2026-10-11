@@ -33,7 +33,7 @@ final class MenuBarEventIndicatorTests: XCTestCase {
         XCTAssertEqual(state, .upcoming(event: meeting, minutesUntilStart: 15))
         XCTAssertEqual(
             state?.label(configuration: configuration, calendar: calendar),
-            "in 15m · Planning · →11:00"
+            "15m · Planning →11:00"
         )
     }
 
@@ -42,7 +42,7 @@ final class MenuBarEventIndicatorTests: XCTestCase {
                                        startDate: date(10), endDate: date(11), title: "Planning")
         let upcoming = MenuBarEventIndicatorState.upcoming(event: meeting, minutesUntilStart: 15)
         XCTAssertEqual(upcoming.label(configuration: configuration, calendar: calendar, format: .twelveHour),
-                       "in 15m · Planning · →11:00am")
+                       "15m · Planning →11:00am")
         XCTAssertEqual(MenuBarEventIndicatorState.free(until: date(15, 30))
             .label(configuration: configuration, calendar: calendar, format: .twelveHour), "Free until 3:30pm")
     }

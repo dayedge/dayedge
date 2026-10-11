@@ -1,14 +1,9 @@
 import AppKit
 import Foundation
 import Domain
+import UI
 
-/// A dumb AppKit shell around the single `NSStatusItem` — owns the button,
-/// its click-region math (calendar half vs. accessory half), and its
-/// right-click context menu. Never touches `CalendarDataProviding`,
-/// `AgendaEventModel`, or any `*Strategy`/`*Settings` type: it only applies
-/// whatever image/tooltip/accessory region it's handed via `apply(...)`
-/// and reports clicks back through closures. `MenuBarStateController`
-/// decides *what* to show; this only shows it.
+/// Owns the primary icon/date item, its popover anchor and the shared status menu.
 @MainActor
 final class MenuBarStatusItemController {
     var onCalendarClick: () -> Void = {}
@@ -21,13 +16,17 @@ final class MenuBarStatusItemController {
     var onMuteUntil: (MuteUntilOption) -> Void = { _ in }
 
     private var statusItem: NSStatusItem?
-    private var accessoryRegionMinX: CGFloat?
-    private var onAccessoryClick: (() -> Void)?
+    private let images = MenuBarImageCache<MenuBarBadgeImageKey>()
     private var anchorObservers: [NSObjectProtocol] = []
 
     func install() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.autosaveName = "\(Bundle.main.bundleIdentifier ?? "com.dayedge.app").status.primary"
+        item.isVisible = true
         if let button = item.button {
+            button.font = AppTheme.MenuBar.primaryFont
+            button.imagePosition = .imageLeft
+            button.imageHugsTitle = true
             // Without this, `NSButton` can stretch/resample the icon to
             // fit its own content box — this icon is drawn at its exact
             // intended size already, so it should render 1:1, not be
@@ -45,41 +44,26 @@ final class MenuBarStatusItemController {
         observeAnchorChanges()
     }
 
-    /// Sole way anything outside this controller changes what's shown.
-    /// `onAccessoryClick` fires instead of `onCalendarClick` when a click
-    /// lands in the accessory's region — nil when there's currently
-    /// nothing joinable, in which case every click is a calendar click.
-    func apply(image: NSImage?, toolTip: String?, accessoryRegionMinX: CGFloat?, onAccessoryClick: (() -> Void)?) {
-        statusItem?.button?.image = image
-        statusItem?.button?.toolTip = toolTip
-        self.accessoryRegionMinX = accessoryRegionMinX
-        self.onAccessoryClick = onAccessoryClick
+    func apply(badge: MenuBarBadgeContent, cornerGlyph: MenuBarCornerGlyph?, text: String, showsIcon: Bool) {
+        guard let button = statusItem?.button else { return }
+        let scale = button.window?.screen?.backingScaleFactor ?? 2
+        let key = MenuBarBadgeImageKey(number: badge.number, glyph: cornerGlyph, scale: scale)
+        let image = showsIcon ? images.image(for: key) {
+            MenuBarBadgeIcon.render(value: badge.number, cornerGlyph: cornerGlyph, scale: scale)
+        } : nil
+        if button.image !== image { button.image = image }
+        button.imagePosition = showsIcon ? .imageLeft : .noImage
+        if button.title != text { button.title = text }
+        button.setAccessibilityLabel(text.isEmpty ? "DayEdge" : "DayEdge, \(text)")
     }
 
-    /// Screen-space geometry `PopoverWindowController` should anchor to — the
-    /// calendar badge's own visual center, accounting for
-    /// `NSStatusBarButton`'s leading inset and `MenuBarBadgeIcon`'s canvas
-    /// margins.
+    /// Anchor to the icon when present, otherwise the date/time button's center.
     var screenAnchor: PopoverAnchor? {
-        guard let buttonFrameOnScreen = buttonScreenFrame,
-              let screen = statusItem?.button?.window?.screen else { return nil }
-        // The calendar badge is always the leading element of the combined
-        // status item image (see `CombinedMenuBarIcon`) — when the
-        // right-hand accessory (contextual event text, or the call icon)
-        // is showing, the button is much wider than just the badge, and
-        // anchoring on the *whole* button's midpoint would visibly point
-        // the popover at the middle of the text instead of at the
-        // calendar icon someone actually clicked near.
-        // `NSStatusBarButton` reserves a few points of its own leading
-        // padding before the image actually starts drawing — not
-        // accounted for by the icon's own canvas math alone, which is why
-        // the plain `totalCanvasWidth / 2` version landed visibly left of
-        // the real icon. This is a measured correction, not derived —
-        // nudge it further if it's still off.
-        let buttonLeadingInset: CGFloat = 4
-        let calendarIconMidX = buttonFrameOnScreen.minX + buttonLeadingInset + MenuBarBadgeIcon.totalCanvasWidth / 2
+        guard let button = statusItem?.button, let frame = buttonScreenFrame,
+              let screen = button.window?.screen, let cell = button.cell else { return nil }
+        let anchorX = button.image == nil ? button.bounds.midX : cell.imageRect(forBounds: button.bounds).midX
         return PopoverAnchor(
-            point: CGPoint(x: calendarIconMidX, y: buttonFrameOnScreen.minY),
+            point: CGPoint(x: frame.minX + anchorX, y: frame.minY),
             visibleFrame: screen.visibleFrame
         )
     }
@@ -100,6 +84,7 @@ final class MenuBarStatusItemController {
             (NSWindow.didMoveNotification, window),
             (NSWindow.didResizeNotification, window),
             (NSWindow.didChangeScreenNotification, window),
+            (NSWindow.didChangeBackingPropertiesNotification, window),
             (NSApplication.didChangeScreenParametersNotification, nil)
         ]
         anchorObservers = notifications.map { name, object in
@@ -119,21 +104,9 @@ final class MenuBarStatusItemController {
     @objc private func statusItemClicked() {
         guard let event = NSApp.currentEvent else { return }
 
-        if event.type == .rightMouseUp {
+        if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
             showContextMenu()
             return
-        }
-
-        // Calendar and accessory share one status-button action. Only a
-        // joinable event makes the accessory region behave as Join.
-        if let onAccessoryClick, let accessoryRegionMinX, let button = statusItem?.button {
-            let location = button.convert(event.locationInWindow, from: nil)
-            let imageWidth = button.image?.size.width ?? button.bounds.width
-            let imageOriginX = max(0, (button.bounds.width - imageWidth) / 2)
-            if location.x >= imageOriginX + accessoryRegionMinX {
-                onAccessoryClick()
-                return
-            }
         }
 
         onCalendarClick()
@@ -146,8 +119,8 @@ final class MenuBarStatusItemController {
     /// menu up, and cleared right after `performClick` (which blocks
     /// until the menu is dismissed) returns, restoring normal left-click
     /// toggling for next time.
-    private func showContextMenu() {
-        guard let button = statusItem?.button else { return }
+    func showContextMenu(for meetingItem: NSStatusItem? = nil) {
+        guard let item = meetingItem ?? statusItem, let button = item.button else { return }
         let menu = NSMenu()
         menu.autoenablesItems = false
         for (index, section) in menuPlan().enumerated() {
@@ -159,9 +132,9 @@ final class MenuBarStatusItemController {
             }
         }
 
-        statusItem?.menu = menu
+        item.menu = menu
         button.performClick(nil)
-        statusItem?.menu = nil
+        item.menu = nil
     }
 
     private func menuItem(for row: StatusMenuItem) -> NSMenuItem {
