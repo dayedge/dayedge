@@ -36,10 +36,12 @@ struct MenuBarBadgeIcon: View {
     /// top-right corner without being clipped — kept small so the badge
     /// mostly sits *on* the corner rather than floating outside it.
     private static let badgeOverflow: CGFloat = 4.5
-    private static let canvasSize = CGSize(
-        width: frameSize.width + strokeMargin * 2 + badgeOverflow,
-        height: frameSize.height + strokeMargin * 2 + badgeOverflow
-    )
+    private var canvasSize: CGSize {
+        CGSize(
+            width: Self.frameSize.width + Self.strokeMargin * 2 + (cornerGlyph == nil ? 0 : Self.badgeOverflow),
+            height: Self.frameSize.height + Self.strokeMargin * 2 + Self.badgeOverflow
+        )
+    }
 
     /// Exposed so `CallJoinIcon` can match this icon's vertical placement
     /// within a shared canvas height — this icon's own drawn content
@@ -49,8 +51,6 @@ struct MenuBarBadgeIcon: View {
     /// the same visual center; both need the same top/bottom split too.
     static var topContentInset: CGFloat { strokeMargin + badgeOverflow }
     static var bottomContentInset: CGFloat { strokeMargin }
-    static var totalCanvasHeight: CGFloat { canvasSize.height }
-    static var totalCanvasWidth: CGFloat { canvasSize.width }
 
     /// Side of the square each corner glyph's glyph is drawn into.
     fileprivate static let glyphSize: CGFloat = badgeDiameter + 2.5
@@ -113,7 +113,7 @@ struct MenuBarBadgeIcon: View {
                     .fill(inkColor)
             }
         }
-        .frame(width: Self.canvasSize.width, height: Self.canvasSize.height, alignment: .topLeading)
+        .frame(width: canvasSize.width, height: canvasSize.height, alignment: .topLeading)
         // The halo erases only within the icon.
         .compositingGroup()
     }
@@ -157,9 +157,11 @@ extension MenuBarBadgeIcon {
     /// alone, so the actual drawn color above (plain black) doesn't
     /// matter, only its shape (and, for the badge, its cut-out gaps).
     @MainActor
-    static func render(value: Int, cornerGlyph: MenuBarCornerGlyph?) -> NSImage? {
-        let renderer = ImageRenderer(content: MenuBarBadgeIcon(value: value, cornerGlyph: cornerGlyph))
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
+    static func render(value: Int, cornerGlyph: MenuBarCornerGlyph?, scale: CGFloat = 2) -> NSImage? {
+        // The glyph's top margin makes the calendar sit below the canvas center.
+        let renderer = ImageRenderer(content: MenuBarBadgeIcon(value: value, cornerGlyph: cornerGlyph)
+            .offset(y: -badgeOverflow / 2))
+        renderer.scale = scale
         guard let image = renderer.nsImage else { return nil }
         image.isTemplate = true
         return image

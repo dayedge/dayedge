@@ -2,10 +2,7 @@ import SwiftUI
 import Domain
 import UI
 
-/// Settings → General → Date & time: the standard and compact date styles,
-/// each System (the region's order, English names) or Custom…, whose
-/// pattern is edited in a sheet. Each row's example is its description.
-/// Two rows, so `SettingsGroup` separates them like its own.
+/// General date styles share their custom pattern editor with the menu bar.
 struct DateFormatRows: View {
     @AppStorage(GeneralSettings.dateFormatStandardKey) private var standard = ""
     @AppStorage(GeneralSettings.dateFormatCompactKey) private var compact = ""
@@ -15,7 +12,10 @@ struct DateFormatRows: View {
         // One sheet for both rows, hung on the first.
         DateFormatRow(target: .standard, stored: $standard) { editing = .standard }
             .sheet(item: $editing) { target in
-                DatePatternSheet(target: target, stored: target == .standard ? $standard : $compact)
+                DatePatternSheet(
+                    title: L10n.tr("dateformatrows.custom.date.format", "Custom \(String(describing: target.title)) Date Format"),
+                    suggestion: target.suggestion, stored: target == .standard ? $standard : $compact
+                )
             }
         DateFormatRow(target: .compact, stored: $compact) { editing = .compact }
     }
@@ -70,42 +70,49 @@ private struct DateFormatRow: View {
 
 /// The pattern, its live preview, a short error when it can't be used, the
 /// link to the pattern letters, and Cancel · Save (Esc · Return).
-private struct DatePatternSheet: View {
+struct DatePatternSheet: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.dateFormatter) private var dateFormatter
     @Environment(\.dismiss) private var dismiss
 
-    let target: DatePatternTarget
+    let title: String
+    let suggestion: String
+    let purpose: DatePresentationFormatter.PatternPurpose
+    let onSave: () -> Void
     @Binding var stored: String
     @State private var draft: String
 
     /// Apple's guide to the pattern letters (Unicode TR35).
     static let patternsGuide = URL(string: "https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/DataFormatting/Articles/dfDateFormatting10_4.html")!
 
-    init(target: DatePatternTarget, stored: Binding<String>) {
-        self.target = target
+    init(title: String, suggestion: String, stored: Binding<String>,
+         purpose: DatePresentationFormatter.PatternPurpose = .date, onSave: @escaping () -> Void = {}) {
+        self.title = title
+        self.suggestion = suggestion
+        self.purpose = purpose
+        self.onSave = onSave
         self._stored = stored
-        self._draft = State(initialValue: stored.wrappedValue.isEmpty ? target.suggestion : stored.wrappedValue)
+        self._draft = State(initialValue: stored.wrappedValue.isEmpty ? suggestion : stored.wrappedValue)
     }
 
     private var check: DatePresentationFormatter.PatternCheck {
         var system = dateFormatter
         system.customStandard = nil
         system.customCompact = nil
-        return DatePresentationFormatter.validate(draft, using: system)
+        return DatePresentationFormatter.validate(draft, using: system, purpose: purpose)
     }
 
-    private var canSave: Bool { check.isValid && draft != stored }
+    private var canSave: Bool { check.isValid }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(L10n.tr("dateformatrows.custom.date.format", "Custom \(String(describing: target.title)) Date Format"))
+            Text(title)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(theme.settings.primaryText)
 
             VStack(alignment: .leading, spacing: 5) {
                 label(L10n.tr("dateformatrows.pattern", "Pattern"))
-                TextField(target.suggestion, text: $draft)
+                TextField(suggestion, text: $draft)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12, design: .monospaced))
                     .onSubmit(save)
@@ -162,6 +169,7 @@ private struct DatePatternSheet: View {
     private func save() {
         guard canSave else { return }
         stored = draft
+        onSave()
         dismiss()
     }
 }

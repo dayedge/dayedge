@@ -1,10 +1,6 @@
 import Foundation
 
-/// Which video conferencing service an event links to, detected from its
-/// URL/notes/location. There's no official Zoom/Teams SF Symbol (and
-/// copying their actual logos isn't something to do), so each renders as
-/// a small colored letter badge instead — enough to tell them apart at a
-/// glance without reproducing trademarked artwork.
+/// Service detected from an event's meeting URL.
 package enum VideoConferenceService: Hashable {
     case zoom
     case teams
@@ -21,7 +17,7 @@ package enum VideoConferenceService: Hashable {
     }
 
     /// Name of the bundled SVG in `Resources/` for services we have a real
-    /// icon for (see `BrandIcon`). Nil falls back to the letter badge.
+    /// icon for (see `BrandIcon`). Call icons without a resource use a generic camera glyph.
     package var iconResourceName: String? {
         switch self {
         case .zoom: return "zoom-icon"

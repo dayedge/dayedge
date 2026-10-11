@@ -18,6 +18,31 @@ final class MenuBarBadgeRenderingTests: XCTestCase {
         XCTAssertEqual(date.height, singleDigit.height)
     }
 
+    func testCalendarWithoutGlyphOmitsHorizontalOverflowSpace() throws {
+        let plain = try XCTUnwrap(MenuBarBadgeIcon.render(value: 9, cornerGlyph: nil))
+        let overflow = try XCTUnwrap(MenuBarBadgeIcon.render(value: 9, cornerGlyph: .overflow))
+        XCTAssertEqual(overflow.size.width - plain.size.width, 4.5, accuracy: 0.5)
+        XCTAssertEqual(plain.size.height, overflow.size.height)
+    }
+
+    func testTasksGlyphKeepsHorizontalOverflowSpace() throws {
+        let tasks = try XCTUnwrap(MenuBarBadgeIcon.render(value: 9, cornerGlyph: .tasksDue))
+        let overflow = try XCTUnwrap(MenuBarBadgeIcon.render(value: 9, cornerGlyph: .overflow))
+        XCTAssertEqual(tasks.size, overflow.size)
+    }
+
+    func testRenderedCalendarIsVerticallyCenteredInStatusImage() throws {
+        let image = try XCTUnwrap(MenuBarBadgeIcon.render(value: 11, cornerGlyph: nil, scale: 2))
+        let cgImage = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        let bitmap = NSBitmapImageRep(cgImage: cgImage)
+        let occupiedRows = (0..<bitmap.pixelsHigh).filter { y in
+            (0..<bitmap.pixelsWide).contains { x in (bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.1 }
+        }
+        let first = try XCTUnwrap(occupiedRows.first)
+        let last = try XCTUnwrap(occupiedRows.last)
+        XCTAssertEqual(Double(first + last + 1) / 2, Double(bitmap.pixelsHigh) / 2, accuracy: 1)
+    }
+
     func testBadgePreviews() throws {
         guard let path = ProcessInfo.processInfo.environment["DAYEDGE_BADGE_PREVIEWS_DIR"] else {
             throw XCTSkip("Set DAYEDGE_BADGE_PREVIEWS_DIR to export badge previews")

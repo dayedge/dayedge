@@ -50,8 +50,6 @@
 "calendarssettingsview.workdays" = "Dni robocze";
 "chatcoordinator.all.chats" = "Wszystkie rozmowy";
 "chatcoordinator.new.chat" = "Nowa rozmowa";
-"combinedmenubaricon.free.until" = "Wolne do %@";
-"combinedmenubaricon.m.left" = "Pozostało %@ min";
 "customsnoozepopover.minutes" = "Minuty";
 "customsnoozepopover.remind" = "Przypomnij";
 "customsnoozepopover.remind.in" = "Przypomnij za %@";
@@ -163,9 +161,7 @@
 "menubarbadgestrategy.remaining.events.today" = "Pozostałe wydarzenia dzisiaj";
 "menubarbadgestrategy.total.events.today" = "Wszystkie wydarzenia dzisiaj";
 "menubareventindicator.free.until" = "Wolne do %@";
-"menubareventindicator.in.m" = "za %@ min";
 "menubareventindicator.m.left" = "Pozostało %@ min";
-"menubareventindicator.soon" = "Wkrótce";
 "menubarsettingsview.after.that.dayedge.opens.on.today" = "Po tym czasie DayEdge otwiera się na dzisiejszym dniu.";
 "menubarsettingsview.badge" = "Znacznik";
 "menubarsettingsview.between.events" = "Między wydarzeniami";
@@ -315,3 +311,15 @@
 "shortcutssettingsview.previous.next.week" = "Poprzedni / następny tydzień";
 "shortcutssettingsview.open.selected.item" = "Otwórz wybrany element";
 "shortcutssettingsview.show.search.result" = "Pokaż wynik wyszukiwania";
+"menubar.datetime.compact" = "Kompaktowy";
+"menubar.datetime.date" = "Data";
+"menubar.datetime.time" = "Godzina";
+"menubar.datetime.long" = "Długi";
+"menubar.datetime.format" = "Format";
+"menubar.datetime.custom.title" = "Własny format daty i godziny";
+"menubar.meeting.now" = "TERAZ";
+"menubar.meeting.minutes" = "%@ min";
+"menubar.item.section" = "Element paska menu";
+"menubar.item.icon" = "Ikona";
+"menubar.item.date.time" = "Data i godzina";
+"menubar.item.icon.date.time" = "Ikona oraz data i godzina";

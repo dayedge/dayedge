@@ -22,8 +22,6 @@ struct MenuBarSettingsView: View {
     private var freeTransitionMinutes = MenuBarEventIndicatorConfiguration.default.freeTimeTransitionMinutes
     @AppStorage(MenuBarEventIndicatorSettings.minimumFreeGapKey)
     private var minimumFreeGapMinutes = MenuBarEventIndicatorConfiguration.default.minimumFreeGapMinutes
-    @AppStorage(MenuBarBadgeSettings.strategyKey)
-    private var badgeStrategy = MenuBarBadgeStrategy.remainingEvents.rawValue
     @AppStorage(CallReadinessSettings.leadMinutesKey)
     private var callLeadMinutes = CallReadinessSettings.defaultLeadMinutes
     @AppStorage(PopoverReopenSettings.timeoutMinutesKey)
@@ -44,12 +42,8 @@ struct MenuBarSettingsView: View {
                 )
             }
 
-            SettingsGroup(header: L10n.tr("menubarsettingsview.badge", "Badge")) {
-                SettingsPickerRow(
-                    title: L10n.tr("menubarsettingsview.badge", "Badge"),
-                    selection: $badgeStrategy,
-                    options: MenuBarBadgeStrategy.allCases.map { ($0.rawValue, $0.displayName) }
-                )
+            SettingsGroup(header: L10n.tr("menubar.item.section", "Menu Bar Item")) {
+                MenuBarItemRows()
             }
 
             SettingsGroup(header: L10n.tr("menubarsettingsview.quick.join", "Quick Join")) {

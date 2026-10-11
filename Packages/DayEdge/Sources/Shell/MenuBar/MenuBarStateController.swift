@@ -1,54 +1,41 @@
 import AppKit
-import EventKit
 import Foundation
 import Observation
 import Domain
 import UI
 
-/// Decides what the status item *should* currently show, and when to
-/// recompute it — split out of `AppDelegate`. Never touches `NSStatusItem`
-/// directly; only calls `MenuBarStatusItemController.apply(...)` with the
-/// result. Owns the minute-aligned refresh timer and the four
-/// notifications (EventKit changes, settings changes, app activation,
-/// wake from sleep) that trigger an early recompute.
+/// Coordinates both status items from one agenda read and a minute-aligned timer.
 @MainActor
 final class MenuBarStateController {
     private let dataProvider: CalendarDataProviding
-    private let eventStore: EKEventStore
     private let statusItemController: MenuBarStatusItemController
+    private let meetingItemController: MenuBarMeetingItemController
     private let taskRepository: TaskRepository
     private let reminderSuppression: ReminderSuppressionStore
 
-    /// The event represented by the right-hand accessory when clicking
-    /// that accessory should immediately join its call.
-    private var readyCallEvent: AgendaEventModel?
-
     private var badgeRefreshTimer: Timer?
-    private var eventStoreChangeObserver: NSObjectProtocol?
+    private var calendarChangeObserver: NSObjectProtocol?
     private var settingsChangeObserver: NSObjectProtocol?
     private var appActiveObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
+    private var environmentObservers: [NSObjectProtocol] = []
 
     init(
         dataProvider: CalendarDataProviding,
-        eventStore: EKEventStore,
         taskRepository: TaskRepository,
         reminderSuppression: ReminderSuppressionStore,
-        statusItemController: MenuBarStatusItemController
+        statusItemController: MenuBarStatusItemController,
+        meetingItemController: MenuBarMeetingItemController
     ) {
         self.reminderSuppression = reminderSuppression
         self.dataProvider = dataProvider
-        self.eventStore = eventStore
         self.taskRepository = taskRepository
         self.statusItemController = statusItemController
+        self.meetingItemController = meetingItemController
 
-        eventStoreChangeObserver = NotificationCenter.default.addObserver(
+        calendarChangeObserver = NotificationCenter.default.addObserver(
             forName: .calendarEventsDidChange, object: nil, queue: .main
         ) { [weak self] _ in
-            // `queue: .main` above already guarantees this runs on the
-            // main thread at runtime; the `Task` is only to satisfy the
-            // compiler, which can't see that guarantee through a plain
-            // non-isolated closure type.
             Task { @MainActor in self?.refresh() }
         }
         settingsChangeObserver = NotificationCenter.default.addObserver(
@@ -72,18 +59,28 @@ final class MenuBarStateController {
                 self?.scheduleMinuteRefresh()
             }
         }
+        let changes: [Notification.Name] = [
+            NSLocale.currentLocaleDidChangeNotification, .NSSystemTimeZoneDidChange, .NSSystemClockDidChange,
+            NSApplication.didChangeScreenParametersNotification, NSWindow.didChangeBackingPropertiesNotification,
+            NSWindow.didChangeScreenNotification
+        ]
+        environmentObservers = changes.map { name in
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    self?.refresh()
+                    self?.scheduleMinuteRefresh()
+                }
+            }
+        }
     }
 
-    /// Redraws the combined status item image from today's agenda — one
-    /// EventKit read decides both halves, rather than each recomputing its
-    /// own.
     func refresh() {
         let calendar = Calendar.autoupdatingCurrent
         let now = Date.now
         let today = calendar.startOfDay(for: now)
         let events = dataProvider.events(for: today, calendar: calendar)
 
-        let resolution = resolveMenuBarAccessory(
+        let resolution = resolveMenuBarMeeting(
             events: events,
             on: today,
             now: now,
@@ -92,7 +89,6 @@ final class MenuBarStateController {
             callReadinessStrategy: CallReadinessSettings.strategy,
             timeFormat: .current
         )
-        readyCallEvent = resolution.readyCallEvent
 
         let badge = MenuBarBadgeSettings.strategy.badgeContent(events: events, now: now, calendar: calendar)
         // New corner glyphs get their data here — see `MenuBarCornerGlyph`.
@@ -101,16 +97,17 @@ final class MenuBarStateController {
             isOverflow: badge.isOverflow,
             hasTasksDueToday: !tasksToday.isEmpty
         ))
-        let rendered = CombinedMenuBarIcon.render(
-            accessory: resolution.accessory, badgeValue: badge.number, cornerGlyph: cornerGlyph
+        let configuration = MenuBarDateTimeSettings.configuration()
+        let text = configuration.text(
+            at: now, formatter: DatePresentationFormatter.current.with(calendar), timeFormat: .current
         )
-
+        statusItemController.apply(badge: badge, cornerGlyph: cornerGlyph, text: text, showsIcon: configuration.presentation.showsIcon)
+        let readyCallEvent = resolution.readyCallEvent
         let joinURL = readyCallEvent?.meetingLink?.preferredURL
-        statusItemController.apply(
-            image: rendered?.image,
+        meetingItemController.apply(
+            resolution.presentation,
             toolTip: readyCallEvent.map { L10n.tr("menubarstatecontroller.join", "Join \(String(describing: $0.title))") },
-            accessoryRegionMinX: rendered?.accessoryRegionMinX,
-            onAccessoryClick: joinURL.map { url in { NSWorkspace.shared.open(url) } }
+            onJoin: joinURL.map { url in { NSWorkspace.shared.open(url) } }
         )
     }
 
@@ -168,9 +165,11 @@ final class MenuBarStateController {
 
     func invalidate() {
         badgeRefreshTimer?.invalidate()
-        if let eventStoreChangeObserver { NotificationCenter.default.removeObserver(eventStoreChangeObserver) }
+        if let calendarChangeObserver { NotificationCenter.default.removeObserver(calendarChangeObserver) }
         if let settingsChangeObserver { NotificationCenter.default.removeObserver(settingsChangeObserver) }
         if let appActiveObserver { NotificationCenter.default.removeObserver(appActiveObserver) }
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
+        environmentObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        environmentObservers.removeAll()
     }
 }

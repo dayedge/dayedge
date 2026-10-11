@@ -2,6 +2,11 @@ import SwiftUI
 
 /// Shared geometry, typography and symbols. Colors live in ThemePalette.
 package enum AppTheme {
+    package enum MenuBar {
+        package static let primaryFont = NSFont.systemFont(ofSize: 12, weight: .regular)
+        package static let meetingFont = NSFont.systemFont(ofSize: 11, weight: .medium)
+    }
+
     package enum ScrollEdge {
         package static let effectHeight: CGFloat = 64
         package static let totalHeight: CGFloat = effectHeight + 16

@@ -9,9 +9,9 @@ import Intelligence
 /// Top-level orchestration: decides which presentation mode the app runs
 /// in and wires up the pieces that implement it, but doesn't implement any
 /// of their mechanics itself — those live in `PopoverWindowController`
-/// (the bubble window's lifecycle), `MenuBarStatusItemController` (the
-/// status item and its click routing), and `MenuBarStateController` (what
-/// the status item should currently show, and when to recompute it).
+/// (the bubble window's lifecycle), the primary and meeting status-item
+/// controllers (AppKit interaction), and `MenuBarStateController`
+/// (presentation decisions and refresh scheduling).
 ///
 /// The Settings window is managed here too, rather than via SwiftUI's
 /// `Settings` scene: that scene's `showSettingsWindow:` command relies on
@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dockSettingObserver: NSObjectProtocol?
     private var statusItemController: MenuBarStatusItemController?
     private var menuBarState: MenuBarStateController?
+    private var meetingItemController: MenuBarMeetingItemController?
     private var meetingHUD: MeetingHUDController?
     /// The local calendar index — the event source: opened at launch,
     /// filling in the background once Calendar access is granted.
@@ -193,10 +194,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startMenuBarState(_ statusItemController: MenuBarStatusItemController) {
+        let meetingItem = MenuBarMeetingItemController()
+        meetingItem.onCalendarClick = { [weak statusItemController] in statusItemController?.onCalendarClick() }
+        meetingItem.onContextMenu = { [weak statusItemController] item in statusItemController?.showContextMenu(for: item) }
+        meetingItem.install()
+        self.meetingItemController = meetingItem
         let menuBarState = MenuBarStateController(
-            dataProvider: dataProvider, eventStore: eventStore,
+            dataProvider: dataProvider,
             taskRepository: taskRepository, reminderSuppression: reminderSuppression,
-            statusItemController: statusItemController
+            statusItemController: statusItemController, meetingItemController: meetingItem
         )
         self.menuBarState = menuBarState
         statusItemController.menuPlan = { [weak menuBarState] in menuBarState?.menuPlan() ?? [] }
