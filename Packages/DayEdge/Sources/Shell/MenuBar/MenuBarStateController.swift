@@ -101,14 +101,17 @@ final class MenuBarStateController {
         let text = configuration.text(
             at: now, formatter: DatePresentationFormatter.current.with(calendar), timeFormat: .current
         )
-        statusItemController.apply(badge: badge, cornerGlyph: cornerGlyph, text: text, showsIcon: configuration.presentation.showsIcon)
+        let plan = MenuBarCompositionStrategy(presentation: configuration.presentation).plan(
+            configuration: configuration, badge: badge, cornerGlyph: cornerGlyph, text: text,
+            meeting: resolution.presentation
+        )
         let readyCallEvent = resolution.readyCallEvent
         let joinURL = readyCallEvent?.meetingLink?.preferredURL
-        meetingItemController.apply(
-            resolution.presentation,
-            toolTip: readyCallEvent.map { L10n.tr("menubarstatecontroller.join", "Join \(String(describing: $0.title))") },
-            onJoin: joinURL.map { url in { NSWorkspace.shared.open(url) } }
-        )
+        let onJoin: (() -> Void)? = joinURL.map { url in { NSWorkspace.shared.open(url) } }
+        let toolTip = readyCallEvent.map { L10n.tr("menubarstatecontroller.join", "Join \(String(describing: $0.title))") }
+        statusItemController.apply(plan.primary, toolTip: toolTip, onJoin: onJoin)
+        meetingItemController.apply(plan.meeting, toolTip: toolTip, onJoin: onJoin)
+
     }
 
     /// The right-click menu, from what's true right now.

@@ -16,7 +16,10 @@ final class MenuBarStatusItemController {
     var onMuteUntil: (MuteUntilOption) -> Void = { _ in }
 
     private var statusItem: NSStatusItem?
-    private let images = MenuBarImageCache<MenuBarBadgeImageKey>()
+    private let renderer = MenuBarPrimaryRenderer()
+    private var badgeWidth: CGFloat = 0
+    private var hasCallIcon = false
+    private var onMeetingClick: (() -> Void)?
     private var anchorObservers: [NSObjectProtocol] = []
 
     func install() {
@@ -44,24 +47,34 @@ final class MenuBarStatusItemController {
         observeAnchorChanges()
     }
 
-    func apply(badge: MenuBarBadgeContent, cornerGlyph: MenuBarCornerGlyph?, text: String, showsIcon: Bool) {
+    func apply(_ presentation: MenuBarPrimaryPresentation, toolTip: String?, onJoin: (() -> Void)?) {
         guard let button = statusItem?.button else { return }
         let scale = button.window?.screen?.backingScaleFactor ?? 2
-        let key = MenuBarBadgeImageKey(number: badge.number, glyph: cornerGlyph, scale: scale)
-        let image = showsIcon ? images.image(for: key) {
-            MenuBarBadgeIcon.render(value: badge.number, cornerGlyph: cornerGlyph, scale: scale)
-        } : nil
-        if button.image !== image { button.image = image }
-        button.imagePosition = showsIcon ? .imageLeft : .noImage
-        if button.title != text { button.title = text }
-        button.setAccessibilityLabel(text.isEmpty ? "DayEdge" : "DayEdge, \(text)")
+        let content = renderer.render(presentation, scale: scale)
+        if button.image !== content.image { button.image = content.image }
+        button.imagePosition = presentation.showsIcon ? .imageLeft : .noImage
+        if !button.attributedTitle.isEqual(to: content.title) { button.attributedTitle = content.title }
+        badgeWidth = content.badgeWidth
+        hasCallIcon = content.hasCallIcon
+        onMeetingClick = presentation.meeting == nil ? nil : onJoin
+        button.toolTip = presentation.meeting == nil ? nil : toolTip
+        let detail = content.text.isEmpty ? button.toolTip : content.text
+        button.setAccessibilityLabel(detail.map { "DayEdge, \($0)" } ?? "DayEdge")
+    }
+
+    private var geometry: MenuBarPrimaryGeometry? {
+        guard let button = statusItem?.button, let cell = button.cell else { return nil }
+        return MenuBarPrimaryGeometry(
+            imageRect: cell.imageRect(forBounds: button.bounds), titleRect: cell.titleRect(forBounds: button.bounds),
+            badgeWidth: badgeWidth, hasCallIcon: hasCallIcon
+        )
     }
 
     /// Anchor to the icon when present, otherwise the date/time button's center.
     var screenAnchor: PopoverAnchor? {
         guard let button = statusItem?.button, let frame = buttonScreenFrame,
-              let screen = button.window?.screen, let cell = button.cell else { return nil }
-        let anchorX = button.image == nil ? button.bounds.midX : cell.imageRect(forBounds: button.bounds).midX
+              let screen = button.window?.screen, let geometry else { return nil }
+        let anchorX = button.image == nil ? button.bounds.midX : geometry.calendarCenterX
         return PopoverAnchor(
             point: CGPoint(x: frame.minX + anchorX, y: frame.minY),
             visibleFrame: screen.visibleFrame
@@ -109,7 +122,12 @@ final class MenuBarStatusItemController {
             return
         }
 
-        onCalendarClick()
+        if let onMeetingClick, let button = statusItem?.button,
+           geometry?.isMeetingHit(button.convert(event.locationInWindow, from: nil)) == true {
+            onMeetingClick()
+        } else {
+            onCalendarClick()
+        }
     }
 
     /// Shown on right/control-click instead of toggling the popover.
