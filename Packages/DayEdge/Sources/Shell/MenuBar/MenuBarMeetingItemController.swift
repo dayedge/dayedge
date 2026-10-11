@@ -1,6 +1,4 @@
 import AppKit
-import SwiftUI
-import Domain
 import UI
 
 /// The independent meeting slot. Its text changes without rendering a bitmap.
@@ -10,12 +8,7 @@ final class MenuBarMeetingItemController {
     var onContextMenu: (NSStatusItem) -> Void = { _ in }
     private(set) var statusItem: NSStatusItem?
     private var onJoin: (() -> Void)?
-    private let images = MenuBarImageCache<ImageKey>()
-
-    private enum ImageKey: Equatable {
-        case call(VideoConferenceService, CGFloat)
-        case accent(Color, CGFloat)
-    }
+    private let renderer = MenuBarMeetingRenderer()
 
     func install() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -34,7 +27,7 @@ final class MenuBarMeetingItemController {
     }
 
     func apply(_ presentation: MenuBarMeetingPresentation?, toolTip: String?, onJoin: (() -> Void)?) {
-        self.onJoin = onJoin
+        self.onJoin = presentation == nil ? nil : onJoin
         guard let item = statusItem, let button = item.button else { return }
         guard let presentation else {
             item.isVisible = false
@@ -44,43 +37,12 @@ final class MenuBarMeetingItemController {
             return
         }
         let scale = button.window?.screen?.backingScaleFactor ?? 2
-        let image: NSImage?
-        let text: String
-        switch presentation {
-        case .callIcon(let service):
-            text = ""
-            image = images.image(for: .call(service, scale)) { CallJoinIcon.render(service: service, scale: scale) }
-        case .contextual(let state, let configuration, let calendar, let timeFormat):
-            text = state.label(configuration: configuration, calendar: calendar, format: timeFormat)
-            if configuration.showsCalendarAccent, let event = state.event {
-                image = images.image(for: .accent(event.color, scale)) { Self.accent(event.color, scale: scale) }
-            } else {
-                image = nil
-            }
-        }
-        if button.image !== image { button.image = image }
-        if button.title != text { button.title = text }
+        let content = renderer.render(presentation, scale: scale)
+        if button.image !== content.image { button.image = content.image }
+        if button.title != content.text { button.title = content.text }
         button.toolTip = toolTip
-        button.setAccessibilityLabel(toolTip ?? text)
+        button.setAccessibilityLabel(toolTip ?? content.text)
         item.isVisible = true
-    }
-
-    private static func accent(_ color: Color, scale: CGFloat) -> NSImage {
-        let size = NSSize(width: 5, height: 18)
-        let bitmap = NSBitmapImageRep(
-            bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
-            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
-            bytesPerRow: 0, bitsPerPixel: 0
-        )!
-        bitmap.size = size
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
-        NSColor(color).setFill()
-        NSBezierPath(roundedRect: NSRect(x: 0, y: 2, width: 2, height: 14), xRadius: 1, yRadius: 1).fill()
-        NSGraphicsContext.restoreGraphicsState()
-        let image = NSImage(size: size)
-        image.addRepresentation(bitmap)
-        return image
     }
 
     @objc private func clicked() {

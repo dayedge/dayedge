@@ -324,3 +324,5 @@
 "menubar.item.icon" = "Icon";
 "menubar.item.date.time" = "Date & Time";
 "menubar.item.icon.date.time" = "Icon and Date & Time";
+
+"menubar.item.space.notice" = "Showing date and time uses more menu bar space. If space is limited, macOS may move or hide DayEdge or its meeting indicator automatically.";

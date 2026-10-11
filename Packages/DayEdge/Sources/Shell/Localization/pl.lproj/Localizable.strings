@@ -323,3 +323,5 @@
 "menubar.item.icon" = "Ikona";
 "menubar.item.date.time" = "Data i godzina";
 "menubar.item.icon.date.time" = "Ikona oraz data i godzina";
+
+"menubar.item.space.notice" = "Wyświetlanie daty i godziny zajmuje więcej miejsca na pasku menu. Jeśli miejsca jest mało, macOS może automatycznie przenieść lub ukryć DayEdge albo jego wskaźnik spotkania.";

@@ -2,6 +2,8 @@ import SwiftUI
 import UI
 
 struct MenuBarSettingsView: View {
+    @AppStorage(MenuBarDateTimeSettings.presentationKey)
+    private var presentation = MenuBarItemPresentation.icon.rawValue
     @AppStorage(MenuBarEventIndicatorSettings.enabledKey)
     private var isEnabled = MenuBarEventIndicatorConfiguration.default.isEnabled
     @AppStorage(MenuBarEventIndicatorSettings.leadTimeKey)
@@ -42,8 +44,16 @@ struct MenuBarSettingsView: View {
                 )
             }
 
-            SettingsGroup(header: L10n.tr("menubar.item.section", "Menu Bar Item")) {
-                MenuBarItemRows()
+            VStack(alignment: .leading, spacing: 8) {
+                SettingsGroup(header: L10n.tr("menubar.item.section", "Menu Bar Item")) {
+                    MenuBarItemRows()
+                }
+                if (MenuBarItemPresentation(rawValue: presentation) ?? .icon).showsDateTime {
+                    SettingsInformationCallout(text: L10n.tr(
+                        "menubar.item.space.notice",
+                        "Showing date and time uses more menu bar space. If space is limited, macOS may move or hide DayEdge or its meeting indicator automatically."
+                    ))
+                }
             }
 
             SettingsGroup(header: L10n.tr("menubarsettingsview.quick.join", "Quick Join")) {

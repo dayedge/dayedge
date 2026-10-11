@@ -49,5 +49,5 @@
 
 ## Menu-bar items
 - Primary status item: Icon, Date & Time, or Icon and Date & Time, selected in Menu Bar Item settings. Badge and Format rows appear only when relevant; their saved preferences survive mode changes. The former date/time toggle migrates to Icon or Icon and Date & Time. The cached calendar badge and native date/time title share one status item. Presets follow app language, system region and General's hour-cycle preference; Custom shares General's pattern editor and supports minute precision.
-- Meeting status has its own stable status item, hidden when the existing meeting resolver has no presentation. Join and right-click menu behavior are preserved. Text/countdown changes never render an icon bitmap.
+- In Icon mode, meeting status shares the primary item with separate calendar/Join click regions. Modes containing date/time use the independent, stable meeting item. The existing meeting resolver controls visibility in both layouts. Join and right-click menu behavior are preserved. Text/countdown changes never render an icon bitmap.
 - Each item's image cache retains only its last key/image, including its screen scale. Date/time and meeting text are independent of these keys. Status-item autosave names use the app bundle identifier to keep Dev and Release separate.
