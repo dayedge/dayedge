@@ -3,7 +3,7 @@ import SwiftUI
 import Domain
 import UI
 
-/// Service glyph for the independent meeting status item.
+/// Service glyph shared by both menu-bar compositions.
 struct CallJoinIcon: View {
     let service: VideoConferenceService
     var inkColor: Color = .black
