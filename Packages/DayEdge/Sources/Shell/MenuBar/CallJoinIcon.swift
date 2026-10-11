@@ -38,7 +38,7 @@ struct CallJoinIcon: View {
 
 extension CallJoinIcon {
     /// Renders to an `NSImage` marked as a template — see
-    /// `MenuBarBadgeIcon.render(value:cornerBadge:)`, which this mirrors. Kept for
+    /// `MenuBarBadgeIcon.render(value:cornerGlyph:)`, which this mirrors. Kept for
     /// standalone use/testing; `AppDelegate` normally renders this
     /// composed with the badge via `CombinedMenuBarIcon` instead.
     @MainActor

@@ -94,19 +94,15 @@ final class MenuBarStateController {
         )
         readyCallEvent = resolution.readyCallEvent
 
-        // The calendar-with-a-number badge (see `MenuBarBadgeIcon`), from
-        // `MenuBarBadgeSettings.strategy` — swapping that setting (once
-        // there's a UI for it) is the only thing that changes what number
-        // shows up here.
-        let badgeValue = MenuBarBadgeSettings.strategy.badgeValue(events: events, now: now, calendar: calendar)
-        // New corner badges get their data here — see `MenuBarCornerBadge`.
+        let badge = MenuBarBadgeSettings.strategy.badgeContent(events: events, now: now, calendar: calendar)
+        // New corner glyphs get their data here — see `MenuBarCornerGlyph`.
         let tasksToday = taskRepository.scheduledIndex(now: now, calendar: calendar).tasks(on: today, calendar: calendar)
-        let cornerBadge = MenuBarCornerBadge.resolve(MenuBarCornerBadgeInputs(
-            badgeValue: badgeValue,
+        let cornerGlyph = MenuBarCornerGlyph.resolve(MenuBarCornerGlyphInputs(
+            isOverflow: badge.isOverflow,
             hasTasksDueToday: !tasksToday.isEmpty
         ))
         let rendered = CombinedMenuBarIcon.render(
-            accessory: resolution.accessory, badgeValue: badgeValue, cornerBadge: cornerBadge
+            accessory: resolution.accessory, badgeValue: badge.number, cornerGlyph: cornerGlyph
         )
 
         let joinURL = readyCallEvent?.meetingLink?.preferredURL

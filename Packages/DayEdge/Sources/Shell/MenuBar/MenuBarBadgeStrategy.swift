@@ -1,11 +1,12 @@
 import Foundation
 import Domain
 
-/// Which number the menu bar's calendar badge shows — a small, swappable
-/// "how do I turn today's agenda into one glanceable digit" strategy, in
-/// the same spirit as Foundation's `FormatStyle`: one value that fully
-/// determines the transform, so a future Settings UI can offer a plain
-/// picker over `allCases` and nothing else in the app needs to change.
+struct MenuBarBadgeContent: Equatable {
+    let number: Int
+    let isOverflow: Bool
+}
+
+/// Decides the displayed number and whether it needs an overflow glyph.
 enum MenuBarBadgeStrategy: String, CaseIterable, Identifiable, Codable {
     case remainingEvents
     case acceptedEvents
@@ -25,24 +26,24 @@ enum MenuBarBadgeStrategy: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// `events` are assumed to already be exactly one day's (see
-    /// `AppDelegate.refreshBadge`) — this only decides how to reduce that
-    /// day down to one number, not which day.
-    func badgeValue(events: [AgendaEventModel], now: Date, calendar: Calendar) -> Int {
+    /// Events already belong to today and respect calendar visibility.
+    func badgeContent(events: [AgendaEventModel], now: Date, calendar: Calendar) -> MenuBarBadgeContent {
+        let count: Int
         switch self {
         case .remainingEvents:
             let nowMinutes = Self.minutesSinceMidnight(of: now, calendar: calendar)
-            return events.filter { Self.isRemaining($0, nowMinutes: nowMinutes) }.count
+            count = events.filter { Self.isRemaining($0, nowMinutes: nowMinutes) }.count
         case .acceptedEvents:
-            return events.filter(Self.isAccepted).count
+            count = events.filter(Self.isAccepted).count
         case .acceptedRemainingEvents:
             let nowMinutes = Self.minutesSinceMidnight(of: now, calendar: calendar)
-            return events.filter { Self.isAccepted($0) && Self.isRemaining($0, nowMinutes: nowMinutes) }.count
+            count = events.filter { Self.isAccepted($0) && Self.isRemaining($0, nowMinutes: nowMinutes) }.count
         case .totalEvents:
-            return events.filter { $0.status != .cancelled }.count
+            count = events.filter { $0.status != .cancelled }.count
         case .dayOfMonth:
-            return calendar.component(.day, from: now)
+            return MenuBarBadgeContent(number: calendar.component(.day, from: now), isOverflow: false)
         }
+        return MenuBarBadgeContent(number: min(count, 9), isOverflow: count > 9)
     }
 
     private static func minutesSinceMidnight(of date: Date, calendar: Calendar) -> Int {
@@ -63,9 +64,7 @@ enum MenuBarBadgeStrategy: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// Persisted choice of `MenuBarBadgeStrategy` — the one seam a future
-/// Settings "menu bar" pane reads from and writes to; nothing else in the
-/// app should read/write this key directly.
+/// Persisted choice shared by Settings and the menu bar.
 enum MenuBarBadgeSettings {
     static let strategyKey = "com.dayedge.menuBarBadgeStrategy"
 

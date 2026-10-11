@@ -3,12 +3,10 @@ import SwiftUI
 
 /// A blank calendar "page" outline — a thick solid top cap (echoing the
 /// real Calendar.app icon's header band) over a slightly rounded
-/// rectangle frame, with a single digit 0–9 centered inside — the same
-/// trick Calendar.app's own Dock/menu bar icon uses to show today's date.
-/// Anything above 9 clamps the digit at "9" instead of ever showing a
-/// second character, so the digit's size/position never has to vary.
+/// rectangle frame, with the strategy's number centered inside. Dates
+/// use up to two digits; event counts are already capped by the strategy.
 ///
-/// The top-right corner can carry one `MenuBarCornerBadge` (e.g. the "+"
+/// The top-right corner can carry one `MenuBarCornerGlyph` (e.g. the "+"
 /// for more than 9), cut as a true transparent gap out of the frame (a
 /// `.destinationOut` halo in a compositing group) — everything here
 /// renders as one solid template color, so without an actual erased gap
@@ -17,7 +15,7 @@ import SwiftUI
 /// `Canvas` draw briefly allocated ~130 MB of rendering buffers.
 struct MenuBarBadgeIcon: View {
     let value: Int
-    var cornerBadge: MenuBarCornerBadge?
+    var cornerGlyph: MenuBarCornerGlyph?
     var inkColor: Color = .black
 
     private static let frameSize = CGSize(width: 18, height: 15)
@@ -54,10 +52,8 @@ struct MenuBarBadgeIcon: View {
     static var totalCanvasHeight: CGFloat { canvasSize.height }
     static var totalCanvasWidth: CGFloat { canvasSize.width }
 
-    /// Side of the square each corner badge's glyph is drawn into.
+    /// Side of the square each corner glyph's glyph is drawn into.
     fileprivate static let glyphSize: CGFloat = badgeDiameter + 2.5
-
-    private var displayDigit: Int { min(max(value, 0), MenuBarCornerBadge.maxDisplayedValue) }
 
     /// The frame: flush margin on the left/bottom; the top/right side
     /// additionally carries `badgeOverflow` so the "+" badge has room to
@@ -90,13 +86,15 @@ struct MenuBarBadgeIcon: View {
             ))
             .fill(inkColor)
 
-            Text("\(displayDigit)")
+            Text("\(value)")
                 .font(.system(size: 10.5, weight: .bold, design: .rounded))
                 .foregroundStyle(inkColor)
-                .fixedSize()
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(width: frameRect.width - Self.strokeWidth * 2)
                 .position(x: frameRect.midX, y: frameRect.midY + 1.5)
 
-            if let cornerBadge {
+            if let cornerGlyph {
                 // Overlapping well onto the frame's top-right corner rather
                 // than sitting mostly outside it in the reserved margin.
                 let badgeCenter = CGPoint(x: frameRect.maxX - 1, y: frameRect.minY + 1)
@@ -109,7 +107,7 @@ struct MenuBarBadgeIcon: View {
                     width: Self.haloDiameter, height: Self.haloDiameter)))
                     .fill(inkColor)
                     .blendMode(.destinationOut)
-                IconPathShape(path: cornerBadge.glyph(in: CGRect(
+                IconPathShape(path: cornerGlyph.glyph(in: CGRect(
                     x: badgeCenter.x - Self.glyphSize / 2, y: badgeCenter.y - Self.glyphSize / 2,
                     width: Self.glyphSize, height: Self.glyphSize)))
                     .fill(inkColor)
@@ -127,7 +125,7 @@ private struct IconPathShape: Shape {
     func path(in rect: CGRect) -> Path { path }
 }
 
-extension MenuBarCornerBadge {
+extension MenuBarCornerGlyph {
     /// The badge's solid glyph, filling `rect` — a square centered on the
     /// calendar's top-right corner, already cleared by the shared halo.
     /// Keep glyphs bold and filled: hairlines vanish at this size.
@@ -159,8 +157,8 @@ extension MenuBarBadgeIcon {
     /// alone, so the actual drawn color above (plain black) doesn't
     /// matter, only its shape (and, for the badge, its cut-out gaps).
     @MainActor
-    static func render(value: Int, cornerBadge: MenuBarCornerBadge?) -> NSImage? {
-        let renderer = ImageRenderer(content: MenuBarBadgeIcon(value: value, cornerBadge: cornerBadge))
+    static func render(value: Int, cornerGlyph: MenuBarCornerGlyph?) -> NSImage? {
+        let renderer = ImageRenderer(content: MenuBarBadgeIcon(value: value, cornerGlyph: cornerGlyph))
         renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
         guard let image = renderer.nsImage else { return nil }
         image.isTemplate = true
