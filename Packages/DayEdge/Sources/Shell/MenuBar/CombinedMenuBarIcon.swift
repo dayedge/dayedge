@@ -18,9 +18,9 @@ enum MenuBarAccessory: Equatable {
 struct CombinedMenuBarIcon: View {
     let accessory: MenuBarAccessory?
     let badgeValue: Int
-    let cornerBadge: MenuBarCornerBadge?
+    let cornerGlyph: MenuBarCornerGlyph?
 
-    // The badge canvas reserves transparent room for its corner badge.
+    // The badge canvas reserves transparent room for its corner glyph.
     // Slight negative spacing makes the next visible element sit at a
     // normal optical distance from the calendar outline.
     static let iconSpacing: CGFloat = -1
@@ -31,7 +31,7 @@ struct CombinedMenuBarIcon: View {
 
     var body: some View {
         HStack(spacing: Self.iconSpacing) {
-            MenuBarBadgeIcon(value: badgeValue, cornerBadge: cornerBadge, inkColor: ink)
+            MenuBarBadgeIcon(value: badgeValue, cornerGlyph: cornerGlyph, inkColor: ink)
                 .offset(y: -2)
 
             switch accessory {
@@ -139,7 +139,7 @@ extension CombinedMenuBarIcon {
     private struct Key: Equatable {
         let accessory: MenuBarAccessory?
         let badgeValue: Int
-        let cornerBadge: MenuBarCornerBadge?
+        let cornerGlyph: MenuBarCornerGlyph?
         let scale: CGFloat
     }
 
@@ -151,21 +151,21 @@ extension CombinedMenuBarIcon {
     /// already shows; each `ImageRenderer` pass briefly costs ~130 MB of
     /// graphics memory for a 22-point image.
     @MainActor
-    static func render(accessory: MenuBarAccessory?, badgeValue: Int, cornerBadge: MenuBarCornerBadge?) -> Rendered? {
+    static func render(accessory: MenuBarAccessory?, badgeValue: Int, cornerGlyph: MenuBarCornerGlyph?) -> Rendered? {
         let scale = NSScreen.main?.backingScaleFactor ?? 2
-        let key = Key(accessory: accessory, badgeValue: badgeValue, cornerBadge: cornerBadge, scale: scale)
+        let key = Key(accessory: accessory, badgeValue: badgeValue, cornerGlyph: cornerGlyph, scale: scale)
         if let last, last.key == key { return last.rendered }
-        guard let rendered = draw(accessory: accessory, badgeValue: badgeValue, cornerBadge: cornerBadge, scale: scale)
+        guard let rendered = draw(accessory: accessory, badgeValue: badgeValue, cornerGlyph: cornerGlyph, scale: scale)
         else { return nil }
         last = (key, rendered)
         return rendered
     }
 
     @MainActor
-    private static func draw(accessory: MenuBarAccessory?, badgeValue: Int, cornerBadge: MenuBarCornerBadge?,
+    private static func draw(accessory: MenuBarAccessory?, badgeValue: Int, cornerGlyph: MenuBarCornerGlyph?,
                              scale: CGFloat) -> Rendered? {
         let renderer = ImageRenderer(content: CombinedMenuBarIcon(
-            accessory: accessory, badgeValue: badgeValue, cornerBadge: cornerBadge
+            accessory: accessory, badgeValue: badgeValue, cornerGlyph: cornerGlyph
         ))
         renderer.scale = scale
         guard let image = renderer.nsImage else { return nil }

@@ -36,6 +36,7 @@
 - Ask only when needed (repeating scope, no Undo); else save with Undo.
 
 ## Menus
+- The menu-bar badge strategy supplies its display number and overflow flag. Event counts above nine show `9+`; day-of-month shows the full date number without overflow. The task-due corner glyph keeps priority over the overflow glyph.
 - One plan per menu (`EventContextMenuPlan`, `TaskContextMenuPlan`, `StatusMenuPlan`), grouped like Apple Calendar, dividers only between non-empty groups.
 - Items are `Label`s with SF Symbols and explicit `.titleAndIcon`; menus reset tint (`.tint(nil)`). The AppKit status menu opts into `preferredImageVisibility` on macOS 27, whose automatic policy hides symbols. Its public setter is called through KVC to keep the Xcode 26 / CLT builds compatible.
 - Item shortcuts come from `KeyboardShortcutSettings`. No key deletes an event.
