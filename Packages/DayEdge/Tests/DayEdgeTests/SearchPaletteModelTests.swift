@@ -1,5 +1,6 @@
 import CalendarIndex
 import XCTest
+import TimeWhisper
 @testable import Shell
 @testable import Domain
 @testable import Intelligence
@@ -10,7 +11,7 @@ import XCTest
 final class SearchPaletteModelTests: XCTestCase {
     private let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         calendar.locale = Locale(identifier: "en_US_POSIX")
         calendar.firstWeekday = 2
         return calendar
@@ -19,7 +20,12 @@ final class SearchPaletteModelTests: XCTestCase {
     private let lists = [CalendarSource(id: "work", title: "Work", tint: .blue)]
 
     private func model() -> SearchPaletteModel {
-        let model = SearchPaletteModel()
+        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let model = SearchPaletteModel(findTemporal: { text, now, calendar in
+            await parser.findTemporal(text, referenceDate: now, calendar: calendar)
+        }, parse: { text, now, calendar, lists, calendars in
+            await parser.parse(text, referenceDate: now, calendar: calendar, lists: lists, calendars: calendars)
+        })
         model.calendar = calendar
         let dates = DatePresentationFormatter(regionalLocale: Locale(identifier: "en_GB"), displayLocale: Locale(identifier: "en"), calendar: calendar)
         model.dates = { dates }
@@ -507,7 +513,12 @@ extension SearchPaletteModelTests {
 @MainActor
 final class SearchPalettePreviewTests: XCTestCase {
     private func model(events: Int, tasks: [TaskItem] = []) async -> SearchPaletteModel {
-        let model = SearchPaletteModel()
+        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let model = SearchPaletteModel(findTemporal: { text, now, calendar in
+            await parser.findTemporal(text, referenceDate: now, calendar: calendar)
+        }, parse: { text, now, calendar, lists, calendars in
+            await parser.parse(text, referenceDate: now, calendar: calendar, lists: lists, calendars: calendars)
+        })
         model.taskLists = { [] }
         model.results.debounce = .zero
         let base = Date().addingTimeInterval(3600)
@@ -596,7 +607,12 @@ final class SearchPalettePreviewTests: XCTestCase {
 @MainActor
 final class SearchVisibilityTests: XCTestCase {
     private func model(query: String, events: Int) async -> SearchPaletteModel {
-        let model = SearchPaletteModel()
+        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let model = SearchPaletteModel(findTemporal: { text, now, calendar in
+            await parser.findTemporal(text, referenceDate: now, calendar: calendar)
+        }, parse: { text, now, calendar, lists, calendars in
+            await parser.parse(text, referenceDate: now, calendar: calendar, lists: lists, calendars: calendars)
+        })
         model.taskLists = { [CalendarSource(id: "work", title: "Work", tint: .blue)] }
         model.results.debounce = .zero
         stubEvents(model, count: events, base: Date().addingTimeInterval(3600))

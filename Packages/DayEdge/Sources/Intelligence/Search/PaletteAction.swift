@@ -2,8 +2,7 @@ import Foundation
 import Domain
 
 /// One row of the search palette. Precedence is deterministic — a strict
-/// date → "Go to"; else a parsed draft → "Create" a task and/or an event
-/// (`QuickAddKindDecision` picks which, the likelier first); then Search
+/// date → "Go to"; else TimeWhisper candidates → "Create"; then Search
 /// (events and tasks matching the query, enabled when it has a searchable
 /// word) and Ask, always listed.
 package struct PaletteAction: Identifiable, Equatable {
@@ -116,7 +115,7 @@ package enum PaletteActions {
 
     /// The rows for a resolved query, in their fixed order. A task needs a
     /// list to go to, an event a writable calendar.
-    package static func build(dateIntent: SearchIntent?, task: QuickAddDraft?, lists: [CalendarSource],
+    package static func build(dateIntent: SearchIntent?, candidates: [QuickAddCandidate], lists: [CalendarSource],
                               calendars: [CalendarSource] = [], conflict: EventConflict? = nil,
                               isSearchable: Bool = true, referenceDate: Date, calendar: Calendar,
                               format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> [PaletteAction] {
@@ -125,15 +124,18 @@ package enum PaletteActions {
             let title = SearchSuggestion.make(for: dateIntent, referenceDate: referenceDate, calendar: calendar, dates: dates).title
             actions.append(PaletteAction(kind: .goToDate, title: title, subtitle: nil, isEnabled: true,
                                          supportsRefinement: false, accessibilityLabel: title))
-        } else if let task {
-            let kinds = QuickAddKindDecision.decide(task).kinds.filter { kind in
-                kind == .task ? !lists.isEmpty : !calendars.isEmpty
+        } else {
+            let offered = candidates.filter { candidate in
+                switch candidate {
+                case .task: !lists.isEmpty
+                case .event: !calendars.isEmpty
+                }
             }
             // Both offered: each says what it makes.
-            let isChoice = kinds.count > 1
-            for kind in kinds {
-                switch kind {
-                case .task:
+            let isChoice = offered.count > 1
+            for candidate in offered {
+                switch candidate {
+                case .task(let task):
                     actions.append(PaletteAction(
                         kind: .createTask, title: isChoice ? L10n.tr(
                             "paletteaction.create.task", "Create task “\(String(describing: task.title))”"
@@ -143,11 +145,10 @@ package enum PaletteActions {
                         subtitle: summary(of: task, lists: lists, referenceDate: referenceDate, calendar: calendar, format: format, dates: dates),
                         isEnabled: true, supportsRefinement: true, accessibilityLabel: L10n.tr("paletteaction.create.task.cc3d84", "Create task, \(String(describing: task.title))")
                     ))
-                case .event:
-                    let event = task.eventDraft(calendar: calendar, referenceDate: referenceDate)
+                case .event(let event):
                     actions.append(PaletteAction(
                         kind: .createEvent, title: L10n.tr("paletteaction.create.event", "Create event “\(String(describing: event.title))”"),
-                        subtitle: summary(of: event, recurrence: task.recurrence, calendars: calendars,
+                        subtitle: summary(of: event, recurrence: event.recurrenceRule, calendars: calendars,
                                           referenceDate: referenceDate, calendar: calendar, format: format, dates: dates),
                         isEnabled: true, supportsRefinement: true, accessibilityLabel: L10n.tr(
                             "paletteaction.create.event.8833bc", "Create event, \(String(describing: event.title))"
@@ -169,7 +170,8 @@ package enum PaletteActions {
         let hm = { (date: Date) in format.time(date, calendar: calendar) }
         var when = recurrence?.summary ?? day(event.start)
         if event.isAllDay {
-            if !calendar.isDate(event.end, inSameDayAs: event.start) { when += " – " + day(event.end) }
+            let last = calendar.date(byAdding: .day, value: -1, to: event.end) ?? event.start
+            if !calendar.isDate(last, inSameDayAs: event.start) { when += " – " + day(last) }
             when += L10n.tr("paletteaction.all.day", " · All day")
         } else if calendar.isDate(event.end, inSameDayAs: event.start) || event.end.timeIntervalSince(event.start) < 86_400 {
             // Tight, as the line is: "10:00–11:00", "10:30–11:00am".
@@ -187,22 +189,17 @@ package enum PaletteActions {
     /// title: "Friday, 2 Oct 10:00 · Work", "Every Friday 17:00 · Work ·
     /// High Priority" (when and its time read as one block). nil when there
     /// is nothing beyond the title.
-    package static func summary(of task: QuickAddDraft, lists: [CalendarSource], referenceDate: Date, calendar: Calendar,
+    package static func summary(of task: TaskDraft, lists: [CalendarSource], referenceDate: Date, calendar: Calendar,
                                 format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> String? {
         var parts: [String] = []
         var when: [String] = []
-        if let rule = task.recurrence {
+        if let rule = task.recurrenceRule {
             when.append(rule.summary)
-        } else if let day = task.day {
+        } else if let day = task.dueDate {
             when.append(SearchSuggestion.dayLabel(for: day, referenceDate: referenceDate, calendar: calendar, dates: dates))
         }
-        if let start = task.startTime, let hour = start.hour {
-            if let end = task.endTime, let endHour = end.hour {
-                when.append(format.range(fromHour: hour, fromMinute: start.minute ?? 0, toHour: endHour, toMinute: end.minute ?? 0)
-                    .replacingOccurrences(of: " – ", with: "–"))
-            } else {
-                when.append(format.time(hour: hour, minute: start.minute ?? 0))
-            }
+        if task.hasDueTime, let due = task.dueDate {
+            when.append(format.time(due, calendar: calendar))
         }
         if !when.isEmpty { parts.append(when.joined(separator: " ")) }
         if let listID = task.listID, let list = lists.first(where: { $0.id == listID }) { parts.append(list.title) }
@@ -237,16 +234,17 @@ package struct QuickAddEdit: Equatable {
     package var customRule: TaskRecurrenceRule?
     package var alert: TaskAlert?
 
-    package init(draft: QuickAddDraft, calendar: Calendar, referenceDate: Date) {
+    package init(draft: TaskDraft, calendar: Calendar, referenceDate: Date) {
         title = draft.title
         listID = draft.listID
-        day = draft.day
-        hasTime = draft.startTime?.hour != nil
-        let base = draft.day ?? calendar.startOfDay(for: referenceDate)
-        time = calendar.date(bySettingHour: draft.startTime?.hour ?? 9, minute: draft.startTime?.minute ?? 0, second: 0, of: base) ?? base
+        day = draft.dueDate.map { calendar.startOfDay(for: $0) }
+        hasTime = draft.hasDueTime
+        let base = day ?? calendar.startOfDay(for: referenceDate)
+        time = draft.hasDueTime ? (draft.dueDate ?? base)
+            : (calendar.date(bySettingHour: 9, minute: 0, second: 0, of: base) ?? base)
         priority = draft.priority
-        recurrence = draft.recurrence?.menuValue ?? .never
-        customRule = recurrence.isCustom ? draft.recurrence : nil
+        recurrence = draft.recurrenceRule?.menuValue ?? .never
+        customRule = recurrence.isCustom ? draft.recurrenceRule : nil
         alert = draft.alert
     }
 
@@ -256,7 +254,8 @@ package struct QuickAddEdit: Equatable {
         var due = day.map { calendar.startOfDay(for: $0) }
         if let day, hasTime {
             let parts = calendar.dateComponents([.hour, .minute], from: time)
-            due = calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: day)
+            due = calendar.isDate(time, inSameDayAs: day) ? time
+                : calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: day)
         }
         let rule = recurrence.isCustom ? customRule : TaskRecurrenceRule(standard: recurrence)
         return TaskDraft(
@@ -290,16 +289,15 @@ package struct EventQuickAddEdit: Equatable {
     /// Parsed alerts, kept as they are.
     package var alerts: [EventAlert]
 
-    package init(draft: QuickAddDraft, calendar: Calendar, referenceDate: Date) {
-        let event = draft.eventDraft(calendar: calendar, referenceDate: referenceDate)
+    package init(draft event: EventDraft, calendar: Calendar) {
         title = event.title
         calendarID = event.calendarIdentifier
         day = calendar.startOfDay(for: event.start)
         isAllDay = event.isAllDay
         if event.isAllDay {
             start = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
-            end = calendar.date(byAdding: .minute, value: QuickAddDraft.defaultEventMinutes, to: start) ?? start
-            lastDay = calendar.startOfDay(for: event.end)
+            end = calendar.date(byAdding: .minute, value: 60, to: start) ?? start
+            lastDay = calendar.date(byAdding: .day, value: -1, to: event.end) ?? day
         } else {
             start = event.start
             end = event.end
@@ -348,7 +346,7 @@ package struct EventQuickAddEdit: Equatable {
         let place = location.trimmingCharacters(in: .whitespacesAndNewlines)
         return EventDraft(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            start: isAllDay ? day : start, end: isAllDay ? max(lastDay, day) : end, isAllDay: isAllDay,
+            start: isAllDay ? day : start, end: isAllDay ? (calendar.date(byAdding: .day, value: 1, to: max(lastDay, day)) ?? end) : end, isAllDay: isAllDay,
             calendarIdentifier: calendarID, location: place.isEmpty ? nil : place,
             recurrenceRule: rule, alerts: alerts
         )

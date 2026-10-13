@@ -1,4 +1,5 @@
 import SwiftUI
+import TimeWhisper
 @testable import Shell
 @testable import Domain
 @testable import Intelligence
@@ -6,6 +7,7 @@ import SwiftUI
 /// A fixed week for the assistant's tools: "now" is Wednesday
 /// 23 September 2026 12:00 UTC, Monday-first weeks.
 enum AssistantTestData {
+    static let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
     static let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -49,8 +51,11 @@ enum AssistantTestData {
                                     holidays: AssistantHolidays(region: "PL", namesByDayKey: holidays)),
             calendar: calendar,
             now: { now },
-            parseDate: { text, _, _ in
-                text.lowercased() == "next friday" ? .jumpToDate(date(25)) : .freeTextSearch(text)
+            resolveTemporal: { text, now, calendar in
+                if text.lowercased() == "next friday" { return DateInterval(start: date(25), end: date(26)) }
+                guard let found = await parser.findTemporal(text, referenceDate: now, calendar: calendar),
+                      found.remainingText.isEmpty else { return nil }
+                return TemporalPresentation.interval(found.temporal, calendar: calendar)
             }
         )
     }

@@ -61,11 +61,8 @@ final class EventQuickAddEditTests: XCTestCase {
     }
 
     private func edit(start: Date, end: Date) -> EventQuickAddEdit {
-        var draft = QuickAddDraft(title: "Lunch", confidence: 1, spans: [])
-        draft.day = calendar.startOfDay(for: start)
-        draft.startTime = calendar.dateComponents([.hour, .minute], from: start)
-        draft.endTime = calendar.dateComponents([.hour, .minute], from: end)
-        return EventQuickAddEdit(draft: draft, calendar: calendar, referenceDate: at(23, 12))
+        let draft = EventDraft(title: "Lunch", start: start, end: end)
+        return EventQuickAddEdit(draft: draft, calendar: calendar)
     }
 
     func testMovingTheDayKeepsTheTimes() {
@@ -88,13 +85,10 @@ final class EventQuickAddEditTests: XCTestCase {
     }
 
     func testAllDayDraftsKeepTheirSpan() {
-        var draft = QuickAddDraft(title: "Conference", confidence: 1, spans: [])
-        draft.day = calendar.startOfDay(for: at(3, 0))
-        draft.endDay = calendar.startOfDay(for: at(5, 0))
-        draft.isAllDay = true
-        let value = EventQuickAddEdit(draft: draft, calendar: calendar, referenceDate: at(1, 12))
+        let draft = EventDraft(title: "Conference", start: at(3, 0), end: at(6, 0), isAllDay: true)
+        let value = EventQuickAddEdit(draft: draft, calendar: calendar)
         let event = value.eventDraft(calendar: calendar)
         XCTAssertTrue(event.isAllDay)
-        XCTAssertEqual([event.start, event.end], [at(3, 0), at(5, 0)])
+        XCTAssertEqual([event.start, event.end], [at(3, 0), at(6, 0)])
     }
 }

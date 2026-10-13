@@ -27,6 +27,6 @@ allow UI Foundation Observation SwiftUI AppKit CoreGraphics CoreText CoreImage Q
 # Features: Domain and UI only — no Platform, no other feature.
 allow Agenda Foundation Observation SwiftUI AppKit CoreGraphics Domain UI
 allow Tasks Foundation Observation SwiftUI AppKit CoreGraphics Domain UI
-allow Intelligence Foundation Observation SwiftUI AppKit CoreGraphics JavaScriptCore FoundationModels Tachikoma Domain UI
+allow Intelligence Foundation Observation SwiftUI AppKit CoreGraphics os TimeWhisper FoundationModels Tachikoma Domain UI
 
 exit $status

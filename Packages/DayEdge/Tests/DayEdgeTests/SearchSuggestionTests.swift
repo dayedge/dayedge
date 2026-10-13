@@ -61,7 +61,7 @@ final class SearchSuggestionTests: XCTestCase {
         let suggestion = SearchSuggestion.make(for: .freeTextSearch("architecture"), referenceDate: reference, calendar: calendar, dates: dates)
         XCTAssertEqual(suggestion.title, "Search events for “architecture”")
         XCTAssertEqual(suggestion.systemImageName, "magnifyingglass")
-        XCTAssertFalse(suggestion.isEnabled)
-        XCTAssertEqual(suggestion.secondaryText, "Event search not available yet")
+        XCTAssertTrue(suggestion.isEnabled)
+        XCTAssertNil(suggestion.secondaryText)
     }
 }

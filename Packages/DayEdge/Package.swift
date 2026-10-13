@@ -52,7 +52,8 @@ let remoteModelProducts: [Target.Dependency] = []
 
 // The local SQLite mirror of EventKit (event source and search index).
 let packageDependencies: [Package.Dependency] = remoteModelDependencies + [
-    .package(path: "../CalendarIndex")
+    .package(path: "../CalendarIndex"),
+    .package(path: "../../../time-whisper")
 ]
 let shellDependencies: [Target.Dependency] = [
     .product(name: "CalendarIndex", package: "CalendarIndex"),
@@ -120,9 +121,9 @@ let package = Package(
         // the remote-model products (Tachikoma) and the date parser.
         .target(
             name: "Intelligence",
-            dependencies: ["Domain", "UI"] + remoteModelProducts,
+            dependencies: ["Domain", "UI", .product(name: "TimeWhisper", package: "time-whisper")] + remoteModelProducts,
             path: "Sources/Intelligence",
-            resources: [.process("Resources"), .process("Localization")],
+            resources: [.process("Localization")],
             swiftSettings: swiftSettings
         ),
         // The app's shell: composition (the panel's object graph), the menu
@@ -138,7 +139,7 @@ let package = Package(
         .testTarget(
             name: "DayEdgeTests",
             dependencies: ["Domain", "Platform", "UI", "Agenda", "Tasks", "Intelligence", "Shell"]
-                + shellDependencies + remoteModelProducts,
+                + shellDependencies + remoteModelProducts + [.product(name: "TimeWhisper", package: "time-whisper")],
             path: "Tests/DayEdgeTests",
             // Parser snapshots, read from the source tree (GoldenSnapshot).
             exclude: ["Golden"],

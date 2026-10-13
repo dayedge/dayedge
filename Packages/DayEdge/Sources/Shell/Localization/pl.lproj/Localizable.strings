@@ -291,8 +291,6 @@
 "acknowledgements.fonts" = "Kroje pisma";
 "acknowledgements.data" = "Dane";
 "license.title" = "Licencja";
-"acknowledgements.role.chrono" = "Rozpoznaje daty i godziny zapisane w języku naturalnym.";
-"acknowledgements.role.dayjs" = "Obliczenia na datach w bibliotece Chrono.";
 "acknowledgements.role.grdb" = "Narzędzia SQLite obsługujące lokalny indeks kalendarza i wyszukiwanie.";
 "acknowledgements.role.tachikoma" = "Łączy funkcję Zapytaj z wybranymi dostawcami modeli językowych.";
 "acknowledgements.role.mcp" = "Obsługa Model Context Protocol wykorzystywana przez bibliotekę Tachikoma.";
@@ -325,3 +323,6 @@
 "menubar.item.icon.date.time" = "Ikona oraz data i godzina";
 
 "menubar.item.space.notice" = "Wyświetlanie daty i godziny zajmuje więcej miejsca na pasku menu. Jeśli miejsca jest mało, macOS może automatycznie przenieść lub ukryć DayEdge albo jego wskaźnik spotkania.";
+
+"acknowledgements.role.timewhisper" = "Rozpoznaje daty, zadania i wydarzenia zapisane w języku naturalnym.";
+"acknowledgements.role.kotlin" = "Środowisko wykonawcze i narzędzia dat używane przez TimeWhisper.";

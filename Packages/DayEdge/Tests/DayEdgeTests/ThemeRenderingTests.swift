@@ -139,8 +139,7 @@ final class ThemeRenderingTests: XCTestCase {
         notice.show(.init(style: .success, title: "Task completed", action: .init(title: "Undo", handler: {}), duration: 60))
         defer { notice.dismiss(); chat.cancel() }
         for light in [true, false] {
-            let palette = SearchPaletteModel(resolveDate: { text, _, _ in .freeTextSearch(text) },
-                                             resolveTask: { _, _, _, _, _ in nil })
+            let palette = SearchPaletteModel(findTemporal: { _, _, _ in nil }, parse: { _, _, _, _, _ in [] })
             palette.update(query: "Design review")
             await palette.settle()
 
@@ -381,15 +380,10 @@ private struct ThemeEditorBoard: View {
 
     init() {
         let reference = Date(timeIntervalSince1970: 1_791_110_400)
-        var event = QuickAddDraft(title: "Product review", confidence: 1, spans: [])
-        event.eventTitle = event.title
-        event.day = reference
-        event.startTime = DateComponents(hour: 9, minute: 0)
-        event.endTime = DateComponents(hour: 10, minute: 0)
-        event.calendarID = "work"
-        _eventEdit = State(initialValue: EventQuickAddEdit(draft: event, calendar: .autoupdatingCurrent, referenceDate: reference))
-        var task = QuickAddDraft(title: "Prepare review notes", confidence: 1, spans: [])
-        task.listID = "work"
+        let event = EventDraft(title: "Product review", start: reference.addingTimeInterval(9 * 3600),
+                               end: reference.addingTimeInterval(10 * 3600), calendarIdentifier: "work")
+        _eventEdit = State(initialValue: EventQuickAddEdit(draft: event, calendar: .autoupdatingCurrent))
+        let task = TaskDraft(title: "Prepare review notes", listID: "work")
         _taskEdit = State(initialValue: QuickAddEdit(draft: task, calendar: .autoupdatingCurrent, referenceDate: reference))
     }
 

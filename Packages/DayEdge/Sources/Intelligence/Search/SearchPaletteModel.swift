@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import Domain
 import UI
+import TimeWhisper
 
 /// The search palette's state and behavior; `SearchBarView` only draws it.
 /// One keyboard contract everywhere:
@@ -10,8 +11,7 @@ import UI
 ///   Tab    refine the selected action in place (Quick Add), if it can be;
 ///          on a result, show it in Calendar / Tasks
 ///   Esc    collapse a refinement (the root handles closing the palette)
-/// Precedence is fixed: the strict date parser (the search pipeline,
-/// unchanged) first; only if it says no, the Quick Add task parser.
+/// A date-only query navigates; otherwise the library supplies creation candidates.
 @MainActor
 @Observable
 package final class SearchPaletteModel {
@@ -75,16 +75,22 @@ package final class SearchPaletteModel {
 
     // Resolved payloads for the actions.
     @ObservationIgnored var dateIntent: SearchIntent?
-    @ObservationIgnored var taskDraft: QuickAddDraft?
+    @ObservationIgnored var candidates: [QuickAddCandidate] = []
+    var taskDraft: TaskDraft? {
+        candidates.compactMap { if case .task(let draft) = $0 { return draft }; return nil }.first
+    }
+    var eventDraft: EventDraft? {
+        candidates.compactMap { if case .event(let draft) = $0 { return draft }; return nil }.first
+    }
     /// The trimmed query the actions were built for — what Ask asks.
     @ObservationIgnored var query = ""
     @ObservationIgnored var resolution: Task<Void, Never>?
     @ObservationIgnored var creation: Task<Void, Never>?
     @ObservationIgnored var generation = 0
 
-    @ObservationIgnored package let resolveDate: (String, Date, Calendar) async -> SearchIntent
-    /// Text, now, calendar, task lists, event calendars → the parsed draft.
-    @ObservationIgnored package let resolveTask: (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> QuickAddDraft?
+    @ObservationIgnored package let findTemporal: (String, Date, Calendar) async -> FoundTemporal?
+    /// Text, now, calendar, task lists, event calendars → ordered candidates.
+    @ObservationIgnored package let parse: (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> [QuickAddCandidate]
     /// Lists a new task can go to (writable, not excluded); empty = no
     /// task creation (e.g. no Reminders access).
     @ObservationIgnored package var taskLists: () -> [CalendarSource] = { [] }
@@ -131,18 +137,15 @@ package final class SearchPaletteModel {
     @ObservationIgnored package var timeFormat: () -> TimeFormat = { .current }
 
     package init(
-        resolveDate: @escaping (String, Date, Calendar) async -> SearchIntent = { text, date, calendar in
-            await SearchIntentPipeline.live.resolve(text, referenceDate: date, calendar: calendar)
+        findTemporal: @escaping (String, Date, Calendar) async -> FoundTemporal? = { text, date, calendar in
+            await NaturalLanguageParser.live.findTemporal(text, referenceDate: date, calendar: calendar)
         },
-        resolveTask: @escaping (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> QuickAddDraft? = { text, date, calendar, lists, calendars in
-            let options = lists.map { QuickAddList(id: $0.id, title: $0.title) }
-            let calendarOptions = calendars.map { QuickAddList(id: $0.id, title: $0.title) }
-            return await TaskQuickAddStage(lists: { options }, calendars: { calendarOptions })
-                .resolve(text, referenceDate: date, calendar: calendar)
+        parse: @escaping (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> [QuickAddCandidate] = { text, date, calendar, lists, calendars in
+            await NaturalLanguageParser.live.parse(text, referenceDate: date, calendar: calendar, lists: lists, calendars: calendars)
         }
     ) {
-        self.resolveDate = resolveDate
-        self.resolveTask = resolveTask
+        self.findTemporal = findTemporal
+        self.parse = parse
     }
 
     package var selectedAction: PaletteAction? { actions.first { $0.kind == selectedKind } }

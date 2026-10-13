@@ -15,16 +15,19 @@ final class AssistantCalendarToolsTests: XCTestCase {
 
     // MARK: - Dates the model may pass
 
-    func testKeywordsAndISODatesResolveExactly() {
-        func interval(_ text: String) -> DateInterval? { AssistantWhen.exact(text, now: T.now, calendar: calendar) }
-        XCTAssertEqual(interval("today"), DateInterval(start: T.date(23), end: T.date(24)))
-        XCTAssertEqual(interval(" Tomorrow "), DateInterval(start: T.date(24), end: T.date(25)))
-        XCTAssertEqual(interval("next week"), DateInterval(start: T.date(28), end: T.date(5, month: 10)), "Monday-first")
-        XCTAssertEqual(interval("next 7 days"), DateInterval(start: T.date(23), end: T.date(30)))
-        XCTAssertEqual(interval("2026-10-02"), DateInterval(start: T.date(2, month: 10), end: T.date(3, month: 10)))
-        XCTAssertEqual(interval("2026-09-28..2026-09-30"), DateInterval(start: T.date(28), end: T.date(1, month: 10)))
-        XCTAssertNil(interval("next friday"), "phrases go to the parser")
-        XCTAssertNil(interval("2026-09-30..2026-09-28"), "a backwards range isn't a range")
+    func testKeywordsAndISODatesResolveExactly() async {
+        func interval(_ text: String) async -> DateInterval? { try? await AssistantWhen.resolve(text, context: T.context()) }
+        let inputs = ["today", " Tomorrow ", "next week", "next 7 days", "2026-10-02", "2026-09-28..2026-09-30"]
+        var actual: [DateInterval?] = []
+        for input in inputs { actual.append(await interval(input)) }
+        XCTAssertEqual(actual, [DateInterval(start: T.date(23), end: T.date(24)),
+                                DateInterval(start: T.date(24), end: T.date(25)),
+                                DateInterval(start: T.date(28), end: T.date(5, month: 10)),
+                                DateInterval(start: T.date(23), end: T.date(30)),
+                                DateInterval(start: T.date(2, month: 10), end: T.date(3, month: 10)),
+                                DateInterval(start: T.date(28), end: T.date(1, month: 10))])
+        let backwards = await interval("2026-09-30..2026-09-28")
+        XCTAssertNil(backwards)
     }
 
     func testPhrasesGoToTheDateParserAndNonsenseIsExplained() async throws {

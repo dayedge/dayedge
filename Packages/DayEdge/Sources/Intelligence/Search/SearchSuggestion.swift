@@ -1,18 +1,14 @@
 import Foundation
 import Domain
 
-/// What the omnibox should show for a resolved `SearchIntent` — a thin
-/// presentation mapping, not a second search pipeline. `SearchIntentPipeline`
-/// (`Intelligence/SearchIntentPipeline.swift`) stays entirely unaware this
-/// type exists; this is purely UI representation of its output.
+/// The localized title and icon of a navigation or search action.
 package struct SearchSuggestion: Equatable {
     package let intent: SearchIntent
     /// SF Symbol name.
     package let systemImageName: String
     package let title: String
     package let isEnabled: Bool
-    /// Shown only for a disabled suggestion — e.g. "Event search not
-    /// available yet." `nil` for an enabled one.
+    /// Optional supporting text.
     package let secondaryText: String?
 
     package static func make(for intent: SearchIntent, referenceDate: Date, calendar: Calendar,
@@ -31,13 +27,10 @@ package struct SearchSuggestion: Equatable {
                 isEnabled: true, secondaryText: nil
             )
         case .freeTextSearch(let query):
-            // Full-text event search isn't implemented yet — represented
-            // honestly (a visible, disabled row) rather than silently
-            // doing nothing on Enter, or a fake "no date found" state.
             return SearchSuggestion(
                 intent: intent, systemImageName: "magnifyingglass",
                 title: L10n.tr("searchsuggestion.search.events.for", "Search events for “\(String(describing: query))”"),
-                isEnabled: false, secondaryText: L10n.tr("searchsuggestion.event.search.not.available.yet", "Event search not available yet")
+                isEnabled: true, secondaryText: nil
             )
         }
     }

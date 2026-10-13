@@ -49,6 +49,7 @@ package final class SearchSession {
     @ObservationIgnored package var now: () -> Date = { Date() }
     @ObservationIgnored package var debounce: Duration = .milliseconds(200)
 
+    @ObservationIgnored private var resolvedParts: SearchQueryParts?
     @ObservationIgnored private var pending: Task<Void, Never>?
     @ObservationIgnored private var loads: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private var generation = 0
@@ -71,10 +72,13 @@ package final class SearchSession {
 
     // MARK: - Query
 
-    package func update(query: String) {
+    package func cancelPendingResolution() { pending?.cancel() }
+
+    package func update(query: String, resolvedParts: SearchQueryParts? = nil) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed != self.query else { return }
         self.query = trimmed
+        self.resolvedParts = resolvedParts
         pending?.cancel()
         guard Self.isSearchable(trimmed) else {
             reset()
@@ -124,7 +128,8 @@ package final class SearchSession {
     /// dropped.
     private func rebuild(keepingWindow: Bool) async {
         let query = self.query
-        let parts = await parseQuery(query)
+        let parts: SearchQueryParts
+        if let resolvedParts { parts = resolvedParts } else { parts = await parseQuery(query) }
         guard !Task.isCancelled, query == self.query else { return }
         // Only a date ("tomorrow") is Go to's, not a search.
         guard parts.isSearchable else {

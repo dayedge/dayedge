@@ -1,10 +1,11 @@
 import Foundation
 import Domain
+import TimeWhisper
 
 package enum SearchQueryResolver {
     // swiftlint:disable cyclomatic_complexity function_body_length - one branch per search operator
     /// Operators out first; date values through the app's date parsing
-    /// (ISO `yyyy-MM-dd`, else chrono). A date phrase in the free words
+    /// (TimeWhisper). A date phrase in the free words
     /// still narrows ("standup tomorrow") unless an operator set a date.
     package static func resolve(_ query: String, referenceDate: Date, calendar: Calendar) async -> SearchQueryParts {
         let parsed = SearchQuerySyntax.parse(query)
@@ -61,7 +62,8 @@ package enum SearchQueryResolver {
                 result.intersection(with: next) ?? DateInterval(start: .distantPast, duration: 0)
             }
         } else if !parts.text.isEmpty {
-            let phrase = await SearchDateFilter.parse(parts.text, referenceDate: referenceDate, calendar: calendar)
+            let found = await NaturalLanguageParser.live.findTemporal(parts.text, referenceDate: referenceDate, calendar: calendar)
+            let phrase = TemporalPresentation.searchParts(parts.text, found: found, calendar: calendar)
             parts.text = phrase.text
             parts.interval = phrase.interval
             if let label = phrase.label { labels.append(label) }
@@ -83,22 +85,10 @@ package enum SearchQueryResolver {
     package static func dayInterval(_ value: String, referenceDate: Date, calendar: Calendar) async -> (DateInterval, String)? {
         let value = value.trimmingCharacters(in: .whitespaces)
         guard !value.isEmpty else { return nil }
-        if let day = isoDay(value, calendar: calendar), let interval = calendar.dateInterval(of: .day, for: day) {
-            let dates = DatePresentationFormatter.current.with(calendar)
-            return (interval, dates.format(day, .compact, weekday: .abbreviated, relativeTo: referenceDate))
-        }
-        // The whole value must be the date phrase ("next friday").
-        let phrase = await SearchDateFilter.parse(value, referenceDate: referenceDate, calendar: calendar)
-        guard phrase.text.isEmpty, let interval = phrase.interval else { return nil }
-        return (interval, phrase.label ?? value)
-    }
-
-    private static func isoDay(_ value: String, calendar: Calendar) -> Date? {
-        let parts = value.split(separator: "-")
-        guard parts.count == 3, parts[0].count == 4, let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
-              (1...12).contains(month), (1...31).contains(day) else { return nil }
-        let date = calendar.date(from: DateComponents(year: year, month: month, day: day))
-        // Reject rollovers (2026-02-31).
-        return date.flatMap { calendar.component(.day, from: $0) == day ? $0 : nil }
+        guard let found = await NaturalLanguageParser.live.findTemporal(value, referenceDate: referenceDate, calendar: calendar),
+              found.remainingText.isEmpty else { return nil }
+        let parts = TemporalPresentation.searchParts(value, found: found, calendar: calendar)
+        guard let interval = parts.interval else { return nil }
+        return (interval, parts.label ?? value)
     }
 }
