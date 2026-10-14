@@ -2,8 +2,9 @@ import XCTest
 @testable import Shell
 
 final class MenuBarCornerGlyphTests: XCTestCase {
-    private func resolve(overflow: Bool = false, tasks: Bool = false) -> MenuBarCornerGlyph? {
-        MenuBarCornerGlyph.resolve(MenuBarCornerGlyphInputs(isOverflow: overflow, hasTasksDueToday: tasks))
+    private func resolve(overflow: Bool = false, tasks: Bool = false, paused: Bool = false) -> MenuBarCornerGlyph? {
+        MenuBarCornerGlyph.resolve(MenuBarCornerGlyphInputs(isOverflow: overflow, hasTasksDueToday: tasks,
+                                                            areAlertsPaused: paused))
     }
 
     func testNoGlyphWithoutOverflow() {
@@ -16,6 +17,14 @@ final class MenuBarCornerGlyphTests: XCTestCase {
 
     func testTasksDueShowsRing() {
         XCTAssertEqual(resolve(tasks: true), .tasksDue)
+    }
+
+    func testPausedAlertsShowPause() {
+        XCTAssertEqual(resolve(paused: true), .alertsPaused)
+    }
+
+    func testPausedAlertsWinOverTasksDueAndOverflow() {
+        XCTAssertEqual(resolve(overflow: true, tasks: true, paused: true), .alertsPaused)
     }
 
     func testTasksDueWinsOverOverflow() {

@@ -239,7 +239,9 @@
 "statusmenuplan.mute.this.meeting" = "Wycisz to spotkanie";
 "statusmenuplan.unmute.this.meeting" = "Wyłącz wyciszenie tego spotkania";
 "statusmenuplan.pause.meeting.alerts" = "Wstrzymaj alerty spotkań";
-"statusmenuplan.meeting.alerts.paused" = "Alerty spotkań wstrzymane";
+"statusmenuplan.meeting.alerts.paused.until" = "Alerty spotkań wstrzymane · do %@";
+"statusmenuplan.meeting.alerts.paused.until.tomorrow" = "Alerty spotkań wstrzymane · do jutra, %@";
+"statusmenuplan.meeting.alerts.paused.until.date" = "Alerty spotkań wstrzymane · do %@, %@";
 "statusmenuplan.resume.meeting.alerts" = "Wznów alerty spotkań";
 "statusmenuplan.open.dayedge" = "Otwórz DayEdge";
 "statusmenuplan.quit.dayedge" = "Zakończ DayEdge";

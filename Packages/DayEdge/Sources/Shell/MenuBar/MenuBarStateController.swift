@@ -95,7 +95,8 @@ final class MenuBarStateController {
         let tasksToday = taskRepository.scheduledIndex(now: now, calendar: calendar).tasks(on: today, calendar: calendar)
         let cornerGlyph = MenuBarCornerGlyph.resolve(MenuBarCornerGlyphInputs(
             isOverflow: badge.isOverflow,
-            hasTasksDueToday: !tasksToday.isEmpty
+            hasTasksDueToday: !tasksToday.isEmpty,
+            areAlertsPaused: reminderSuppression.isGloballyMuted
         ))
         let configuration = MenuBarDateTimeSettings.configuration()
         let text = configuration.text(
@@ -126,7 +127,9 @@ final class MenuBarStateController {
             events: dataProvider.events(for: calendar.startOfDay(for: now), calendar: calendar),
             actionableTaskCount: TaskBuckets.actionableTodayCount(tasks: taskRepository.tasks, now: now, calendar: calendar),
             isMuted: { [reminderSuppression] in reminderSuppression.isMuted($0) },
-            globalMute: mute.map { ($0.until, $0.chosen) }
+            globalMute: mute.map { ($0.until, $0.chosen) },
+            dates: .current,
+            timeFormat: .current
         ))
     }
 

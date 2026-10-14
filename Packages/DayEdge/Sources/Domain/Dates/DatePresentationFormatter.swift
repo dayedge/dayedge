@@ -142,14 +142,17 @@ package struct DatePresentationFormatter: Hashable {
     /// "Today", "Tomorrow", "Yesterday" — nil for any other day. In the
     /// display language, like the names.
     package func relativeDay(_ date: Date, relativeTo now: Date = .now) -> String? {
-        let offset = calendar.dateComponents([.day], from: calendar.startOfDay(for: now),
-                                             to: calendar.startOfDay(for: date)).day ?? 0
-        switch offset {
+        switch dayOffset(date, from: now) {
         case 0: return localized("date.today", "Today")
         case 1: return localized("date.tomorrow", "Tomorrow")
         case -1: return localized("date.yesterday", "Yesterday")
         default: return nil
         }
+    }
+
+    /// Calendar days from `now`'s day to `date`'s: 0 today, 1 tomorrow, -1 yesterday.
+    package func dayOffset(_ date: Date, from now: Date) -> Int {
+        calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: date)).day ?? 0
     }
 
     // MARK: - Custom patterns

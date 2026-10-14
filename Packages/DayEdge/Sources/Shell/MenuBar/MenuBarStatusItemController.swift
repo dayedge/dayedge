@@ -172,13 +172,13 @@ final class MenuBarStatusItemController {
             item.keyEquivalent = ","
         case .quit:
             item.keyEquivalent = "q"
-        case .pauseAlerts(let options, let isPaused, let checked):
+        case .pauseAlerts(let options, let pausedTitle, let checked):
             // Like Focus: Resume first while paused, then the durations —
             // text only, the chosen one checked when it still holds.
             item.action = nil
             let submenu = NSMenu()
             submenu.autoenablesItems = false
-            if isPaused {
+            if pausedTitle != nil {
                 submenu.addItem(menuItem(for: .unmuteAll))
                 submenu.addItem(.separator())
             }
