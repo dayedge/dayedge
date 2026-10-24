@@ -130,7 +130,17 @@ extension MenuBarCornerGlyph {
     /// calendar's top-right corner, already cleared by the shared halo.
     /// Keep glyphs bold and filled: hairlines vanish at this size.
     func glyph(in rect: CGRect) -> Path {
+        // The pause bars and the plus share one bar thickness.
+        let bar: CGFloat = 2.1
         switch self {
+        case .alertsPaused:
+            // Two bars, as thick as the plus's and a point shorter: at
+            // full height they look taller than the ring and the plus.
+            let bars = rect.insetBy(dx: 1, dy: 1.5)
+            var path = Path()
+            path.addRect(CGRect(x: bars.minX, y: bars.minY, width: bar, height: bars.height))
+            path.addRect(CGRect(x: bars.maxX - bar, y: bars.minY, width: bar, height: bars.height))
+            return path
         case .tasksDue:
             // A ring, not a dot: reads as an open to-do, like a
             // Reminders checkbox.
@@ -141,11 +151,10 @@ extension MenuBarCornerGlyph {
             // Two thick crossed bars — not a filled circle with the plus
             // cut out of it (that read as a dot with a faint hairline
             // cross, not a plus).
-            let thickness: CGFloat = 2.1
             let arms = rect.insetBy(dx: 1, dy: 1)
             var path = Path()
-            path.addRect(CGRect(x: arms.minX, y: arms.midY - thickness / 2, width: arms.width, height: thickness))
-            path.addRect(CGRect(x: arms.midX - thickness / 2, y: arms.minY, width: thickness, height: arms.height))
+            path.addRect(CGRect(x: arms.minX, y: arms.midY - bar / 2, width: arms.width, height: bar))
+            path.addRect(CGRect(x: arms.midX - bar / 2, y: arms.minY, width: bar, height: arms.height))
             return path
         }
     }

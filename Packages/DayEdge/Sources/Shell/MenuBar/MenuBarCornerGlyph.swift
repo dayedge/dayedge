@@ -15,6 +15,8 @@ import Foundation
 ///    (`MenuBarBadgeIcon.swift`). The clear halo that separates it from
 ///    the calendar outline is shared, so only the glyph itself is needed.
 enum MenuBarCornerGlyph: CaseIterable, Equatable {
+    /// Every meeting's alerts are paused — a "‖".
+    case alertsPaused
     /// At least one open task due today or overdue — a "○".
     case tasksDue
     /// The strategy capped an event count; a "+" stands in for the rest.
@@ -22,6 +24,8 @@ enum MenuBarCornerGlyph: CaseIterable, Equatable {
 
     func applies(to inputs: MenuBarCornerGlyphInputs) -> Bool {
         switch self {
+        case .alertsPaused:
+            return inputs.areAlertsPaused
         case .tasksDue:
             return inputs.hasTasksDueToday
         case .overflow:
@@ -41,4 +45,6 @@ struct MenuBarCornerGlyphInputs: Equatable {
     var isOverflow: Bool
     /// Today's agenda has an open task — due today or overdue.
     var hasTasksDueToday = false
+    /// The global mute is on.
+    var areAlertsPaused = false
 }

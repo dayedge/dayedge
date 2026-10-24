@@ -220,7 +220,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reminderSuppression.onMutation = { [weak meetingHUD] key, muted in
             meetingHUD?.reminderSuppressionChanged(for: key, muted: muted)
         }
-        reminderSuppression.onGlobalMutation = { [weak meetingHUD] in meetingHUD?.refresh() }
+        reminderSuppression.onGlobalMutation = { [weak self, weak meetingHUD] in
+            meetingHUD?.refresh()
+            self?.menuBarState?.refresh()
+        }
         meetingHUD.refresh()
         meetingHUD.scheduleMinuteRefresh()
     }

@@ -12,10 +12,11 @@ enum StatusMenuItem {
     case muteMeeting(AgendaEventModel)
     case restoreMeeting(AgendaEventModel)
     /// Every meeting's alerts, for a while (the Focus-style durations). While
-    /// paused, the submenu starts with Resume (`unmuteAll`); `checked` is the
+    /// paused, the row's title is `pausedTitle` (it says when they resume) and
+    /// the submenu starts with Resume (`unmuteAll`); `checked` is the
     /// duration the pause came from, only when choosing it now would end at
     /// exactly the same moment.
-    case pauseAlerts([MuteUntilOption], isPaused: Bool, checked: MuteUntilOption?)
+    case pauseAlerts([MuteUntilOption], pausedTitle: String?, checked: MuteUntilOption?)
     /// Resume Meeting Alerts — the paused submenu's first row.
     case unmuteAll
     case settings, about, quit
@@ -30,9 +31,8 @@ enum StatusMenuItem {
         case .showTodayTasks(let count): return L10n.tr("statusmenuplan.show.today.s.tasks", "Show Today’s Tasks (\(String(describing: count)))")
         case .muteMeeting: return L10n.tr("statusmenuplan.mute.this.meeting", "Mute This Meeting")
         case .restoreMeeting: return L10n.tr("statusmenuplan.unmute.this.meeting", "Unmute This Meeting")
-        case .pauseAlerts(_, let isPaused, _):
-            return isPaused ? L10n.tr("statusmenuplan.meeting.alerts.paused", "Meeting Alerts Paused")
-                : L10n.tr("statusmenuplan.pause.meeting.alerts", "Pause Meeting Alerts")
+        case .pauseAlerts(_, let pausedTitle, _):
+            return pausedTitle ?? L10n.tr("statusmenuplan.pause.meeting.alerts", "Pause Meeting Alerts")
         case .unmuteAll: return L10n.tr("statusmenuplan.resume.meeting.alerts", "Resume Meeting Alerts")
         case .settings: return L10n.tr("statusmenuplan.settings", "Settings…")
         case .about: return L10n.tr("statusmenuplan.about.dayedge", "About DayEdge")
@@ -52,7 +52,7 @@ enum StatusMenuItem {
         case .showTodayTasks: return "checklist"
         case .muteMeeting: return "bell.slash"
         case .restoreMeeting: return "bell"
-        case .pauseAlerts(_, let isPaused, _): return isPaused ? "pause.circle.fill" : "pause.circle"
+        case .pauseAlerts(_, let pausedTitle, _): return pausedTitle == nil ? "pause.circle" : "pause.circle.fill"
         // In a text-only submenu, like the durations under it.
         case .unmuteAll: return nil
         case .settings: return "gearshape"
@@ -78,6 +78,8 @@ enum StatusMenuPlan {
         var isMuted: (AgendaEventModel) -> Bool
         /// The global mute, while active.
         var globalMute: (until: Date, chosen: MuteUntilOption?)?
+        var dates: DatePresentationFormatter
+        var timeFormat: TimeFormat
     }
 
     static let titleLimit = 40
@@ -109,7 +111,11 @@ enum StatusMenuPlan {
         let checked = inputs.globalMute.flatMap { mute in
             mute.chosen.flatMap { $0.endDate(now: inputs.now, calendar: inputs.calendar) == mute.until ? $0 : nil }
         }
-        let reminders: [StatusMenuItem] = [.pauseAlerts(options, isPaused: inputs.globalMute != nil, checked: checked)]
+        let pausedTitle = inputs.globalMute.map { mute in
+            Self.pausedTitle(until: mute.until, now: inputs.now, dates: inputs.dates.with(inputs.calendar),
+                             timeFormat: inputs.timeFormat)
+        }
+        let reminders: [StatusMenuItem] = [.pauseAlerts(options, pausedTitle: pausedTitle, checked: checked)]
 
         return [[.open, .search, .ask], context, reminders, [.settings, .about], [.quit]]
             .filter { !$0.isEmpty }
@@ -129,6 +135,23 @@ enum StatusMenuPlan {
         return meetings
             .filter { $0.startDate! > now }
             .min { $0.startDate! < $1.startDate! }
+    }
+
+    /// "Meeting Alerts Paused · Until 15:00" — the day only when it isn't today.
+    static func pausedTitle(until: Date, now: Date, dates: DatePresentationFormatter, timeFormat: TimeFormat) -> String {
+        // Whole sentences per case: "tomorrow" after "until" takes its own form in some languages (Polish "do jutra").
+        let time = timeFormat.time(until, calendar: dates.calendar)
+        let locale = dates.displayLocale
+        switch dates.dayOffset(until, from: now) {
+        case 0:
+            return L10n.tr("statusmenuplan.meeting.alerts.paused.until", "Meeting Alerts Paused · Until \(time)", locale: locale)
+        case 1:
+            return L10n.tr("statusmenuplan.meeting.alerts.paused.until.tomorrow", "Meeting Alerts Paused · Until Tomorrow, \(time)",
+                           locale: locale)
+        default:
+            return L10n.tr("statusmenuplan.meeting.alerts.paused.until.date",
+                           "Meeting Alerts Paused · Until \(dates.menuBarDate(until)), \(time)", locale: locale)
+        }
     }
 
     /// “Title”, shortened so the menu stays narrow.

@@ -240,7 +240,9 @@
 "statusmenuplan.mute.this.meeting" = "Mute This Meeting";
 "statusmenuplan.unmute.this.meeting" = "Unmute This Meeting";
 "statusmenuplan.pause.meeting.alerts" = "Pause Meeting Alerts";
-"statusmenuplan.meeting.alerts.paused" = "Meeting Alerts Paused";
+"statusmenuplan.meeting.alerts.paused.until" = "Meeting Alerts Paused · Until %@";
+"statusmenuplan.meeting.alerts.paused.until.tomorrow" = "Meeting Alerts Paused · Until Tomorrow, %@";
+"statusmenuplan.meeting.alerts.paused.until.date" = "Meeting Alerts Paused · Until %@, %@";
 "statusmenuplan.resume.meeting.alerts" = "Resume Meeting Alerts";
 "statusmenuplan.open.dayedge" = "Open DayEdge";
 "statusmenuplan.quit.dayedge" = "Quit DayEdge";

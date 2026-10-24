@@ -29,6 +29,11 @@ final class StatusMenuPlanTests: XCTestCase {
         )
     }
 
+    private var dates: DatePresentationFormatter {
+        DatePresentationFormatter(regionalLocale: Locale(identifier: "en_US"), displayLocale: Locale(identifier: "en"),
+                                  calendar: calendar)
+    }
+
     private func titles(
         now: Date,
         events: [AgendaEventModel] = [],
@@ -39,8 +44,13 @@ final class StatusMenuPlanTests: XCTestCase {
         StatusMenuPlan.resolve(.init(
             now: now, calendar: calendar, events: events, actionableTaskCount: tasks,
             isMuted: { muted.contains($0.id) },
-            globalMute: globalMute.map { (until: $0.0, chosen: $0.1) }
+            globalMute: globalMute.map { (until: $0.0, chosen: $0.1) },
+            dates: dates, timeFormat: .twentyFourHour
         )).map { $0.map(\.title) }
+    }
+
+    private func pausedTitle(now: Date, until: Date, timeFormat: TimeFormat = .twentyFourHour) -> String {
+        StatusMenuPlan.pausedTitle(until: until, now: now, dates: dates, timeFormat: timeFormat)
     }
 
     private let top = ["Open DayEdge", "Search…", "Ask DayEdge…"]
@@ -64,7 +74,7 @@ final class StatusMenuPlanTests: XCTestCase {
         XCTAssertEqual(result, [
             top,
             ["Join “1F – Proces wytwórczy”", "Show Today’s Tasks (3)"],
-            ["Meeting Alerts Paused"],
+            ["Meeting Alerts Paused · Until 18:00"],
             app, quit
         ], "the global mute outranks the meeting's own")
     }
@@ -123,7 +133,7 @@ final class StatusMenuPlanTests: XCTestCase {
         let event = meeting("Review", at(11))
         let rows: [StatusMenuItem] = [
             .open, .search, .ask, .join(event), .showEvent(event, day: at(0)), .showTodayTasks(count: 2),
-            .muteMeeting(event), .restoreMeeting(event), .pauseAlerts([.oneHour], isPaused: false, checked: nil), .pauseAlerts([.oneHour], isPaused: true, checked: nil),
+            .muteMeeting(event), .restoreMeeting(event), .pauseAlerts([.oneHour], pausedTitle: nil, checked: nil), .pauseAlerts([.oneHour], pausedTitle: "Paused", checked: nil),
             .settings, .about
         ]
         for row in rows {
@@ -162,8 +172,9 @@ final class StatusMenuPlanTests: XCTestCase {
     func testPausedAlertsCheckTheChoiceOnlyWhileItStillMeansThisPause() {
         func pause(now: Date, until: Date, chosen: MuteUntilOption?) -> (isPaused: Bool, checked: MuteUntilOption?)? {
             let rows = StatusMenuPlan.resolve(.init(now: now, calendar: calendar, events: [], actionableTaskCount: 0,
-                                                    isMuted: { _ in false }, globalMute: (until, chosen)))
-            for row in rows.joined() { if case .pauseAlerts(_, let isPaused, let checked) = row { return (isPaused, checked) } }
+                                                    isMuted: { _ in false }, globalMute: (until, chosen),
+                                                    dates: dates, timeFormat: .twentyFourHour))
+            for row in rows.joined() { if case .pauseAlerts(_, let pausedTitle, let checked) = row { return (pausedTitle != nil, checked) } }
             return nil
         }
         XCTAssertEqual(pause(now: at(15), until: at(18), chosen: .evening)?.checked, .evening, "a daypart still ends there")
@@ -173,6 +184,43 @@ final class StatusMenuPlanTests: XCTestCase {
         XCTAssertEqual(pause(now: at(9, 30), until: at(10, 10), chosen: .oneHour)?.isPaused, true)
         XCTAssertEqual(StatusMenuItem.unmuteAll.title, "Resume Meeting Alerts")
         XCTAssertNil(StatusMenuItem.unmuteAll.symbolName, "text only, like the durations")
+    }
+
+    // MARK: - When alerts resume
+
+    func testPausedTitleTodayShowsOnlyTheTime() {
+        XCTAssertEqual(pausedTitle(now: at(9), until: at(14)), "Meeting Alerts Paused · Until 14:00")
+    }
+
+    func testPausedTitleForOneHourShowsTheResolvedTime() {
+        let now = at(9, 10)
+        let until = MuteUntilOption.oneHour.endDate(now: now, calendar: calendar)
+        XCTAssertEqual(pausedTitle(now: now, until: until), "Meeting Alerts Paused · Until 10:10")
+    }
+
+    func testPausedTitleTomorrowNamesTheDay() {
+        XCTAssertEqual(pausedTitle(now: at(15), until: at(8, daysAhead: 1)), "Meeting Alerts Paused · Until Tomorrow, 08:00")
+    }
+
+    func testPausedTitleLaterWritesTheDate() {
+        XCTAssertEqual(pausedTitle(now: at(15), until: at(8, daysAhead: 2)), "Meeting Alerts Paused · Until Fri, Oct 2, 08:00")
+    }
+
+    /// Polish says "until tomorrow" with its own form ("do jutra"), so each case is a whole sentence.
+    func testPausedTitleInPolish() {
+        let polish = DatePresentationFormatter(regionalLocale: Locale(identifier: "pl_PL"), displayLocale: Locale(identifier: "pl"),
+                                               calendar: calendar)
+        func title(_ until: Date) -> String {
+            StatusMenuPlan.pausedTitle(until: until, now: at(15), dates: polish, timeFormat: .twentyFourHour)
+        }
+        XCTAssertEqual(title(at(18)), "Alerty spotkań wstrzymane · do 18:00")
+        XCTAssertEqual(title(at(8, daysAhead: 1)), "Alerty spotkań wstrzymane · do jutra, 08:00")
+        let later = at(8, daysAhead: 2)
+        XCTAssertEqual(title(later), "Alerty spotkań wstrzymane · do \(polish.menuBarDate(later)), 08:00")
+    }
+
+    func testPausedTitleFollowsTheTwelveHourSetting() {
+        XCTAssertEqual(pausedTitle(now: at(15), until: at(18), timeFormat: .twelveHour), "Meeting Alerts Paused · Until 6:00pm")
     }
 
     // MARK: - Today's tasks
