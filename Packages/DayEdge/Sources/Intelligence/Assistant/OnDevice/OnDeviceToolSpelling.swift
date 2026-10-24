@@ -12,7 +12,7 @@ package enum OnDeviceToolSpelling {
         let parameters: [String: String]
     }
 
-    private static let when = "Day or period, e.g. today, next week, 2026-10-02."
+    private static let when = "2026-10-02, or 2026-10-01..2026-10-07."
 
     package static let table: [String: Spelling] = [
         "get_current_date": Spelling(description: "Today's date and time.", parameters: [:]),
@@ -25,15 +25,15 @@ package enum OnDeviceToolSpelling {
             "with": "A person taking part.", "type": "", "when": when + " Any time if left out."
         ]),
         "event_details": Spelling(description: "One event in full: people, responses, place, notes.",
-                                  parameters: ["event": "Its title.", "when": "Where to look, e.g. tomorrow."]),
+                                  parameters: ["event": "Its title.", "when": "Where to look."]),
         "list_tasks": Spelling(description: "The user's tasks.", parameters: ["filter": "Default open.", "list": "A list's name."]),
         "task_recurrence": Spelling(description: "How a repeating task repeats, and its dates.",
-                                    parameters: ["task": "Its title.", "when": "Which dates, e.g. next month."]),
+                                    parameters: ["task": "Its title.", "when": when]),
         "get_days": Spelling(description: "Holidays, weekends and workdays.", parameters: ["when": when + " Default next 30 days."]),
-        "create_task": Spelling(description: "Create a task.", parameters: ["title": "", "due": "e.g. tomorrow 10:00"]),
+        "create_task": Spelling(description: "Create a task.", parameters: ["title": "", "due": "2026-10-02, or 2026-10-02 10:00."]),
         "complete_task": Spelling(description: "Mark a task done.", parameters: ["task": "Its title."]),
         "update_task": Spelling(description: "Change a task's due date or title.",
-                                parameters: ["task": "Its title.", "due": "New day and time.", "title": "New title."]),
+                                parameters: ["task": "Its title.", "due": "2026-10-02 10:00; a time alone keeps its day.", "title": "New title."]),
         "delete_task": Spelling(description: "Delete a task.", parameters: ["task": "Its title."])
     ]
 

@@ -86,6 +86,7 @@ package struct TaskDetailPopoverView: View {
             // A plain field reads as the title itself until focused.
             TextField(L10n.tr("taskdetailpopoverview.title", "Title"), text: $titleDraft, axis: .vertical)
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(task.isCompleted ? theme.secondaryText : theme.primaryText)
                 .strikethrough(task.isCompleted)

@@ -102,11 +102,6 @@ final class PanelRouter {
 
         case .jumpToMonth(let date):
             agendaNavigation.jumpToMonth(date)
-
-        case .freeTextSearch:
-            // Full-text event search is a separate, later piece of work —
-            // nothing to route to yet.
-            break
         }
         searchQuery = ""
     }

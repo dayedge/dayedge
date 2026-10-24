@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import Domain
 import UI
-import TimeWhisper
 
 extension SearchPaletteModel {
     // MARK: - Resolution
@@ -22,17 +21,19 @@ extension SearchPaletteModel {
         let referenceDate = now()
         let calendar = self.calendar
         let lists = taskLists()
+        let pause = typingPause
         resolution = Task { @MainActor [weak self] in
-            guard let self else { return }
+            if pause > .zero { try? await Task.sleep(for: pause) }
+            guard let self, !Task.isCancelled else { return }
             // Operators (`from:`, `day:` …) make it a search: no Go to or
             // Create for "refinement day:today".
             let isSearchOnly = SearchQuerySyntax.parse(trimmed).hasOperators
-            let calendars = isSearchOnly ? [] : await eventCalendars()
-            async let temporal = isSearchOnly ? nil : findTemporal(trimmed, referenceDate, calendar)
-            async let parsed = isSearchOnly ? [] : parse(trimmed, referenceDate, calendar, lists, calendars)
-            let (found, candidates) = await (temporal, parsed)
+            let found = isSearchOnly ? nil : await findTemporal(trimmed, referenceDate, calendar)
             let intent = found.flatMap { TemporalPresentation.navigation($0, calendar: calendar) }
-            let offered = intent == nil ? candidates : []
+            // A date alone is Go to; only other text is read for a task or an event. (The library runs one request at a
+            // time, so reading both at once saved nothing.)
+            let calendars = isSearchOnly || intent != nil ? [] : await eventCalendars()
+            let offered = isSearchOnly || intent != nil ? [] : await parse(trimmed, referenceDate, calendar, lists, calendars)
             let conflict = await conflict(for: offered)
             let parts: SearchQueryParts
             if isSearchOnly {
@@ -87,9 +88,7 @@ extension SearchPaletteModel {
     /// The new event's time against the days it touches (first
     /// occurrence only); nil when no event is offered or it's all day.
     private func conflict(for candidates: [QuickAddCandidate]) async -> EventConflict? {
-        guard let event = candidates.compactMap({ candidate -> EventDraft? in
-            if case .event(let draft) = candidate { return draft }; return nil
-        }).first, !event.isAllDay else { return nil }
+        guard let event = candidates.lazy.compactMap(\.event).first, !event.isAllDay else { return nil }
         return EventConflict.check(start: event.start, end: event.end, against: await events(touching: event.start, event.end))
     }
 

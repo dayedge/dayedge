@@ -30,6 +30,11 @@
   developer identity or provide notarization. The development keychain uses a public password; never
   put Developer ID certificates or unrelated secrets in it.
 
+`make build` generates `build/DayEdge-local.entitlements` with library validation disabled:
+local self-signed/ad-hoc apps have no Apple Team ID and otherwise cannot load the model's
+embedded dynamic framework. Hardened runtime remains enabled. `make release` uses the original
+`App/DayEdge.entitlements` and keeps library validation enabled for Developer ID distribution.
+
 ## Memory
 - `scripts/memory-report.sh` (`make memory ARGS=…`) → `build/memory/`. Don't hand-run footprint/vmmap/heap.
 - `--launch` fresh launch · `--stacks` allocators (DayEdge frames ▶) · `--track 10:30` leak check · `--spike 40:120` transient peaks · `--compare <report>` delta.

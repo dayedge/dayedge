@@ -78,6 +78,7 @@ package struct DetailNotesSection: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .hidden()
             TextEditor(text: $draft)
+                .themedTextInput()
                 .font(.system(size: 12))
                 .foregroundStyle(theme.primaryText)
                 .scrollContentBackground(.hidden)

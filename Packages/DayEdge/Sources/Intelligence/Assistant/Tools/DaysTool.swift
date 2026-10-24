@@ -7,7 +7,7 @@ import Foundation
 package enum DaysTool {
     package static let everyDayLimit = 31
     package static let maxDays = 366
-    package static let defaultWhen = "next 30 days"
+    package static let defaultDays = 30
 
     package static func make(_ context: AssistantToolContext) -> AssistantTool {
         .answering(
@@ -18,7 +18,7 @@ package enum DaysTool {
                       description: "Which days: \(AssistantWhen.accepted). Default next 30 days.", isRequired: false)
             ]
         ) { arguments in
-            let interval = try await AssistantWhen.resolve(arguments.optionalString("when") ?? defaultWhen, context: context)
+            let interval = try AssistantWhen.resolve(arguments.optionalString("when"), defaultDays: defaultDays, context: context)
             return await answer(for: interval, context: context)
         }
     }

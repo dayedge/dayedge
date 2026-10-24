@@ -67,9 +67,9 @@ final class AssistantToolTests: XCTestCase {
         func call(_ name: String, _ json: String) async throws -> String {
             try await bridged.first { $0.name == name }!.call(arguments: GeneratedContent(json: json))
         }
-        let agenda = try await call("get_agenda", #"{"when": "tomorrow"}"#)
+        let agenda = try await call("get_agenda", #"{"when": "2026-09-24"}"#)
         XCTAssertTrue(agenda.contains("08:00–09:00 Dentist"), agenda)
-        let free = try await call("find_free_time", #"{"when": "tomorrow", "minutes": 60}"#)
+        let free = try await call("find_free_time", #"{"when": "2026-09-24", "minutes": 60}"#)
         XCTAssertTrue(free.hasSuffix("Thursday 24 September 2026: 09:00–17:00"), free)
         let found = try await call("find_events", #"{"text": "dentist"}"#)
         XCTAssertTrue(found.contains("event Thu 24 Sep 08:00–09:00 Dentist"), found)

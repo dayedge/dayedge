@@ -47,8 +47,6 @@ final class AcknowledgementsTests: XCTestCase {
         let notices = LicenseView.thirdPartyText
         XCTAssertTrue(notices.contains("COMPONENT: TimeWhisper\n"))
         XCTAssertTrue(notices.contains("COMPONENT: Kotlin runtime, kotlinx-coroutines and kotlinx-datetime\n"))
-        XCTAssertFalse(notices.contains("COMPONENT: chrono-node\n"))
-        XCTAssertFalse(notices.contains("COMPONENT: dayjs\n"))
     }
 
     /// About shows the bundled copy of the licence: it must be the

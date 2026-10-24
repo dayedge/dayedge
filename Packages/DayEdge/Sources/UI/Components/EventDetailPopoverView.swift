@@ -169,6 +169,7 @@ package struct EventDetailPopoverView: View {
                     // A plain field reads as the title itself until focused.
                     TextField(L10n.tr("eventdetailpopoverview.title", "Title"), text: $titleDraft, axis: .vertical)
                         .textFieldStyle(.plain)
+                        .themedTextInput()
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(theme.primaryText)
                         .lineLimit(1...4)

@@ -114,6 +114,7 @@ struct DatePatternSheet: View {
                 label(L10n.tr("dateformatrows.pattern", "Pattern"))
                 TextField(suggestion, text: $draft)
                     .textFieldStyle(.roundedBorder)
+                    .themedTextInput()
                     .font(.system(size: 12, design: .monospaced))
                     .onSubmit(save)
                 if case .invalid(let reason) = check {

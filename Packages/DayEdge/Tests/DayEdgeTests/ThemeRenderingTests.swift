@@ -139,7 +139,7 @@ final class ThemeRenderingTests: XCTestCase {
         notice.show(.init(style: .success, title: "Task completed", action: .init(title: "Undo", handler: {}), duration: 60))
         defer { notice.dismiss(); chat.cancel() }
         for light in [true, false] {
-            let palette = SearchPaletteModel(findTemporal: { _, _, _ in nil }, parse: { _, _, _, _, _ in [] })
+            let palette = SearchPaletteModel(findTemporal: { _, _, _ in nil }, parse: { _, _, _, _, _ in [] }, prepareParser: { _ in })
             palette.update(query: "Design review")
             await palette.settle()
 

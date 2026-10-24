@@ -88,6 +88,7 @@ struct WeatherLocationSheet: View {
             if mode == .city {
                 TextField(L10n.tr("weatherlocationsheet.search.city", "Search city…"), text: $search.query)
                     .textFieldStyle(.roundedBorder)
+                    .themedTextInput()
                     .focused($isSearchFocused)
                     .onKeyPress(.downArrow) { moveHighlight(1) }
                     .onKeyPress(.upArrow) { moveHighlight(-1) }

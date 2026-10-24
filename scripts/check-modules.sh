@@ -27,6 +27,12 @@ allow UI Foundation Observation SwiftUI AppKit CoreGraphics CoreText CoreImage Q
 # Features: Domain and UI only — no Platform, no other feature.
 allow Agenda Foundation Observation SwiftUI AppKit CoreGraphics Domain UI
 allow Tasks Foundation Observation SwiftUI AppKit CoreGraphics Domain UI
-allow Intelligence Foundation Observation SwiftUI AppKit CoreGraphics os TimeWhisper FoundationModels Tachikoma Domain UI
+allow Intelligence Foundation Observation SwiftUI AppKit CoreGraphics os TimeWhisper TimeWhisperModelAll FoundationModels Tachikoma Domain UI
+
+# The parser library stays behind Intelligence/Parsing; the rest of the app uses its own values.
+while IFS= read -r line; do
+    echo "only Intelligence/Parsing may: $line"
+    status=1
+done < <(grep -rnE '^import TimeWhisper' . --include='*.swift' | grep -v '^\./Intelligence/Parsing/' || true)
 
 exit $status

@@ -1,39 +1,39 @@
 import Foundation
 import Domain
-import TimeWhisper
 
 /// Adapts library ranges to navigation and day-based search; never reads text.
 package enum TemporalPresentation {
-    package static func navigation(_ found: FoundTemporal, calendar: Calendar) -> SearchIntent? {
+    package static func navigation(_ found: FoundDate, calendar: Calendar) -> SearchIntent? {
         guard found.remainingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        switch found.temporal.granularity {
-        case .month, .year: return .jumpToMonth(found.temporal.start.date)
-        case .day, .week: return .jumpToDate(calendar.startOfDay(for: found.temporal.start.date))
+        switch found.date.span {
+        case .month, .year: return .jumpToMonth(found.date.start)
+        case .day, .week: return .jumpToDate(calendar.startOfDay(for: found.date.start))
         }
     }
 
-    package static func interval(_ temporal: TemporalSpec, calendar: Calendar) -> DateInterval {
-        let start = temporal.start.date
-        let end = temporal.endExclusive.date
-        guard temporal.hasExplicitTime || end == start else { return DateInterval(start: start, end: end) }
+    package static func interval(_ date: ParsedDate, calendar: Calendar) -> DateInterval {
+        let start = date.start
+        let end = date.end
+        guard date.hasTime || end == start else { return DateInterval(start: start, end: end) }
         let first = calendar.startOfDay(for: start)
         let last = calendar.startOfDay(for: end)
         let exclusive = end > start && end == last ? end : (calendar.dateInterval(of: .day, for: end)?.end ?? end)
         return DateInterval(start: first, end: exclusive)
     }
 
-    package static func searchParts(_ query: String, found: FoundTemporal?, calendar: Calendar,
-                                    dates: DatePresentationFormatter = .current) -> SearchQueryParts {
+    package static func searchParts(_ query: String, found: FoundDate?, calendar: Calendar) -> SearchQueryParts {
         guard let found else { return .plain(query) }
-        let range = interval(found.temporal, calendar: calendar)
-        let dates = dates.with(calendar)
-        let label: String
-        switch found.temporal.granularity {
-        case .month: label = dates.monthYear(range.start)
-        case .year: label = dates.year(range.start)
-        case .day, .week:
-            label = dates.format(range.start, .compact, weekday: .abbreviated, year: .outsideCurrentYear)
+        let range = interval(found.date, calendar: calendar)
+        return SearchQueryParts(text: found.remainingText, interval: range, label: label(found.date, interval: range, calendar: calendar))
+    }
+
+    /// How to name the days a search covers: "Oct 2026", "2026", or the first day ("Fri 2 Oct").
+    package static func label(_ date: ParsedDate, interval: DateInterval, calendar: Calendar) -> String {
+        let dates = DatePresentationFormatter.current.with(calendar)
+        return switch date.span {
+        case .month: dates.monthYear(interval.start)
+        case .year: dates.year(interval.start)
+        case .day, .week: dates.format(interval.start, .compact, weekday: .abbreviated, year: .outsideCurrentYear)
         }
-        return SearchQueryParts(text: found.remainingText, interval: range, label: label)
     }
 }

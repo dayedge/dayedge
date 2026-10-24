@@ -78,7 +78,7 @@ extension ThemePalette {
             cancelledText: muted, cancelledMetadata: muted.opacity(0.75), cancelledTimelineText: muted,
             cancelledTimelineFill: surface, ongoingIndicator: red, quietMetadata: muted,
             subduedMetadata: secondary.opacity(0.8), detailMetadata: secondary, sourceLabelFallback: text)
-        p.editor = .init(text: text, focusRing: blue.opacity(0.8), selectionFill: filledBlue,
+        p.editor = .init(text: text, caret: blue, focusRing: blue.opacity(0.8), selectionFill: filledBlue,
             titleText: text, labelText: secondary, placeholderText: secondary, panelFill: raised,
             fieldFill: surface, fieldHoverFill: raised, fieldFocusedFill: raised, fieldKeyline: border,
             overlapBusyText: secondary, overlapUnconfirmedText: secondary)

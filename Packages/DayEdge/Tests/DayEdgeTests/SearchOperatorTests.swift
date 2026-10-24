@@ -179,6 +179,7 @@ final class SearchPaletteOperatorTests: XCTestCase {
         var resolvedDate = false
         let model = SearchPaletteModel(findTemporal: { _, _, _ in resolvedDate = true; return nil },
                                        parse: { _, _, _, _, _ in [] })
+        model.typingPause = .zero
         model.update(query: "standup day:tomorrow")
         await model.settle()
         XCTAssertFalse(resolvedDate)

@@ -25,7 +25,7 @@ package enum TaskRecurrenceTool {
         ) { arguments in
             let name = try arguments.string("task")
             var range: DateInterval?
-            if let when = arguments.optionalString("when") { range = try await AssistantWhen.resolve(when, context: context) }
+            if let when = arguments.optionalString("when") { range = try AssistantWhen.resolve(when, context: context) }
             return await answer(task: name, in: range, context: context)
         }
     }

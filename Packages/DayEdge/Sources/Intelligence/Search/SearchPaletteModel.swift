@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import Domain
 import UI
-import TimeWhisper
 
 /// The search palette's state and behavior; `SearchBarView` only draws it.
 /// One keyboard contract everywhere:
@@ -63,12 +62,12 @@ package final class SearchPaletteModel {
     /// Calendars a new event can go to, as of the last resolution.
     package internal(set) var eventCalendarOptions: [CalendarSource] = []
     @ObservationIgnored var overlapCheck: Task<Void, Never>?
-    /// The Quick Add field whose child editor (choice list, date or time
-    /// picker) is open. That editor owns ↑ / ↓, Return and Esc.
+    /// The Quick Add field whose child editor (choice list, date, time or
+    /// End Repeat picker) is open. That editor owns ↑ / ↓, Return and Esc.
     package var openChildEditor: QuickAddField?
     package var isChildEditorOpen: Bool { openChildEditor != nil }
-    /// Creating: the task is being saved (Quick Add stays, inert, until it
-    /// is — and stays editable if saving fails).
+    /// Creating: the task or event is being saved (Quick Add stays, inert,
+    /// until it is — and stays editable if saving fails).
     package internal(set) var isCommitting = false
     /// Events and tasks matching the query — Search's counts and preview.
     package let results = SearchSession()
@@ -76,19 +75,20 @@ package final class SearchPaletteModel {
     // Resolved payloads for the actions.
     @ObservationIgnored var dateIntent: SearchIntent?
     @ObservationIgnored var candidates: [QuickAddCandidate] = []
-    var taskDraft: TaskDraft? {
-        candidates.compactMap { if case .task(let draft) = $0 { return draft }; return nil }.first
-    }
-    var eventDraft: EventDraft? {
-        candidates.compactMap { if case .event(let draft) = $0 { return draft }; return nil }.first
-    }
+    var taskDraft: TaskDraft? { candidates.lazy.compactMap(\.task).first }
+    var eventDraft: EventDraft? { candidates.lazy.compactMap(\.event).first }
     /// The trimmed query the actions were built for — what Ask asks.
     @ObservationIgnored var query = ""
     @ObservationIgnored var resolution: Task<Void, Never>?
     @ObservationIgnored var creation: Task<Void, Never>?
     @ObservationIgnored var generation = 0
+    /// How long typing must pause before the query is read. A read already running can't be stopped, so reading every
+    /// keystroke would queue reads for text that is already gone.
+    @ObservationIgnored package var typingPause: Duration = .milliseconds(70)
 
-    @ObservationIgnored package let findTemporal: (String, Date, Calendar) async -> FoundTemporal?
+    @ObservationIgnored package let findTemporal: (String, Date, Calendar) async -> FoundDate?
+    /// Loads the parser's model when the palette opens, ahead of the first keystroke.
+    @ObservationIgnored package let prepareParser: (Calendar) async -> Void
     /// Text, now, calendar, task lists, event calendars → ordered candidates.
     @ObservationIgnored package let parse: (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> [QuickAddCandidate]
     /// Lists a new task can go to (writable, not excluded); empty = no
@@ -137,15 +137,23 @@ package final class SearchPaletteModel {
     @ObservationIgnored package var timeFormat: () -> TimeFormat = { .current }
 
     package init(
-        findTemporal: @escaping (String, Date, Calendar) async -> FoundTemporal? = { text, date, calendar in
+        findTemporal: @escaping (String, Date, Calendar) async -> FoundDate? = { text, date, calendar in
             await NaturalLanguageParser.live.findTemporal(text, referenceDate: date, calendar: calendar)
         },
         parse: @escaping (String, Date, Calendar, [CalendarSource], [CalendarSource]) async -> [QuickAddCandidate] = { text, date, calendar, lists, calendars in
             await NaturalLanguageParser.live.parse(text, referenceDate: date, calendar: calendar, lists: lists, calendars: calendars)
-        }
+        },
+        prepareParser: @escaping (Calendar) async -> Void = { await NaturalLanguageParser.live.prepare(calendar: $0) }
     ) {
         self.findTemporal = findTemporal
         self.parse = parse
+        self.prepareParser = prepareParser
+    }
+
+    /// The palette opened: the parser's model starts loading in the background.
+    package func opened() {
+        let calendar = calendar
+        Task(priority: .utility) { [prepareParser] in await prepareParser(calendar) }
     }
 
     package var selectedAction: PaletteAction? { actions.first { $0.kind == selectedKind } }
@@ -177,11 +185,19 @@ package final class SearchPaletteModel {
         }
     }
 
-    /// What is shown: the alternatives disappear once the task is being
-    /// refined — Esc brings them back.
+    /// What is shown: the alternatives disappear while the selected task or
+    /// event is being edited — Esc brings them back.
     package var visibleActions: [PaletteAction] {
-        if isRefining { return actions.filter { $0.kind == (eventEdit != nil ? .createEvent : .createTask) } }
+        if isRefining { return actions.filter { $0.kind == selectedKind } }
         return actions.filter { $0.kind != .search || isSearchShown }
+    }
+
+    /// Tab's order through the form being edited: the event's or the task's.
+    package var quickAddOrder: [QuickAddField] {
+        if selectedKind == .createEvent, let eventEdit {
+            return QuickAddField.eventOrder(isAllDay: eventEdit.timing.isAllDay, repeats: eventEdit.repeating.isRepeating)
+        }
+        return QuickAddField.order(hasDate: edit?.day != nil, repeats: edit?.repeating.isRepeating ?? false)
     }
 
     /// The footer's key hints for the current state.

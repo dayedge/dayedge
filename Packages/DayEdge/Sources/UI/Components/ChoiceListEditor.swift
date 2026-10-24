@@ -132,7 +132,7 @@ package struct RepeatEditor: View {
             }
         case .custom:
             PropertyEditor(width: .wide, onCancel: { page = .list }, onDone: {
-                if let draft { onChoose(draft.rule) }
+                if let draft { onChoose(draft.rule(calendar: calendar)) }
             }, content: {
                 if let binding = Binding($draft) { CustomRepeatForm(draft: binding) }
             })
@@ -185,6 +185,7 @@ private struct CustomRepeatForm: View {
                 HStack(spacing: 6) {
                     TextField("", value: $draft.interval, format: .number)
                         .textFieldStyle(.roundedBorder)
+                        .themedTextInput()
                         .frame(width: 40)
                     Picker("", selection: $draft.frequency) {
                         ForEach(Self.units, id: \.0) { Text($0.1).tag($0.0) }
@@ -233,6 +234,7 @@ private struct CustomRepeatForm: View {
                         Text(L10n.tr("choicelisteditor.after", "After"))
                         TextField("", value: count, format: .number)
                             .textFieldStyle(.roundedBorder)
+                            .themedTextInput()
                             .frame(width: 40)
                             .disabled(endKind.wrappedValue != .afterCount)
                         Text("times")
@@ -255,7 +257,7 @@ private struct CustomRepeatForm: View {
         } set: { kind in
             switch kind {
             case .never: draft.ending = .never
-            case .onDate: draft.ending = .onDate(Calendar.autoupdatingCurrent.date(byAdding: .month, value: 1, to: Date()) ?? Date())
+            case .onDate: draft.ending = .onDate(draft.suggestedEnd)
             case .afterCount: draft.ending = .afterCount(5)
             }
         }
@@ -264,7 +266,7 @@ private struct CustomRepeatForm: View {
     private var endDate: Binding<Date> {
         Binding {
             if case .onDate(let date) = draft.ending { return date }
-            return Calendar.autoupdatingCurrent.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+            return draft.suggestedEnd
         } set: { draft.ending = .onDate($0) }
     }
 

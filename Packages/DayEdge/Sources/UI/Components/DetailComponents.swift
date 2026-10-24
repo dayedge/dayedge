@@ -223,6 +223,7 @@ package struct DetailInlineTextRow: View {
                 DetailRowIcon(symbol: icon)
                 TextField(prompt, text: $draft)
                     .textFieldStyle(.plain)
+                    .themedTextInput()
                     .font(DetailMetrics.font)
                     .foregroundStyle(theme.primaryText)
                     .focused($isFocused)

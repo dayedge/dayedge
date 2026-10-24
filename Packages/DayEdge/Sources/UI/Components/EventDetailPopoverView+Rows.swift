@@ -28,9 +28,8 @@ extension EventDetailPopoverView {
 
     /// "15 minutes before", "+1" when there are more.
     var alertText: String {
-        guard let first = event.alerts.first else { return L10n.tr("eventdetailpopoverview.rows.add.alert", "Add alert") }
-        let title = first.title(isAllDay: event.isAllDay, format: timeFormat)
-        return event.alerts.count > 1 ? "\(title) +\(event.alerts.count - 1)" : title
+        event.alerts.summary(isAllDay: event.isAllDay, format: timeFormat)
+            ?? L10n.tr("eventdetailpopoverview.rows.add.alert", "Add alert")
     }
 
     /// The first alert: None, Calendar's presets, or a specific time (which
@@ -69,8 +68,7 @@ extension EventDetailPopoverView {
     }
 
     private func setFirstAlert(_ alert: EventAlert?) {
-        let rest = Array(event.alerts.dropFirst())
-        let alerts = alert.map { [$0] + rest } ?? rest
+        let alerts = event.alerts.replacingFirst(with: alert)
         guard alerts != event.alerts else { return }
         apply(EventChange(alerts: alerts))
     }
@@ -83,10 +81,10 @@ extension EventDetailPopoverView {
         editor = nil
         guard let start = event.startDate else { return }
         let calendar = Calendar.autoupdatingCurrent
-        let time = calendar.dateComponents([.hour, .minute], from: start)
-        let newStart = calendar.date(bySettingHour: time.hour ?? 0, minute: time.minute ?? 0, second: 0, of: day) ?? day
-        guard !calendar.isDate(newStart, equalTo: start, toGranularity: .minute) else { return }
-        apply(EventChange(start: newStart))
+        var timing = EventTiming(start: start, end: event.endDate ?? start, isAllDay: event.isAllDay, calendar: calendar)
+        timing.firstDay = day
+        guard !calendar.isDate(timing.start, equalTo: start, toGranularity: .minute) else { return }
+        apply(EventChange(start: timing.start))
     }
 
     func commitTitle() {

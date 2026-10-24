@@ -1,8 +1,8 @@
 import Foundation
 import Domain
 
-/// One row of the search palette. Precedence is deterministic — a strict
-/// date → "Go to"; else TimeWhisper candidates → "Create"; then Search
+/// One row of the search palette. Precedence is deterministic — a date
+/// alone → "Go to"; else TimeWhisper candidates → "Create"; then Search
 /// (events and tasks matching the query, enabled when it has a searchable
 /// word) and Ask, always listed.
 package struct PaletteAction: Identifiable, Equatable {
@@ -17,8 +17,7 @@ package struct PaletteAction: Identifiable, Equatable {
     package var id: Kind { kind }
     package let kind: Kind
     package let title: String
-    /// What the query was understood as ("Friday, 2 Oct · 10:00 · Work"),
-    /// or a placeholder's "Coming later".
+    /// What the query was understood as ("Friday, 2 Oct · 10:00 · Work").
     package let subtitle: String?
     /// Disabled actions render quietly, can't be selected and never run.
     package let isEnabled: Bool
@@ -120,8 +119,8 @@ package enum PaletteActions {
                               isSearchable: Bool = true, referenceDate: Date, calendar: Calendar,
                               format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> [PaletteAction] {
         var actions: [PaletteAction] = []
-        if let dateIntent, dateIntent.isNavigation {
-            let title = SearchSuggestion.make(for: dateIntent, referenceDate: referenceDate, calendar: calendar, dates: dates).title
+        if let dateIntent {
+            let title = SearchSuggestion.title(for: dateIntent, referenceDate: referenceDate, calendar: calendar, dates: dates)
             actions.append(PaletteAction(kind: .goToDate, title: title, subtitle: nil, isEnabled: true,
                                          supportsRefinement: false, accessibilityLabel: title))
         } else {
@@ -182,6 +181,9 @@ package enum PaletteActions {
         var parts = [when]
         if let id = event.calendarIdentifier, let source = calendars.first(where: { $0.id == id }) { parts.append(source.title) }
         if let location = event.location { parts.append(location) }
+        if let alert = event.alerts.first {
+            parts.append(L10n.tr("paletteaction.alert", "Alert \(String(describing: alert.title(isAllDay: event.isAllDay, format: format, dates: dates)))"))
+        }
         return parts.joined(separator: " · ")
     }
 
@@ -206,149 +208,5 @@ package enum PaletteActions {
         if task.priority != .none { parts.append(L10n.tr("paletteaction.priority", "\(String(describing: task.priority.title)) Priority")) }
         if let alert = task.alert { parts.append(L10n.tr("paletteaction.alert", "Alert \(String(describing: alert.title(format: format)))")) }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-}
-
-extension SearchIntent {
-    /// A date the palette can go to (anything but free text).
-    package var isNavigation: Bool {
-        if case .freeTextSearch = self { return false }
-        return true
-    }
-}
-
-/// The editable Quick Add fields, prefilled from the parsed draft (Tab).
-/// Only what creation needs — no notes, URL or other Task Details.
-package struct QuickAddEdit: Equatable {
-    package var title: String
-    /// nil = the source's default list.
-    package var listID: String?
-    package var day: Date?
-    package var hasTime: Bool
-    /// Only the hour and minute are used.
-    package var time: Date
-    package var priority: TaskPriority
-    package var recurrence: TaskRecurrence
-    /// A parsed rule the Repeat menu can't express; kept while `recurrence`
-    /// still shows it.
-    package var customRule: TaskRecurrenceRule?
-    package var alert: TaskAlert?
-
-    package init(draft: TaskDraft, calendar: Calendar, referenceDate: Date) {
-        title = draft.title
-        listID = draft.listID
-        day = draft.dueDate.map { calendar.startOfDay(for: $0) }
-        hasTime = draft.hasDueTime
-        let base = day ?? calendar.startOfDay(for: referenceDate)
-        time = draft.hasDueTime ? (draft.dueDate ?? base)
-            : (calendar.date(bySettingHour: 9, minute: 0, second: 0, of: base) ?? base)
-        priority = draft.priority
-        recurrence = draft.recurrenceRule?.menuValue ?? .never
-        customRule = recurrence.isCustom ? draft.recurrenceRule : nil
-        alert = draft.alert
-    }
-
-    package var canCreate: Bool { !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-
-    package func taskDraft(calendar: Calendar) -> TaskDraft {
-        var due = day.map { calendar.startOfDay(for: $0) }
-        if let day, hasTime {
-            let parts = calendar.dateComponents([.hour, .minute], from: time)
-            due = calendar.isDate(time, inSameDayAs: day) ? time
-                : calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0, of: day)
-        }
-        let rule = recurrence.isCustom ? customRule : TaskRecurrenceRule(standard: recurrence)
-        return TaskDraft(
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines), listID: listID,
-            dueDate: due, hasDueTime: due != nil && hasTime, priority: priority,
-            recurrenceRule: due == nil ? nil : rule,
-            // A time-relative alert needs a due time, as in `TaskItem`.
-            alert: alert.flatMap { $0.isRelative && !(due != nil && hasTime) ? nil : $0 }
-        )
-    }
-}
-
-/// Create Event, expanded in place (Tab): the fields an event needs,
-/// prefilled from the parsed draft.
-package struct EventQuickAddEdit: Equatable {
-    package var title: String
-    /// nil = the default calendar for new events.
-    package var calendarID: String?
-    /// Start of the first day.
-    package var day: Date
-    package var isAllDay: Bool
-    /// Timed: the start and end moments (the end may fall on the next day).
-    package var start: Date
-    package var end: Date
-    /// All day: the last day (a span of days).
-    package var lastDay: Date
-    package var location: String
-    package var recurrence: TaskRecurrence
-    /// A parsed rule the Repeat menu can't express.
-    package var customRule: TaskRecurrenceRule?
-    /// Parsed alerts, kept as they are.
-    package var alerts: [EventAlert]
-
-    package init(draft event: EventDraft, calendar: Calendar) {
-        title = event.title
-        calendarID = event.calendarIdentifier
-        day = calendar.startOfDay(for: event.start)
-        isAllDay = event.isAllDay
-        if event.isAllDay {
-            start = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
-            end = calendar.date(byAdding: .minute, value: 60, to: start) ?? start
-            lastDay = calendar.date(byAdding: .day, value: -1, to: event.end) ?? day
-        } else {
-            start = event.start
-            end = event.end
-            lastDay = day
-        }
-        location = event.location ?? ""
-        recurrence = event.recurrenceRule?.menuValue ?? .never
-        customRule = recurrence.isCustom ? event.recurrenceRule : nil
-        alerts = event.alerts
-    }
-
-    package var canCreate: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (isAllDay || end > start)
-    }
-
-    /// Another day: the times and the length go with it.
-    package mutating func move(to newDay: Date, calendar: Calendar) {
-        let target = calendar.startOfDay(for: newDay)
-        let days = calendar.dateComponents([.day], from: day, to: target).day ?? 0
-        guard days != 0 else { return }
-        func shift(_ date: Date) -> Date { calendar.date(byAdding: .day, value: days, to: date) ?? date }
-        day = target
-        start = shift(start)
-        end = shift(end)
-        lastDay = shift(lastDay)
-    }
-
-    /// A new start keeps the length.
-    package mutating func setStart(_ newStart: Date) {
-        let length = end.timeIntervalSince(start)
-        start = newStart
-        end = newStart.addingTimeInterval(max(length, 60))
-    }
-
-    /// An end at or before the start is on the next day ("22:00–01:00").
-    package mutating func setEnd(timeOf time: Date, calendar: Calendar) {
-        let parts = calendar.dateComponents([.hour, .minute], from: time)
-        var candidate = calendar.date(bySettingHour: parts.hour ?? 0, minute: parts.minute ?? 0, second: 0,
-                                      of: calendar.startOfDay(for: start)) ?? time
-        if candidate <= start { candidate = calendar.date(byAdding: .day, value: 1, to: candidate) ?? candidate }
-        end = candidate
-    }
-
-    package func eventDraft(calendar: Calendar) -> EventDraft {
-        let rule = recurrence.isCustom ? customRule : TaskRecurrenceRule(standard: recurrence)
-        let place = location.trimmingCharacters(in: .whitespacesAndNewlines)
-        return EventDraft(
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            start: isAllDay ? day : start, end: isAllDay ? (calendar.date(byAdding: .day, value: 1, to: max(lastDay, day)) ?? end) : end, isAllDay: isAllDay,
-            calendarIdentifier: calendarID, location: place.isEmpty ? nil : place,
-            recurrenceRule: rule, alerts: alerts
-        )
     }
 }

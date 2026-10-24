@@ -1,6 +1,5 @@
 import Foundation
 import Domain
-import TimeWhisper
 
 package enum SearchQueryResolver {
     // swiftlint:disable cyclomatic_complexity function_body_length - one branch per search operator
@@ -9,28 +8,8 @@ package enum SearchQueryResolver {
     /// still narrows ("standup tomorrow") unless an operator set a date.
     package static func resolve(_ query: String, referenceDate: Date, calendar: Calendar) async -> SearchQueryParts {
         let parsed = SearchQuerySyntax.parse(query)
-        var parts = SearchQueryParts(text: parsed.freeText)
-        var labels: [String] = []
         let values = parsed.values
-
-        parts.subject = values[.subject]
-        if let organizer = values[.from] {
-            if organizer.lowercased() == "me" {
-                parts.organizedByMe = true
-            } else {
-                parts.organizer = organizer
-            }
-            labels.append(parts.organizedByMe ? "from me" : "from \(organizer)")
-        }
-        if let attendee = values[.with] {
-            parts.attendee = attendee
-            labels.append("with \(attendee)")
-        }
-        if let type = values[.type] {
-            parts.kind = kind(type)
-            if let kind = parts.kind { labels.append(kind == .event ? "Events" : "Tasks") }
-        }
-
+        var (parts, labels) = words(parsed.freeText, values: values)
         var intervals: [DateInterval] = []
         func day(_ value: String) async -> (DateInterval, String)? {
             await dayInterval(value, referenceDate: referenceDate, calendar: calendar)
@@ -73,6 +52,31 @@ package enum SearchQueryResolver {
     }
     // swiftlint:enable cyclomatic_complexity function_body_length
 
+    /// The free words and the operators that are not dates (subject, from — "me" too —, with, type), with how each
+    /// reads in the label. The assistant's search takes these as they are and its dates separately.
+    package static func words(_ text: String, values: [SearchOperator: String]) -> (parts: SearchQueryParts, labels: [String]) {
+        var parts = SearchQueryParts(text: text)
+        var labels: [String] = []
+        parts.subject = values[.subject]
+        if let organizer = values[.from] {
+            if organizer.lowercased() == "me" {
+                parts.organizedByMe = true
+            } else {
+                parts.organizer = organizer
+            }
+            labels.append(parts.organizedByMe ? "from me" : "from \(organizer)")
+        }
+        if let attendee = values[.with] {
+            parts.attendee = attendee
+            labels.append("with \(attendee)")
+        }
+        if let type = values[.type] {
+            parts.kind = kind(type)
+            if let kind = parts.kind { labels.append(kind == .event ? "Events" : "Tasks") }
+        }
+        return (parts, labels)
+    }
+
     package static func kind(_ value: String) -> SearchQueryParts.Kind? {
         switch value.lowercased() {
         case "event", "events", "e": .event
@@ -81,14 +85,13 @@ package enum SearchQueryResolver {
         }
     }
 
-    /// A day (or a month) a value names, with how to say it.
+    /// The days an operator's value names, read whole ("friday", "next month"), with how to say them.
     package static func dayInterval(_ value: String, referenceDate: Date, calendar: Calendar) async -> (DateInterval, String)? {
         let value = value.trimmingCharacters(in: .whitespaces)
-        guard !value.isEmpty else { return nil }
-        guard let found = await NaturalLanguageParser.live.findTemporal(value, referenceDate: referenceDate, calendar: calendar),
-              found.remainingText.isEmpty else { return nil }
-        let parts = TemporalPresentation.searchParts(value, found: found, calendar: calendar)
-        guard let interval = parts.interval else { return nil }
-        return (interval, parts.label ?? value)
+        guard !value.isEmpty,
+              let temporal = await NaturalLanguageParser.live.parseTemporal(value, referenceDate: referenceDate, calendar: calendar)
+        else { return nil }
+        let interval = TemporalPresentation.interval(temporal, calendar: calendar)
+        return (interval, TemporalPresentation.label(temporal, interval: interval, calendar: calendar))
     }
 }

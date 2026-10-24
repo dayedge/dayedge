@@ -49,7 +49,7 @@ final class AssistantBackendResolverTests: XCTestCase {
             XCTFail("expected an OpenRouter model")
         }
         XCTAssertTrue(backend.instructions(Date()).contains("write its reference alone on its own line"))
-        let agenda = try await XCTUnwrap(backend.tools.first { $0.name == "get_agenda" }).call(AssistantToolArguments(["when": .string("tomorrow")]))
+        let agenda = try await XCTUnwrap(backend.tools.first { $0.name == "get_agenda" }).call(AssistantToolArguments(["when": .string("2026-09-24")]))
         XCTAssertTrue(agenda.contains("[[E1]] event 08:00–09:00 Dentist"), agenda)
     }
     #endif
@@ -60,7 +60,7 @@ final class AssistantBackendResolverTests: XCTestCase {
         let context = AssistantTestData.context(events: [24: [AssistantTestData.event("Dentist", day: 24, from: (8, 0), to: (9, 0))]])
         let backend = try XCTUnwrap(AssistantBackendResolver.resolve(toolContext: context, settings: .localOnly, appleAvailable: true) as? AppleFoundationModelsBackend)
         XCTAssertFalse(backend.instructions(Date()).contains("[["), "no reference contract for the small model")
-        let agenda = try await XCTUnwrap(backend.tools.first { $0.name == "get_agenda" }).call(AssistantToolArguments(["when": .string("tomorrow")]))
+        let agenda = try await XCTUnwrap(backend.tools.first { $0.name == "get_agenda" }).call(AssistantToolArguments(["when": .string("2026-09-24")]))
         XCTAssertTrue(agenda.hasSuffix("- event 08:00–09:00 Dentist · Work"), agenda)
         XCTAssertFalse(agenda.contains("[["))
     }

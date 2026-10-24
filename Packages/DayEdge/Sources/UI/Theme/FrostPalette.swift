@@ -130,7 +130,7 @@ extension ThemePalette {
         p.content.detailMetadata = t.secondary
         p.content.sourceLabelFallback = t.primary
         p.content.ongoingIndicator = t.coralInk
-        p.editor = .init(text: t.primary, focusRing: p.nativeControlAccent.opacity(0.65), selectionFill: t.selection,
+        p.editor = .init(text: t.primary, caret: p.nativeControlAccent, focusRing: p.nativeControlAccent.opacity(0.65), selectionFill: t.selection,
                          titleText: t.primary, labelText: t.secondary, placeholderText: t.tertiary,
                          panelFill: t.nested, fieldFill: light ? .white.opacity(0.38) : .black.opacity(0.16),
                          fieldHoverFill: light ? .white.opacity(0.58) : .white.opacity(0.09),

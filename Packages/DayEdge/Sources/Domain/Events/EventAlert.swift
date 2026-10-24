@@ -67,3 +67,28 @@ package enum EventAlert: Hashable, Sendable {
             : L10n.tr("eventalert.offset.minutes.after", "\(count) minutes after", locale: locale)
     }
 }
+
+// MARK: - Editing
+
+extension EventAlert {
+    /// What an alert editor offers: Calendar's presets, then `current` when it is none of them ("at 8:40").
+    package static func choices(current: EventAlert?, isAllDay: Bool) -> [EventAlert] {
+        let presets = presets(isAllDay: isAllDay)
+        guard let current, !presets.contains(current) else { return presets }
+        return presets + [current]
+    }
+}
+
+extension [EventAlert] {
+    /// How an event's alerts read in one line: the first, "+N" for the others ("15 minutes before +1"); nil without one.
+    package func summary(isAllDay: Bool, format: TimeFormat = .twentyFourHour, dates: DatePresentationFormatter = .current) -> String? {
+        guard let first else { return nil }
+        let title = first.title(isAllDay: isAllDay, format: format, dates: dates)
+        return count > 1 ? "\(title) +\(count - 1)" : title
+    }
+
+    /// The editors change the first alert: `alert` in its place, or none; the others stay.
+    package func replacingFirst(with alert: EventAlert?) -> [EventAlert] {
+        (alert.map { [$0] } ?? []) + dropFirst()
+    }
+}

@@ -22,7 +22,7 @@ package enum TaskChangeTools {
             parameters: context.parameters([
                 .init(name: "title", kind: .string, description: "What to do."),
                 .init(name: "due", kind: .string,
-                      description: context.brief("When it's due: \(AssistantMoment.accepted). Omit for no date.", "Day and time, e.g. tomorrow 10:00."),
+                      description: context.brief("When it's due: \(AssistantMoment.accepted). Omit for no date.", "Day, or day and time: 2026-10-02 10:00."),
                       isRequired: false)
             ], optional: [
                 .init(name: "list", kind: .string, description: "The list's name. Omit for the default list.", isRequired: false),
@@ -33,7 +33,7 @@ package enum TaskChangeTools {
             let title = try arguments.string("title").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !title.isEmpty, let changes = context.changes else { return "A task needs a title." }
             let snapshot = await context.data.taskSnapshot()
-            let due = try await arguments.optionalString("due").flatMap(nonEmpty).asyncMap { try await AssistantMoment.resolve($0, context: context) }
+            let due = try arguments.optionalString("due").flatMap(nonEmpty).map { try AssistantMoment.resolve($0, context: context) }
             var list: CalendarSource?
             if let name = arguments.optionalString("list").flatMap(nonEmpty) {
                 guard let match = matchList(name, in: snapshot.lists) else {
@@ -120,7 +120,8 @@ package enum TaskChangeTools {
             parameters: context.parameters([
                 .init(name: "task", kind: .string, description: context.brief(taskArgument, "The task's title.")),
                 .init(name: "due", kind: .string,
-                      description: context.brief("New due date: \(AssistantMoment.accepted), or 'none' to remove it.", "New day and time."),
+                      description: context.brief("New due date: \(AssistantMoment.accepted); a time alone (10:00) keeps its day, a day alone its time. "
+                                                 + "'none' removes it.", "New day and time: 2026-10-02 10:00."),
                       isRequired: false),
                 .init(name: "title", kind: .string, description: "New title.", isRequired: false)
             ], optional: [
@@ -150,7 +151,7 @@ package enum TaskChangeTools {
                     apply.append(.due(nil, hasTime: false))
                     fields.append(ChangeField(label: "Due", before: old, after: "No date"))
                 } else {
-                    let moment = try await AssistantMoment.resolve(due, on: task.dueDate, context: context)
+                    let moment = try AssistantMoment.resolve(due, on: task.dueDate, keepsTime: task.hasDueTime, context: context)
                     apply.append(.due(moment.date, hasTime: moment.hasTime))
                     fields.append(ChangeField(label: "Due", before: old ?? "No date",
                                               after: ChangeRunner.when(moment.date, hasTime: moment.hasTime, now: now, calendar: calendar, format: context.timeFormat()),
@@ -275,13 +276,5 @@ package enum TaskChangeTools {
 
     package static func isNone(_ text: String) -> Bool {
         ["none", "no date", "nothing", "remove", "clear", "-"].contains(text.lowercased().trimmingCharacters(in: .whitespaces))
-    }
-}
-
-extension Optional {
-    /// `map` for an async, throwing transform.
-    package func asyncMap<T>(_ transform: (Wrapped) async throws -> T) async rethrows -> T? {
-        guard let self else { return nil }
-        return try await transform(self)
     }
 }

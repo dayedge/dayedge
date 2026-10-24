@@ -185,6 +185,9 @@ extension ThemePaletteValues {
 
     package struct EditorColors {
         package var text: Color
+        /// The text cursor in fields. Not the app's tint: in dark themes that is a darkened fill made for buttons, and a
+        /// cursor in it all but disappears.
+        package var caret: Color
         package var focusRing: Color
         package var selectionFill: Color
         package var titleText: Color

@@ -1,5 +1,6 @@
 import XCTest
 import TimeWhisper
+import os
 @testable import Domain
 @testable import Intelligence
 
@@ -17,63 +18,93 @@ private enum ParserFixture {
     static let now = date(23, 12)
     static let sources = [CalendarSource(id: "work", title: "Work", tint: .blue)]
     static func parser(language: String = "en") -> NaturalLanguageParser {
-        NaturalLanguageParser(language: language, spellCheckerFactory: { NoSpellChecker() })
+        NaturalLanguageParser(language: { language })
+    }
+    /// What the library would find for the palette tests' queries, fixed so they test the palette, not the tagger.
+    static func found(_ text: String) -> FoundDate? {
+        let tomorrow = ParsedDate(start: date(24), end: date(25), span: .day)
+        switch text {
+        case "tomorrow": return FoundDate(date: tomorrow, remainingText: "")
+        case "meeting tomorrow": return FoundDate(date: tomorrow, remainingText: "meeting")
+        default: return nil
+        }
+    }
+    static func candidates(_ text: String) -> [QuickAddCandidate] {
+        guard text == "meeting tomorrow" else { return [] }
+        return [.task(TaskDraft(title: "Meeting", dueDate: date(24))),
+                .event(EventDraft(title: "Meeting", start: date(24), end: date(25), isAllDay: true))]
     }
 }
 
+/// DayEdge's side of TimeWhisper: the calendar and language it passes in, and how the library's answers become the app's
+/// drafts and search ranges. How text is read is time-whisper's to test; these use `parseTemporal`, which needs no model,
+/// or answers built by hand.
 final class NaturalLanguageParserTests: XCTestCase {
     private typealias F = ParserFixture
 
-    func testDefaultEnglishDoesNotFollowPolishLocale() async throws {
-        let found = await F.parser().findTemporal("tomorrow", referenceDate: F.now, calendar: F.calendar)
-        XCTAssertEqual(found?.temporal.start.date, F.date(24))
+    func testTheCalendarsRegionDecidesTheDateOrder() async {
+        var american = F.calendar
+        american.locale = Locale(identifier: "en_US")
+        let polish = await F.parser().parseTemporal("11/12/2026", referenceDate: F.now, calendar: F.calendar)
+        let us = await F.parser().parseTemporal("11/12/2026", referenceDate: F.now, calendar: american)
+        XCTAssertEqual(polish?.start, F.date(11, month: 12))
+        XCTAssertEqual(us?.start, F.date(12, month: 11))
     }
 
-    func testDefaultEnglishDoesNotRecognizePolish() async {
-        let found = await F.parser().findTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
-        XCTAssertNil(found)
+    func testTheLanguageIsChosenAtTheEntryPoint() async {
+        let english = await F.parser().parseTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
+        let polish = await F.parser(language: "pl").parseTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
+        XCTAssertNil(english, "the Polish locale does not switch the language")
+        XCTAssertEqual(polish?.start, F.date(24))
     }
 
-    func testPolishCanBeSelectedAtTheEntryPoint() async {
-        let found = await F.parser(language: "pl").findTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
-        XCTAssertEqual(found?.temporal.start.date, F.date(24))
+    /// English only for now; the system's languages and a Settings choice are read once others are supported.
+    func testTheLanguageFollowsTheOverrideThenThePreferredLanguages() {
+        XCTAssertEqual(ParsingLanguage.current(), "en")
+        XCTAssertEqual(ParsingLanguage.resolve(override: nil, preferred: ["pl-PL", "en-GB"]), "en", "only English is read yet")
+        XCTAssertEqual(ParsingLanguage.resolve(override: "pl", preferred: []), "en")
+        let both = ["en", "pl"]
+        XCTAssertEqual(ParsingLanguage.resolve(override: nil, preferred: ["pl-PL", "en-GB"], supported: both), "pl")
+        XCTAssertEqual(ParsingLanguage.resolve(override: nil, preferred: ["de-DE", "en-GB"], supported: both), "en")
+        XCTAssertEqual(ParsingLanguage.resolve(override: "en", preferred: ["pl-PL"], supported: both), "en", "Settings wins")
+        XCTAssertEqual(ParsingLanguage.resolve(override: "de", preferred: ["pl-PL"], supported: both), "pl", "an unread choice is skipped")
+        XCTAssertEqual(ParsingLanguage.resolve(override: nil, preferred: ["de-DE"], supported: both), "en", "the first is the fallback")
     }
 
-    func testTaskKeepsDateOnlyDueAndDestination() async throws {
-        let values = await F.parser().parse("pay rent tomorrow #work !!!", referenceDate: F.now,
-                                            calendar: F.calendar, lists: F.sources, calendars: F.sources)
-        guard case .task(let task) = try XCTUnwrap(values.first) else { return XCTFail("Expected task") }
-        XCTAssertEqual(task.title, "Pay rent")
-        XCTAssertEqual(task.dueDate, F.date(24))
-        XCTAssertFalse(task.hasDueTime)
-        XCTAssertEqual(task.listID, "work")
-        XCTAssertEqual(task.priority, .high)
+    func testAChangedLanguageTakesEffectOnTheNextRequest() async {
+        let language = OSAllocatedUnfairLock(initialState: "en")
+        let parser = NaturalLanguageParser(language: { language.withLock { $0 } })
+        let english = await parser.parseTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
+        language.withLock { $0 = "pl" }
+        let polish = await parser.parseTemporal("jutro", referenceDate: F.now, calendar: F.calendar)
+        XCTAssertNil(english)
+        XCTAssertEqual(polish?.start, F.date(24))
     }
 
-    func testTimedEventKeepsExclusiveEndAndCalendar() async throws {
-        let values = await F.parser().parse("demo tomorrow 15:00-16:00 #work t:e", referenceDate: F.now,
-                                            calendar: F.calendar, lists: F.sources, calendars: F.sources)
-        guard case .event(let event) = try XCTUnwrap(values.first) else { return XCTFail("Expected event") }
-        XCTAssertEqual(event.start, F.date(24, 15))
-        XCTAssertEqual(event.end, F.date(24, 16))
-        XCTAssertEqual(event.calendarIdentifier, "work")
-        XCTAssertFalse(event.isAllDay)
+    func testReleaseAllowsReuse() async {
+        let parser = F.parser()
+        _ = await parser.parseTemporal("tomorrow", referenceDate: F.now, calendar: F.calendar)
+        await parser.releaseResources()
+        let again = await parser.parseTemporal("tomorrow", referenceDate: F.now, calendar: F.calendar)
+        XCTAssertEqual(again?.start, F.date(24))
     }
+
+    // MARK: Drafts
 
     func testAllDayEventKeepsExclusiveEnd() throws {
         let value = Candidate(content: .event(EventSpec(title: "Conference", time: .allDay(
             startDate: CivilDate(year: 2026, month: 9, day: 24), endDateExclusive: CivilDate(year: 2026, month: 9, day: 27)))))
-        guard case .event(let event) = try QuickAddCandidate(value, calendar: F.calendar) else { return XCTFail("Expected event") }
+        let event = try XCTUnwrap(try QuickAddCandidate(value, calendar: F.calendar).event)
         XCTAssertEqual(event.end, F.date(27))
         let edit = EventQuickAddEdit(draft: event, calendar: F.calendar)
-        XCTAssertEqual(edit.lastDay, F.date(26))
+        XCTAssertEqual(edit.timing.lastDay, F.date(26))
         XCTAssertEqual(edit.eventDraft(calendar: F.calendar), event)
     }
 
     func testMappingPreservesAnExplicitInstant() throws {
         let instant = Moment(date: F.date(24, 17), timeZoneID: "UTC", offsetSeconds: 0)
         let value = Candidate(content: .task(TaskSpec(title: "Call", due: .atTime(instant))))
-        guard case .task(let task) = try QuickAddCandidate(value, calendar: F.calendar) else { return XCTFail("Expected task") }
+        let task = try XCTUnwrap(try QuickAddCandidate(value, calendar: F.calendar).task)
         XCTAssertEqual(task.dueDate, instant.date)
         XCTAssertTrue(task.hasDueTime)
     }
@@ -81,72 +112,48 @@ final class NaturalLanguageParserTests: XCTestCase {
     func testRecurrenceUsesFoundationWeekdayNumbering() throws {
         let rule = RecurrenceSpec(frequency: .weekly, interval: 2, weekdays: [WeekdayRule(day: .monday)])
         let value = Candidate(content: .task(TaskSpec(title: "Review", recurrence: rule, reminder: .before(minutes: 15))))
-        guard case .task(let task) = try QuickAddCandidate(value, calendar: F.calendar) else { return XCTFail("Expected task") }
+        let task = try XCTUnwrap(try QuickAddCandidate(value, calendar: F.calendar).task)
         XCTAssertEqual(task.recurrenceRule?.weekdays, [.init(weekday: 2)])
         XCTAssertEqual(task.recurrenceRule?.interval, 2)
         XCTAssertEqual(task.alert, .relative(minutesBefore: 15))
     }
 
-    func testReleaseAllowsReuse() async {
-        let parser = F.parser()
-        _ = await parser.findTemporal("tomorrow", referenceDate: F.now, calendar: F.calendar)
-        await parser.releaseResources()
-        let found = await parser.findTemporal("tomorrow", referenceDate: F.now, calendar: F.calendar)
-        XCTAssertEqual(found?.temporal.start.date, F.date(24))
+    // MARK: Search ranges
+
+    func testAMonthNavigatesWithoutADay() {
+        let march = ParsedDate(start: F.date(1, month: 3), end: F.date(1, month: 4), span: .month)
+        XCTAssertEqual(TemporalPresentation.navigation(FoundDate(date: march, remainingText: ""), calendar: F.calendar),
+                       .jumpToMonth(F.date(1, month: 3)))
     }
 
-    func testImpossibleDateIsNotNavigation() async {
-        let found = await F.parser().findTemporal("2026-02-31", referenceDate: F.now, calendar: F.calendar)
-        XCTAssertNil(found)
-    }
-
-    func testMonthCanNavigateWithoutADay() async throws {
-        let result = await find("March")
-        let found = try XCTUnwrap(result)
-        XCTAssertEqual(TemporalPresentation.navigation(found, calendar: F.calendar), .jumpToMonth(F.date(1, month: 3)))
-    }
-
-    func testTextWithDateDoesNotNavigate() async throws {
-        let result = await find("meeting tomorrow")
-        let found = try XCTUnwrap(result)
-        XCTAssertEqual(found.remainingText, "meeting")
+    func testTextBesideADateDoesNotNavigate() {
+        let found = FoundDate(date: ParsedDate(start: F.date(24), end: F.date(25), span: .day), remainingText: "meeting")
         XCTAssertNil(TemporalPresentation.navigation(found, calendar: F.calendar))
     }
 
-    func testSearchTimePointBecomesTheLocalDay() async throws {
-        let result = await find("tomorrow at 9am")
-        let found = try XCTUnwrap(result)
-        XCTAssertEqual(TemporalPresentation.interval(found.temporal, calendar: F.calendar),
-                       DateInterval(start: F.date(24), end: F.date(25)))
+    func testATimePointBecomesItsLocalDay() {
+        let nineAM = ParsedDate(start: F.date(24, 9), end: F.date(24, 9), span: .day, hasTime: true)
+        XCTAssertEqual(TemporalPresentation.interval(nineAM, calendar: F.calendar), DateInterval(start: F.date(24), end: F.date(25)))
     }
 
-    func testSearchDayAcrossDSTIsNotTwentyFourHours() async throws {
-        let result = await find("2026-10-25")
-        let found = try XCTUnwrap(result)
-        XCTAssertEqual(TemporalPresentation.interval(found.temporal, calendar: F.calendar).duration, 25 * 3600)
-    }
-
-    private func find(_ text: String) async -> FoundTemporal? {
-        await F.parser().findTemporal(text, referenceDate: F.now, calendar: F.calendar)
+    func testADayAcrossDSTIsNotTwentyFourHours() {
+        let changeDay = ParsedDate(start: F.date(25, month: 10), end: F.date(25, month: 10), span: .day, hasTime: true)
+        XCTAssertEqual(TemporalPresentation.interval(changeDay, calendar: F.calendar).duration, 25 * 3600)
     }
 }
 
 @MainActor
-final class WhisperPaletteTests: XCTestCase {
+final class SearchPaletteResolutionTests: XCTestCase {
     private typealias F = ParserFixture
 
     private func model() -> SearchPaletteModel {
-        let parser = F.parser()
-        let model = SearchPaletteModel(findTemporal: { text, now, calendar in
-            await parser.findTemporal(text, referenceDate: now, calendar: calendar)
-        }, parse: { text, now, calendar, lists, calendars in
-            await parser.parse(text, referenceDate: now, calendar: calendar, lists: lists, calendars: calendars)
-        })
+        let model = SearchPaletteModel(findTemporal: { text, _, _ in F.found(text) }, parse: { text, _, _, _, _ in F.candidates(text) })
         model.now = { F.now }
         model.calendar = F.calendar
         model.taskLists = { F.sources }
         model.eventCalendars = { F.sources }
         model.results.debounce = .zero
+        model.typingPause = .zero
         return model
     }
 
@@ -187,6 +194,7 @@ final class WhisperPaletteTests: XCTestCase {
             return [.task(TaskDraft(title: text))]
         })
         model.taskLists = { F.sources }
+        model.typingPause = .zero
         model.update(query: "old")
         let oldResolution = model.resolution
         await gate.waitUntilStarted()
@@ -195,6 +203,17 @@ final class WhisperPaletteTests: XCTestCase {
         await gate.resume()
         await oldResolution?.value
         XCTAssertEqual(model.taskDraft?.title, "new")
+    }
+
+    func testFastTypingReadsOnlyTheLastText() async {
+        let read = TextLog()
+        let model = SearchPaletteModel(findTemporal: { text, _, _ in await read.append(text); return nil },
+                                       parse: { _, _, _, _, _ in [] })
+        model.typingPause = .milliseconds(20)
+        for text in ["m", "me", "mee", "meet"] { model.update(query: text) }
+        await model.settle()
+        let texts = await read.texts
+        XCTAssertEqual(texts, ["meet"], "a keystroke within the pause replaces the one before")
     }
 
     func testSearchReusesResolvedTemporalResult() async {
@@ -229,4 +248,10 @@ private actor ParserGate {
         continuation?.resume()
         continuation = nil
     }
+}
+
+/// What a fake parser was asked to read, in order.
+private actor TextLog {
+    private(set) var texts: [String] = []
+    func append(_ text: String) { texts.append(text) }
 }

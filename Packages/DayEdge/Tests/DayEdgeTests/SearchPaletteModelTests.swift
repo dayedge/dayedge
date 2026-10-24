@@ -1,12 +1,11 @@
 import CalendarIndex
 import XCTest
-import TimeWhisper
 @testable import Shell
 @testable import Domain
 @testable import Intelligence
 
-/// The palette's deterministic contract, with the real parsers. Reference:
-/// Wednesday 2026-09-23 12:00, Monday-first week.
+/// The palette end to end with the real library: the rows, keys and editors it builds from what the library offers.
+/// What the library reads is time-whisper's to test. Reference: Wednesday 2026-09-23 12:00, Monday-first week.
 @MainActor
 final class SearchPaletteModelTests: XCTestCase {
     private let calendar: Calendar = {
@@ -20,7 +19,7 @@ final class SearchPaletteModelTests: XCTestCase {
     private let lists = [CalendarSource(id: "work", title: "Work", tint: .blue)]
 
     private func model() -> SearchPaletteModel {
-        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let parser = NaturalLanguageParser()
         let model = SearchPaletteModel(findTemporal: { text, now, calendar in
             await parser.findTemporal(text, referenceDate: now, calendar: calendar)
         }, parse: { text, now, calendar, lists, calendars in
@@ -33,6 +32,7 @@ final class SearchPaletteModelTests: XCTestCase {
         model.now = { [reference] in reference }
         model.taskLists = { [lists] in lists }
         model.commitBeat = .zero
+        model.typingPause = .zero
         return model
     }
 
@@ -70,26 +70,29 @@ final class SearchPaletteModelTests: XCTestCase {
         return model
     }
 
-    func testEventAndTaskRowsInTheDecisionsOrder() async {
+    /// Rows follow the library's order (which kind comes first is time-whisper's to decide and test), and show what each
+    /// draft says the way the app writes it.
+    func testEventAndTaskRowsFollowTheLibrarysOrder() async {
         let model = eventModel()
+        func offered() -> [PaletteAction.Kind] { model.candidates.map { $0.task != nil ? .createTask : .createEvent } }
+        func row(_ kind: PaletteAction.Kind) -> PaletteAction? { model.actions.first { $0.kind == kind } }
+
         await resolve(model, "lunch tomorrow 1pm at Starbucks")
-        XCTAssertEqual(Array(kinds(model).prefix(2)), [.createEvent, .createTask])
-        XCTAssertEqual(model.actions[0].title, "Create event “Lunch”")
-        XCTAssertEqual(model.actions[0].subtitle, "Tomorrow 13:00–14:00 · Starbucks")
-        XCTAssertTrue(model.actions[0].supportsRefinement, "Tab edits the event in place")
-        XCTAssertEqual(model.actions[1].title, "Create task “Lunch at Starbucks”")
-        XCTAssertEqual(model.selectedKind, .createEvent)
+        XCTAssertEqual(Array(kinds(model).prefix(2)), offered())
+        XCTAssertEqual(row(.createEvent)?.title, "Create event “Lunch”")
+        XCTAssertEqual(row(.createEvent)?.subtitle, "Tomorrow 13:00–14:00 · Starbucks")
+        XCTAssertEqual(row(.createEvent)?.supportsRefinement, true, "Tab edits the event in place")
+        XCTAssertEqual(row(.createTask)?.title, "Create task “Lunch at Starbucks”")
+        XCTAssertEqual(model.selectedKind, kinds(model).first)
 
         await resolve(model, "pay rent friday")
-        XCTAssertEqual(Array(kinds(model).prefix(2)), [.createTask, .createEvent], "a day alone: task first")
+        XCTAssertEqual(Array(kinds(model).prefix(offered().count)), offered())
 
         await resolve(model, "dinner friday 7pm #family")
-        XCTAssertEqual(model.actions[0].subtitle, "Friday 25 Sep 19:00–20:00 · Family")
+        XCTAssertEqual(row(.createEvent)?.subtitle, "Friday 25 Sep 19:00–20:00 · Family")
 
         await resolve(model, "conference 3-5 oct")
-        XCTAssertEqual(kinds(model).first, .createEvent)
-        XCTAssertEqual(model.actions[0].subtitle, "Saturday 3 Oct – Monday 5 Oct · All day")
-        XCTAssertFalse(kinds(model).contains(.createTask), "a span of days is an event only")
+        XCTAssertEqual(row(.createEvent)?.subtitle, "Saturday 3 Oct – Monday 5 Oct · All day")
     }
 
     func testEventRowsNeedACalendarAndTaskRowsAList() async {
@@ -148,10 +151,10 @@ final class SearchPaletteModelTests: XCTestCase {
         XCTAssertEqual(model.editOverlap?.conflict, .busy)
 
         // Moving it to 15:00 clears the overlap; the length goes along.
-        model.eventEdit?.setStart(at(15))
+        model.eventEdit?.timing.start = at(15)
         await model.settle()
         XCTAssertNil(model.editOverlap)
-        XCTAssertEqual(model.eventEdit?.end, at(16))
+        XCTAssertEqual(model.eventEdit?.timing.end, at(16))
 
         model.eventEdit?.title = "Team lunch"
         model.executeSelected()
@@ -160,6 +163,18 @@ final class SearchPaletteModelTests: XCTestCase {
         XCTAssertEqual(drafts.first?.start, at(15))
         XCTAssertEqual(drafts.first?.end, at(16))
         XCTAssertEqual(drafts.first?.location, "Starbucks")
+    }
+
+    func testTheFormShownIsTheSelectedOnesEvenAfterTheOtherWasEdited() async {
+        let model = eventModel(into: { _ in })
+        await resolve(model, "lunch tomorrow 1pm")
+        model.select(.createEvent)
+        model.refine()
+        model.collapse()
+        model.select(.createTask)
+        model.refine()
+        XCTAssertEqual(model.visibleActions.map(\.kind), [.createTask], "the event's edit is kept, but the task is selected")
+        XCTAssertFalse(model.quickAddOrder.contains(.calendar), "Tab walks the task's fields")
     }
 
     func testEscLeavesTheEventEditorKeepingWhatWasEdited() async {
@@ -274,7 +289,7 @@ final class SearchPaletteModelTests: XCTestCase {
 
     // MARK: - Precedence
 
-    func testPureDateIsGoToDateWithPlaceholders() async {
+    func testPureDateIsGoToDate() async {
         let model = model()
         await resolve(model, "next Friday")
         XCTAssertEqual(kinds(model), [.goToDate, .search, .askAI])
@@ -296,7 +311,7 @@ final class SearchPaletteModelTests: XCTestCase {
     func testEmbeddedDateIsATaskNotANavigation() async {
         let model = model()
         await resolve(model, "invoice next Friday")
-        XCTAssertEqual(kinds(model), [.createTask, .search, .askAI], "the strict date parser must not match inside a sentence")
+        XCTAssertEqual(kinds(model), [.createTask, .search, .askAI], "a date inside a sentence is a task, not Go to")
         XCTAssertEqual(model.actions[0].title, "Create “Invoice”")
         XCTAssertEqual(model.actions[0].subtitle, "Friday 2 Oct")
     }
@@ -498,13 +513,13 @@ extension SearchPaletteModelTests {
 
     func testTabOrderWalksTheFieldsAndWraps() {
         typealias Field = QuickAddField
-        XCTAssertEqual(Field.next(after: .title, hasDate: true, backward: false), .list)
-        XCTAssertEqual(Field.next(after: .date, hasDate: true, backward: false), .time)
-        XCTAssertEqual(Field.next(after: .recurrence, hasDate: true, backward: false), .title, "wraps")
-        XCTAssertEqual(Field.next(after: .title, hasDate: true, backward: true), .recurrence, "Shift-Tab wraps back")
-        XCTAssertEqual(Field.next(after: .date, hasDate: false, backward: false), .priority, "no Time without a date")
-        XCTAssertEqual(Field.next(after: .priority, hasDate: false, backward: false), .title)
-        XCTAssertEqual(Field.next(after: nil, hasDate: true, backward: false), .title)
+        XCTAssertEqual(Field.next(after: .title, in: Field.order(hasDate: true, repeats: false), backward: false), .list)
+        XCTAssertEqual(Field.next(after: .date, in: Field.order(hasDate: true, repeats: false), backward: false), .time)
+        XCTAssertEqual(Field.next(after: .recurrence, in: Field.order(hasDate: true, repeats: false), backward: false), .title, "wraps")
+        XCTAssertEqual(Field.next(after: .title, in: Field.order(hasDate: true, repeats: false), backward: true), .recurrence, "Shift-Tab wraps back")
+        XCTAssertEqual(Field.next(after: .date, in: Field.order(hasDate: false, repeats: false), backward: false), .priority, "no Time without a date")
+        XCTAssertEqual(Field.next(after: .priority, in: Field.order(hasDate: false, repeats: false), backward: false), .title)
+        XCTAssertEqual(Field.next(after: nil, in: Field.order(hasDate: true, repeats: false), backward: false), .title)
     }
 }
 
@@ -513,7 +528,7 @@ extension SearchPaletteModelTests {
 @MainActor
 final class SearchPalettePreviewTests: XCTestCase {
     private func model(events: Int, tasks: [TaskItem] = []) async -> SearchPaletteModel {
-        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let parser = NaturalLanguageParser()
         let model = SearchPaletteModel(findTemporal: { text, now, calendar in
             await parser.findTemporal(text, referenceDate: now, calendar: calendar)
         }, parse: { text, now, calendar, lists, calendars in
@@ -521,6 +536,7 @@ final class SearchPalettePreviewTests: XCTestCase {
         })
         model.taskLists = { [] }
         model.results.debounce = .zero
+        model.typingPause = .zero
         let base = Date().addingTimeInterval(3600)
         stubEvents(model, count: events, base: base)
         model.results.tasks = { tasks }
@@ -607,7 +623,7 @@ final class SearchPalettePreviewTests: XCTestCase {
 @MainActor
 final class SearchVisibilityTests: XCTestCase {
     private func model(query: String, events: Int) async -> SearchPaletteModel {
-        let parser = NaturalLanguageParser(spellCheckerFactory: { NoSpellChecker() })
+        let parser = NaturalLanguageParser()
         let model = SearchPaletteModel(findTemporal: { text, now, calendar in
             await parser.findTemporal(text, referenceDate: now, calendar: calendar)
         }, parse: { text, now, calendar, lists, calendars in
@@ -615,6 +631,7 @@ final class SearchVisibilityTests: XCTestCase {
         })
         model.taskLists = { [CalendarSource(id: "work", title: "Work", tint: .blue)] }
         model.results.debounce = .zero
+        model.typingPause = .zero
         stubEvents(model, count: events, base: Date().addingTimeInterval(3600))
         model.update(query: query)
         await model.results.settle()

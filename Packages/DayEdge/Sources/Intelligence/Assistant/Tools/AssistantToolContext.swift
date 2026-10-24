@@ -2,12 +2,11 @@ import Foundation
 import Domain
 
 /// Everything the tools share: where data comes from, the calendar and
-/// clock, and the date parser — all injectable for tests.
+/// clock — all injectable for tests.
 package struct AssistantToolContext: Sendable {
     package let data: any AssistantDataSource
     package var calendar: Calendar = .autoupdatingCurrent
     package var now: @Sendable () -> Date = { Date() }
-    package var resolveTemporal: @Sendable (String, Date, Calendar) async -> DateInterval? = Self.liveResolveTemporal
     /// Short handles for the objects this conversation's tools return.
     package var references = ChatReferenceRegistry()
     /// Whether items carry references (`[[E1]]`) for the model to show.
@@ -24,22 +23,14 @@ package struct AssistantToolContext: Sendable {
     /// "Always allow" is offered — remote models only.
     package var offersAlwaysAllow = false
 
-    package static let liveResolveTemporal: @Sendable (String, Date, Calendar) async -> DateInterval? = { text, now, calendar in
-        guard let found = await NaturalLanguageParser.live.findTemporal(text, referenceDate: now, calendar: calendar),
-              found.remainingText.isEmpty else { return nil }
-        return TemporalPresentation.interval(found.temporal, calendar: calendar)
-    }
-
     package init(data: any AssistantDataSource, calendar: Calendar = .autoupdatingCurrent,
                  now: @escaping @Sendable () -> Date = { Date() },
-                 resolveTemporal: @escaping @Sendable (String, Date, Calendar) async -> DateInterval? = Self.liveResolveTemporal,
                  references: ChatReferenceRegistry = ChatReferenceRegistry(), showsReferences: Bool = true, maxLines: Int = 30,
                  approvals: ChatApprovals? = nil, changes: (any AssistantChangeWriter)? = nil, offersAlwaysAllow: Bool = false,
                  isCompact: Bool = false, timeFormat: @escaping @Sendable () -> TimeFormat = { .twentyFourHour }) {
         self.data = data
         self.calendar = calendar
         self.now = now
-        self.resolveTemporal = resolveTemporal
         self.references = references
         self.showsReferences = showsReferences
         self.maxLines = maxLines

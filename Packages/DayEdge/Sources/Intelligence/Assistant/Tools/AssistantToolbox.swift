@@ -45,7 +45,7 @@ extension AssistantTool {
             } catch is CancellationError {
                 throw CancellationError()
             } catch let error as AssistantWhen.Unrecognized {
-                return "Couldn't read the date “\(error.text)”. Use \(AssistantWhen.accepted)."
+                return "Couldn't read the date “\(error.text)”. Use \(error.expected)."
             } catch let error as AssistantMoment.NeedsDay {
                 return "“\(error.text)” has no day. Ask the user which day, then pass it like \(AssistantMoment.accepted)."
             } catch AssistantToolArgumentError.missing(let name) {

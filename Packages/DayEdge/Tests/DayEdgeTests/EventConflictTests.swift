@@ -49,7 +49,7 @@ final class EventConflictTests: XCTestCase {
     }
 }
 
-/// The event editor's values: moving days, starts and ends.
+/// The event editor's values: what it makes of a draft and gives back (the timing rules are `EventTimingTests`).
 final class EventQuickAddEditTests: XCTestCase {
     private let calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
@@ -65,23 +65,10 @@ final class EventQuickAddEditTests: XCTestCase {
         return EventQuickAddEdit(draft: draft, calendar: calendar)
     }
 
-    func testMovingTheDayKeepsTheTimes() {
-        var value = edit(start: at(24, 13), end: at(24, 14))
-        value.move(to: at(26, 0), calendar: calendar)
-        XCTAssertEqual([value.start, value.end], [at(26, 13), at(26, 14)])
-    }
-
-    func testANewStartKeepsTheLength() {
-        var value = edit(start: at(24, 13), end: at(24, 14, 30))
-        value.setStart(at(24, 15))
-        XCTAssertEqual(value.end, at(24, 16, 30))
-    }
-
-    func testAnEndBeforeTheStartIsTheNextDay() {
-        var value = edit(start: at(24, 22), end: at(24, 23))
-        value.setEnd(timeOf: at(24, 1), calendar: calendar)
-        XCTAssertEqual(value.end, at(25, 1))
-        XCTAssertTrue(value.canCreate)
+    func testAnEventOverSeveralDaysKeepsItsEnd() {
+        let value = edit(start: at(24, 22), end: at(26, 6))
+        XCTAssertEqual([value.timing.firstDay, value.timing.lastDay], [at(24, 0), at(26, 0)])
+        XCTAssertEqual(value.eventDraft(calendar: calendar).end, at(26, 6))
     }
 
     func testAllDayDraftsKeepTheirSpan() {

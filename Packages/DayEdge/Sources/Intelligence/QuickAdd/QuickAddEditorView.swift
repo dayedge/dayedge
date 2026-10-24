@@ -3,25 +3,23 @@ import Domain
 import UI
 
 /// The Quick Add fields, in keyboard order. A task's Time and Repeat only
-/// exist once there is a date; an event's End only when it has times.
+/// exist once there is a date; an event's start is `date` and `time`, its end
+/// `endDate` and `endTime` (no end time all day); End Repeat only while it repeats. Alert is the event's.
 package enum QuickAddField: Hashable, CaseIterable {
-    case title, list, date, time, priority, recurrence
-    case calendar, endTime, location
+    case title, list, date, time, priority, recurrence, repeatEnd
+    case calendar, endDate, endTime, location, alert
 
-    package static func order(hasDate: Bool) -> [QuickAddField] {
-        hasDate ? [.title, .list, .date, .time, .priority, .recurrence] : [.title, .list, .date, .priority]
+    package static func order(hasDate: Bool, repeats: Bool) -> [QuickAddField] {
+        hasDate ? [.title, .list, .date, .time, .priority, .recurrence] + (repeats ? [.repeatEnd] : [])
+            : [.title, .list, .date, .priority]
     }
 
-    package static func eventOrder(isAllDay: Bool) -> [QuickAddField] {
-        isAllDay ? [.title, .calendar, .date, .time, .location, .recurrence]
-            : [.title, .calendar, .date, .time, .endTime, .location, .recurrence]
+    package static func eventOrder(isAllDay: Bool, repeats: Bool) -> [QuickAddField] {
+        (isAllDay ? [.title, .calendar, .date, .time, .endDate, .location, .recurrence]
+            : [.title, .calendar, .date, .time, .endDate, .endTime, .location, .recurrence]) + (repeats ? [.repeatEnd] : []) + [.alert]
     }
 
     /// Tab / Shift-Tab, wrapping around.
-    package static func next(after field: QuickAddField?, hasDate: Bool, backward: Bool) -> QuickAddField {
-        next(after: field, in: order(hasDate: hasDate), backward: backward)
-    }
-
     package static func next(after field: QuickAddField?, in order: [QuickAddField], backward: Bool) -> QuickAddField {
         guard let field, let index = order.firstIndex(of: field) else { return backward ? order[order.count - 1] : order[0] }
         let step = backward ? -1 : 1
@@ -62,30 +60,31 @@ package struct QuickAddEditorView: View {
                 .padding(.bottom, QuickAddGrid.headerGap)
 
             VStack(alignment: .leading, spacing: QuickAddGrid.rowSpacing) {
-                row(L10n.tr("quickaddeditorview.list", "List"), .list) {
-                    choiceControl(.list, value: listTitle, options: listOptions, selection: edit.listID) { edit.listID = $0 }
+                QuickAddRow(L10n.tr("quickaddeditorview.list", "List")) {
+                    form.choice(.list, value: listTitle, options: listOptions, selection: edit.listID) { edit.listID = $0 }
                 }
-                row(L10n.tr("quickaddeditorview.date", "Date"), .date) {
-                    control(.date, value: edit.day.map { dateFormatter.format($0, .short, year: .always) }, placeholder: L10n.tr("quickaddeditorview.add.date", "Add date"),
-                            minWidth: QuickAddGrid.shortControlWidth) { datePopover }
-                }
-                if edit.day != nil {
-                    row(L10n.tr("quickaddeditorview.time", "Time"), .time) {
-                        control(.time, value: edit.hasTime ? timeFormat.time(edit.time) : nil,
-                                placeholder: L10n.tr("quickaddeditorview.add.time", "Add time"), minWidth: QuickAddGrid.shortControlWidth) { timePopover }
-                    }
-                }
-                row(L10n.tr("quickaddeditorview.priority", "Priority"), .priority) {
-                    choiceControl(.priority, value: edit.priority.title,
-                                  options: TaskPriority.allCases.map { ($0, $0.title) }, selection: edit.priority) { edit.priority = $0 }
+                QuickAddRow(L10n.tr("quickaddeditorview.date", "Date")) {
+                    form.control(.date, value: edit.day.map(form.format), placeholder: L10n.tr("quickaddeditorview.add.date", "Add date"),
+                                 minWidth: QuickAddGrid.shortControlWidth, step: stepDate,
+                                 prepare: { if edit.day == nil { edit.day = calendar.startOfDay(for: Date()) } }) { datePopover }
                 }
                 if edit.day != nil {
-                    row(L10n.tr("quickaddeditorview.repeat", "Repeat"), .recurrence) {
-                        choiceControl(.recurrence, value: edit.recurrence.title,
-                                      options: repeatOptions.map { ($0, $0.title) }, selection: edit.recurrence) { edit.recurrence = $0 }
+                    QuickAddRow(L10n.tr("quickaddeditorview.time", "Time")) {
+                        form.control(.time, value: edit.hasTime ? timeFormat.time(edit.time) : nil,
+                                     placeholder: L10n.tr("quickaddeditorview.add.time", "Add time"), minWidth: QuickAddGrid.shortControlWidth,
+                                     step: stepTime, prepare: { edit.hasTime = true }) { timePopover }
                     }
+                }
+                QuickAddRow(L10n.tr("quickaddeditorview.priority", "Priority")) {
+                    form.choice(.priority, value: edit.priority.title,
+                                options: TaskPriority.allCases.map { ($0, $0.title) }, selection: edit.priority) { edit.priority = $0 }
+                }
+                if let day = edit.day {
+                    QuickAddRow(L10n.tr("quickaddeditorview.repeat", "Repeat")) { form.repeatChoice }
+                    form.repeatEndRow(firstDay: day)
                 }
             }
+            .padding(.leading, iconColumn + iconToText)
         }
         .font(.system(size: 12))
         // Whatever editor closes, focus returns to the control that opened it.
@@ -104,6 +103,7 @@ package struct QuickAddEditorView: View {
             // The task's name, not a boxed field: no text-field chrome.
             TextField(L10n.tr("quickaddeditorview.title", "Title"), text: $edit.title)
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(theme.editor.titleText)
                 .opacity(edit.title.isEmpty ? theme.editor.nativePlaceholderOpacity : 1)
@@ -112,127 +112,42 @@ package struct QuickAddEditorView: View {
         }
     }
 
-    // MARK: Grid
-
-    private func row<Control: View>(_ label: String, _ field: QuickAddField, @ViewBuilder control: () -> Control) -> some View {
-        HStack(spacing: 0) {
-            Text(label)
-                .foregroundStyle(theme.editor.labelText)
-                .frame(width: QuickAddGrid.labelWidth, alignment: .leading)
-                .accessibilityHidden(true)
-            control()
-            Spacer(minLength: 0)
-        }
-        .frame(height: QuickAddGrid.controlHeight)
-        .padding(.leading, iconColumn + iconToText)
-    }
-
     // MARK: Controls
 
-    /// A popup-style control whose editor is a keyboard-navigable choice list.
-    private func choiceControl<Value: Hashable>(_ field: QuickAddField, value: String, options: [(Value, String)],
-                                                selection: Value, choose: @escaping (Value) -> Void) -> some View {
-        control(field, value: value, placeholder: "", hasMenu: true, minWidth: QuickAddGrid.menuControlWidth) {
-            QuickAddChoiceList(options: options, selection: selection) { value in
-                choose(value)
-                openEditor = nil
-            }
-        }
-        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
-            guard let index = options.firstIndex(where: { $0.0 == selection }) else { return .ignored }
-            let step = press.key == .rightArrow ? 1 : -1
-            choose(options[(index + step + options.count) % options.count].0)
-            return .handled
-        }
-    }
-
-    /// One control family: the value on a compact graphite surface (with a
-    /// chevron for choices), a restrained focus ring, and a popover editor
-    /// opened by Space or a click.
-    private func control<Editor: View>(_ field: QuickAddField, value: String?, placeholder: String, hasMenu: Bool = false,
-                                       minWidth: CGFloat, @ViewBuilder editor: @escaping () -> Editor) -> some View {
-        QuickAddControl(
-            text: value ?? placeholder,
-            isPlaceholder: value == nil,
-            hasMenu: hasMenu,
-            isFocused: focus.wrappedValue == field,
-            minWidth: minWidth
-        )
-        .quickAddControl(field, focus: focus) { open(field) }
-        .onKeyPress(keys: field == .date || field == .time ? [.leftArrow, .rightArrow, .upArrow, .downArrow, .delete] : []) { press in
-            field == .date ? stepDate(press.key) : stepTime(press.key)
-        }
-        .popover(isPresented: Binding(get: { openEditor == field }, set: { if !$0, openEditor == field { openEditor = nil } }),
-                 arrowEdge: .bottom) {
-            editor()
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(label(for: field))
-        .accessibilityValue(value ?? placeholder)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { open(field) }
-    }
-
-    private func open(_ field: QuickAddField) {
-        focus.wrappedValue = field
-        switch field {
-        case .date where edit.day == nil: edit.day = calendar.startOfDay(for: Date())
-        case .time where !edit.hasTime: edit.hasTime = true
-        default: break
-        }
-        openEditor = field
+    private var form: QuickAddForm {
+        QuickAddForm(focus: focus, openEditor: $openEditor, repeating: $edit.repeating, calendar: calendar,
+                     dateFormatter: dateFormatter, name: label(for:))
     }
 
     // MARK: Editors
 
     private var datePopover: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        QuickAddPopover(removeTitle: L10n.tr("quickaddeditorview.remove.date", "Remove Date"), remove: {
+            edit.day = nil
+            edit.hasTime = false
+            edit.repeating.recurrence = .never
+        }, close: form.close) {
             DatePicker(L10n.tr("quickaddeditorview.date", "Date"), selection: Binding(
                 get: { edit.day ?? calendar.startOfDay(for: Date()) },
                 set: { edit.day = calendar.startOfDay(for: $0) }
             ), displayedComponents: .date)
-                .labelsHidden()
                 .datePickerStyle(.graphical)
-            editorFooter(removeTitle: L10n.tr("quickaddeditorview.remove.date", "Remove Date")) {
-                edit.day = nil
-                edit.hasTime = false
-                edit.recurrence = .never
-            }
         }
-        .padding(10)
-        .onKeyPress(.return) { openEditor = nil; return .handled }
     }
 
     private var timePopover: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        QuickAddPopover(removeTitle: L10n.tr("quickaddeditorview.remove.time", "Remove Time"), remove: { edit.hasTime = false },
+                        close: form.close) {
             DatePicker(L10n.tr("quickaddeditorview.time", "Time"), selection: $edit.time, displayedComponents: .hourAndMinute)
-                .labelsHidden()
                 .datePickerStyle(.stepperField)
-            editorFooter(removeTitle: L10n.tr("quickaddeditorview.remove.time", "Remove Time")) { edit.hasTime = false }
-        }
-        .padding(10)
-        .onKeyPress(.return) { openEditor = nil; return .handled }
-    }
-
-    private func editorFooter(removeTitle: String, remove: @escaping () -> Void) -> some View {
-        HStack {
-            Button(removeTitle) {
-                remove()
-                openEditor = nil
-            }
-            .buttonStyle(.link)
-            .font(.system(size: 11))
-            Spacer()
-            Button(L10n.tr("quickaddeditorview.done", "Done")) { openEditor = nil }
-                .controlSize(.small)
         }
     }
 
     // MARK: Stepping (closed controls)
 
     private func stepDate(_ key: KeyEquivalent) -> KeyPress.Result {
-        if key == .delete { edit.day = nil; edit.hasTime = false; edit.recurrence = .never; return .handled }
-        let days = key == .leftArrow ? -1 : key == .rightArrow ? 1 : key == .upArrow ? -7 : 7
+        if key == .delete { edit.day = nil; edit.hasTime = false; edit.repeating.recurrence = .never; return .handled }
+        let days = key.step(small: 1, large: 7)
         let base = edit.day ?? calendar.startOfDay(for: Date())
         edit.day = edit.day == nil ? base : calendar.date(byAdding: .day, value: days, to: base)
         return .handled
@@ -241,7 +156,7 @@ package struct QuickAddEditorView: View {
     private func stepTime(_ key: KeyEquivalent) -> KeyPress.Result {
         if key == .delete { edit.hasTime = false; return .handled }
         guard edit.hasTime else { edit.hasTime = true; return .handled }
-        let minutes = key == .leftArrow ? -15 : key == .rightArrow ? 15 : key == .upArrow ? -60 : 60
+        let minutes = key.step(small: 15, large: 60)
         edit.time = calendar.date(byAdding: .minute, value: minutes, to: edit.time) ?? edit.time
         return .handled
     }
@@ -250,14 +165,6 @@ package struct QuickAddEditorView: View {
 
     private var listOptions: [(String?, String)] {
         [(nil, L10n.tr("quickaddeditorview.default", "Default"))] + lists.map { (Optional($0.id), $0.title) }
-    }
-
-    /// The menu's values, plus a parsed rule it can't express (kept as-is
-    /// while selected).
-    private var repeatOptions: [TaskRecurrence] {
-        var options = TaskRecurrence.standard
-        if edit.recurrence.isCustom { options.append(edit.recurrence) }
-        return options
     }
 
     private var listTitle: String {
@@ -276,9 +183,9 @@ package struct QuickAddEditorView: View {
         case .time: return L10n.tr("quickaddeditorview.time", "Time")
         case .priority: return L10n.tr("quickaddeditorview.priority", "Priority")
         case .recurrence: return L10n.tr("quickaddeditorview.repeat", "Repeat")
-        case .calendar: return L10n.tr("quickaddeditorview.calendar", "Calendar")
-        case .endTime: return L10n.tr("quickaddeditorview.ends", "Ends")
-        case .location: return L10n.tr("quickaddeditorview.location", "Location")
+        case .repeatEnd: return RepeatEndPopover.title
+        // The event form's fields; the task form never shows them.
+        case .calendar, .endDate, .endTime, .location, .alert: return ""
         }
     }
 }
@@ -291,6 +198,8 @@ package enum QuickAddGrid {
     package static let headerGap: CGFloat = 10
     package static let menuControlWidth: CGFloat = 132
     package static let shortControlWidth: CGFloat = 100
+    /// A time beside its date: narrower, and the same for start and end.
+    package static let timeControlWidth: CGFloat = 64
 }
 
 /// The shared control surface: compact, graphite, a hairline edge; a

@@ -87,7 +87,7 @@ final class AssistantMemoryBoundsTests: XCTestCase {
     func testCandidatePreviewCannotTurnNineDistinctTargetsIntoOne() async throws {
         let data = LookupData(sections: (0..<12).map { section(T.date(24), id: "e\($0)", title: "Target") })
         let ctx = context(data)
-        let result = try await AssistantTargetResolver.event("Target", when: "tomorrow", context: ctx)
+        let result = try await AssistantTargetResolver.event("Target", when: "2026-09-24", context: ctx)
         guard case .unresolved(let text) = result else { return XCTFail("all distinct matches must count") }
         XCTAssertTrue(text.hasPrefix("Several events match"))
         XCTAssertNotNil(ctx.references.reference(for: "E8"))
@@ -159,7 +159,7 @@ final class AssistantMemoryBoundsTests: XCTestCase {
         let data = LookupData(sections: [section(T.date(24), id: "e", title: "Target")], pausesFirstRead: true)
         let ctx = context(data)
         let tool = EventDetailsTool.make(ctx)
-        let task = Task { try await tool.call(.init(["event": .string("Target"), "when": .string("tomorrow")])) }
+        let task = Task { try await tool.call(.init(["event": .string("Target"), "when": .string("2026-09-24")])) }
         while await data.calls().isEmpty { await Task.yield() }
         task.cancel()
         await data.resume()

@@ -53,7 +53,8 @@ let remoteModelProducts: [Target.Dependency] = []
 // The local SQLite mirror of EventKit (event source and search index).
 let packageDependencies: [Package.Dependency] = remoteModelDependencies + [
     .package(path: "../CalendarIndex"),
-    .package(path: "../../../time-whisper")
+    .package(url: "https://github.com/dayedge/time-whisper.git", exact: "0.7.1"),
+    .package(url: "https://github.com/dayedge/time-whisper-model.git", exact: "0.7.1")
 ]
 let shellDependencies: [Target.Dependency] = [
     .product(name: "CalendarIndex", package: "CalendarIndex"),
@@ -121,7 +122,9 @@ let package = Package(
         // the remote-model products (Tachikoma) and the date parser.
         .target(
             name: "Intelligence",
-            dependencies: ["Domain", "UI", .product(name: "TimeWhisper", package: "time-whisper")] + remoteModelProducts,
+            dependencies: ["Domain", "UI",
+                           .product(name: "TimeWhisper", package: "time-whisper"),
+                           .product(name: "TimeWhisperModelAll", package: "time-whisper-model")] + remoteModelProducts,
             path: "Sources/Intelligence",
             resources: [.process("Localization")],
             swiftSettings: swiftSettings
@@ -141,8 +144,6 @@ let package = Package(
             dependencies: ["Domain", "Platform", "UI", "Agenda", "Tasks", "Intelligence", "Shell"]
                 + shellDependencies + remoteModelProducts + [.product(name: "TimeWhisper", package: "time-whisper")],
             path: "Tests/DayEdgeTests",
-            // Parser snapshots, read from the source tree (GoldenSnapshot).
-            exclude: ["Golden"],
             resources: [.copy("Fixtures/Localization")],
             swiftSettings: swiftSettings
         )

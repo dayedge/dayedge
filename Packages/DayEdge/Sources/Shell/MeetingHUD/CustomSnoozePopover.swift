@@ -40,6 +40,7 @@ struct CustomSnoozePopover: View {
         HStack(spacing: 5) {
             TextField(L10n.tr("customsnoozepopover.minutes", "Minutes"), text: $draft)
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 .font(.system(size: 16, weight: .medium).monospacedDigit())
                 .frame(width: 34)
                 .focused($isDurationFocused)

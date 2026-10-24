@@ -35,6 +35,7 @@ package struct ModelPickerPopover: View {
         VStack(alignment: .leading, spacing: 8) {
             TextField(L10n.tr("modelpickerpopover.search.or.enter.a.model.id", "Search, or enter a model id"), text: $query)
                 .textFieldStyle(.roundedBorder)
+                .themedTextInput()
                 .focused($isFilterFocused)
                 .onSubmit(chooseHighlighted)
                 .onKeyPress(.downArrow) { move(1); return .handled }

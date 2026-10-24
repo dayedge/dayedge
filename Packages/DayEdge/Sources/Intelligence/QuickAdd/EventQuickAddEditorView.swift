@@ -34,29 +34,34 @@ package struct EventQuickAddEditorView<OverlapRow: View>: View {
                 .padding(.bottom, QuickAddGrid.headerGap)
 
             VStack(alignment: .leading, spacing: QuickAddGrid.rowSpacing) {
-                row(L10n.tr("eventquickaddeditorview.calendar", "Calendar"), .calendar) {
-                    choiceControl(.calendar, value: calendarTitle, options: calendarOptions, selection: edit.calendarID) {
+                QuickAddRow(L10n.tr("eventquickaddeditorview.calendar", "Calendar")) {
+                    form.choice(.calendar, value: calendarTitle, options: calendarOptions, selection: edit.calendarID) {
                         edit.calendarID = $0
                     }
                 }
-                row(L10n.tr("eventquickaddeditorview.date", "Date"), .date) {
-                    control(.date, value: dateText, placeholder: "", minWidth: QuickAddGrid.shortControlWidth) { datePopover }
-                }
-                row(L10n.tr("eventquickaddeditorview.starts", "Starts"), .time) {
-                    control(.time, value: edit.isAllDay ? nil : timeFormat.time(edit.start),
-                            placeholder: L10n.tr("eventquickaddeditorview.all.day", "All day"), minWidth: QuickAddGrid.shortControlWidth) { startPopover }
-                }
-                if !edit.isAllDay {
-                    row(L10n.tr("eventquickaddeditorview.ends", "Ends"), .endTime) {
-                        control(.endTime, value: endText, placeholder: "", minWidth: QuickAddGrid.shortControlWidth) { endPopover }
+                QuickAddRow(L10n.tr("eventquickaddeditorview.starts", "Starts")) {
+                    dateControl(.date, day: edit.timing.firstDay) { datePopover($edit.timing.firstDay) }
+                    form.control(.time, value: edit.timing.isAllDay ? nil : timeFormat.time(edit.timing.start),
+                                 placeholder: L10n.tr("eventquickaddeditorview.all.day", "All day"), minWidth: QuickAddGrid.timeControlWidth,
+                                 step: { step(.time, $0) }, prepare: { edit.timing.isAllDay = false }) {
+                        timePopover($edit.timing.start, removeTitle: L10n.tr("eventquickaddeditorview.editors.all.day", "All Day")) {
+                            edit.timing.isAllDay = true
+                        }
                     }
                 }
-                row(L10n.tr("eventquickaddeditorview.location", "Location"), .location) { locationField }
-                row(L10n.tr("eventquickaddeditorview.repeat", "Repeat"), .recurrence) {
-                    choiceControl(.recurrence, value: edit.recurrence.title,
-                                  options: repeatOptions.map { ($0, $0.title) }, selection: edit.recurrence) { edit.recurrence = $0 }
+                QuickAddRow(L10n.tr("eventquickaddeditorview.ends", "Ends")) {
+                    dateControl(.endDate, day: edit.timing.lastDay) { datePopover($edit.timing.lastDay) }
+                    if !edit.timing.isAllDay {
+                        form.control(.endTime, value: timeFormat.time(edit.timing.end), placeholder: "",
+                                     minWidth: QuickAddGrid.timeControlWidth, step: { step(.endTime, $0) }) { timePopover($edit.timing.end) }
+                    }
                 }
+                QuickAddRow(L10n.tr("eventquickaddeditorview.location", "Location")) { locationField }
+                QuickAddRow(L10n.tr("eventquickaddeditorview.repeat", "Repeat")) { form.repeatChoice }
+                form.repeatEndRow(firstDay: edit.timing.firstDay)
+                QuickAddRow(L10n.tr("eventquickaddeditorview.alert", "Alert")) { alertChoice }
             }
+            .padding(.leading, iconColumn + iconToText)
         }
         .font(.system(size: 12))
         .animation(.easeOut(duration: 0.15), value: overlap)
@@ -100,26 +105,12 @@ package struct EventQuickAddEditorView<OverlapRow: View>: View {
                 .accessibilityHidden(true)
             TextField(L10n.tr("eventquickaddeditorview.title", "Title"), text: $edit.title)
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(theme.editor.titleText)
                 .opacity(edit.title.isEmpty ? theme.editor.nativePlaceholderOpacity : 1)
                 .focused(focus, equals: .title)
                 .accessibilityLabel(L10n.tr("eventquickaddeditorview.title", "Title"))
         }
-    }
-
-    // MARK: Grid
-
-    private func row<Control: View>(_ label: String, _ field: QuickAddField, @ViewBuilder control: () -> Control) -> some View {
-        HStack(spacing: 0) {
-            Text(label)
-                .foregroundStyle(theme.editor.labelText)
-                .frame(width: QuickAddGrid.labelWidth, alignment: .leading)
-                .accessibilityHidden(true)
-            control()
-            Spacer(minLength: 0)
-        }
-        .frame(height: QuickAddGrid.controlHeight)
-        .padding(.leading, iconColumn + iconToText)
     }
 }

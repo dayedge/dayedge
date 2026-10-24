@@ -72,71 +72,57 @@ struct CopyIconButton: View {
 
 /// An event's time, edited as a draft — every saved change can move the
 /// event (and close the card), so nothing is written while adjusting.
-/// Done (↩) saves, Cancel (Esc) doesn't. Moving the start keeps the length.
+/// Done (↩) saves, Cancel (Esc) doesn't. Starts and Ends each hold a date and
+/// a time, so an event can run over several days; `EventTiming` keeps the end
+/// after the start and the length when the start moves.
 struct EventTimeEditor: View {
-    let start: Date
-    let end: Date
-    let isAllDay: Bool
     let onCommit: (EventChange) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var draftStart = Date()
-    @State private var draftEnd = Date()
-    @State private var draftAllDay = false
+    /// The time as it was, to save only what changed.
+    private let original: EventTiming
+    @State private var timing: EventTiming
 
-    private var calendar: Calendar { .autoupdatingCurrent }
+    init(start: Date, end: Date, isAllDay: Bool, onCommit: @escaping (EventChange) -> Void) {
+        let timing = EventTiming(start: start, end: end, isAllDay: isAllDay, calendar: .autoupdatingCurrent)
+        self.onCommit = onCommit
+        original = timing
+        _timing = State(initialValue: timing)
+    }
 
     var body: some View {
-        PropertyEditor(width: .compact, onCancel: { dismiss() }, onDone: {
+        PropertyEditor(width: .standard, onCancel: { dismiss() }, onDone: {
             commit()
             dismiss()
         }, content: {
-            Toggle(L10n.tr("eventdetailparts.all.day", "All-day"), isOn: Binding(get: { draftAllDay }, set: setAllDay))
+            Toggle(L10n.tr("eventdetailparts.all.day", "All-day"), isOn: $timing.isAllDay)
                 .toggleStyle(.checkbox)
-            if !draftAllDay {
-                PropertyEditorField(label: "Starts") {
-                    DatePicker(L10n.tr("eventdetailparts.starts", "Starts"), selection: Binding(get: { draftStart }, set: moveStart), displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                }
-                PropertyEditorField(label: "Ends") {
-                    DatePicker(L10n.tr("eventdetailparts.ends", "Ends"), selection: $draftEnd, in: draftStart.addingTimeInterval(5 * 60)..., displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                }
-            }
+            let starts = L10n.tr("eventdetailparts.starts", "Starts")
+            let ends = L10n.tr("eventdetailparts.ends", "Ends")
+            PropertyEditorField(label: starts) { moment(starts, day: $timing.firstDay, time: $timing.start) }
+            PropertyEditorField(label: ends) { moment(ends, day: $timing.lastDay, time: $timing.end) }
         })
         .datePickerStyle(.field)
-        .onAppear {
-            draftStart = start
-            draftEnd = end
-            draftAllDay = isAllDay
-        }
     }
 
-    private func moveStart(_ new: Date) {
-        let length = draftEnd.timeIntervalSince(draftStart)
-        draftStart = new
-        draftEnd = new.addingTimeInterval(length)
-    }
-
-    /// All-day spans whole days; back to timed, an hour at 9:00.
-    private func setAllDay(_ allDay: Bool) {
-        draftAllDay = allDay
-        let day = calendar.startOfDay(for: draftStart)
-        if allDay {
-            draftStart = day
-            draftEnd = calendar.date(byAdding: .day, value: 1, to: day) ?? day
-        } else {
-            draftStart = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
-            draftEnd = draftStart.addingTimeInterval(3600)
+    /// A date and, unless all day, a time beside it.
+    private func moment(_ label: String, day: Binding<Date>, time: Binding<Date>) -> some View {
+        HStack(spacing: 6) {
+            DatePicker(label, selection: day, displayedComponents: .date)
+                .labelsHidden()
+            if !timing.isAllDay {
+                DatePicker(label, selection: time, displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+            }
         }
     }
 
     /// Only what actually changed is saved.
     private func commit() {
-        if draftAllDay != isAllDay {
-            onCommit(EventChange(start: draftStart, end: draftEnd, isAllDay: draftAllDay))
-        } else if draftStart != start || draftEnd != end {
-            onCommit(EventChange(start: draftStart, end: draftEnd))
+        if timing.isAllDay != original.isAllDay {
+            onCommit(EventChange(start: timing.start, end: timing.end, isAllDay: timing.isAllDay))
+        } else if timing != original {
+            onCommit(EventChange(start: timing.start, end: timing.end))
         }
     }
 }

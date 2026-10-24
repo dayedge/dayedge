@@ -62,7 +62,7 @@ package enum AssistantTargetResolver {
         }
         let range: DateInterval
         if let when, !when.isEmpty {
-            range = try await AssistantWhen.resolve(when, context: context)
+            range = try AssistantWhen.resolve(when, context: context)
         } else {
             let today = calendar.startOfDay(for: context.now())
             range = DateInterval(

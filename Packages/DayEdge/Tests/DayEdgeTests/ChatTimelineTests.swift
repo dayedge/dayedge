@@ -43,8 +43,8 @@ final class ChatTimelineTests: XCTestCase {
         let text = CurrentDateTool.answer(now: at(day: 30, hour: 9), calendar: calendar)
         XCTAssertTrue(text.contains("(2026-09-30, time zone Europe/Warsaw)"), text)
         XCTAssertTrue(text.contains("09:00"), text)
-        XCTAssertTrue(text.contains("This week: 2026-09-28 to 2026-10-04") || text.contains("This week: 2026-09-27 to 2026-10-03"), text)
-        XCTAssertTrue(text.contains("Tomorrow: "), text)
+        XCTAssertTrue(text.contains("this 2026-09-28..2026-10-04") || text.contains("this 2026-09-27..2026-10-03"), text)
+        XCTAssertTrue(text.contains("Thu 2026-10-01 (tomorrow)"), text)
     }
 
     func testInstructionsSayTheCurrentDateAndTheDayChangeRule() {
