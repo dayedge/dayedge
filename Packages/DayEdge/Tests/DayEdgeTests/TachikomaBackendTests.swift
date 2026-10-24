@@ -127,7 +127,7 @@ final class TachikomaBackendTests: XCTestCase {
         ]])
         let provider = ScriptedModelProvider(responses: [
             ProviderResponse(text: "", finishReason: .toolCalls, toolCalls: [
-                AgentToolCall(id: "call-1", name: "get_agenda", arguments: ["when": AnyAgentToolValue(string: "tomorrow")])
+                AgentToolCall(id: "call-1", name: "get_agenda", arguments: ["when": AnyAgentToolValue(string: "2026-09-24")])
             ]),
             ProviderResponse(text: "Tomorrow:\n- [[E1]] 08:00 Dentist\nThat's all.", finishReason: .stop)
         ])

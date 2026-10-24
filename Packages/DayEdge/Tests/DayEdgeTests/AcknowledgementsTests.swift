@@ -45,11 +45,8 @@ final class AcknowledgementsTests: XCTestCase {
 
     func testBundledParserNoticesRetainPermissionText() {
         let notices = LicenseView.thirdPartyText
-        XCTAssertTrue(notices.contains("COMPONENT: chrono-node\n"))
-        XCTAssertTrue(notices.contains("Copyright (c) 2014, Wanasit Tanakitrungruang"))
-        XCTAssertTrue(notices.contains("COMPONENT: dayjs\n"))
-        XCTAssertTrue(notices.contains("Copyright (c) 2018-present, iamkun"))
-        XCTAssertTrue(notices.contains("Permission is hereby granted, free of charge"))
+        XCTAssertTrue(notices.contains("COMPONENT: TimeWhisper\n"))
+        XCTAssertTrue(notices.contains("COMPONENT: Kotlin runtime, kotlinx-coroutines and kotlinx-datetime\n"))
     }
 
     /// About shows the bundled copy of the licence: it must be the

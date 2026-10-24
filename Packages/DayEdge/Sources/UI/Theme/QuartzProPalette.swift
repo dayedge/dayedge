@@ -97,7 +97,7 @@ extension ThemePalette {
             cancelledText: muted, cancelledMetadata: muted.opacity(0.75), cancelledTimelineText: muted,
             cancelledTimelineFill: hover, ongoingIndicator: red, quietMetadata: muted,
             subduedMetadata: secondary.opacity(0.85), detailMetadata: secondary, sourceLabelFallback: text)
-        p.editor = .init(text: text, focusRing: .black.opacity(0.22), selectionFill: selection,
+        p.editor = .init(text: text, caret: accent, focusRing: .black.opacity(0.22), selectionFill: selection,
             titleText: text, labelText: secondary, placeholderText: muted,
             panelFill: white, fieldFill: field,
             fieldHoverFill: hex(0xededee), fieldFocusedFill: white, fieldKeyline: keyline,

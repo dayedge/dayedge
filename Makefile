@@ -37,6 +37,7 @@ CONFIGURATION ?= Release
 # Debug builds are a separate app ("DayEdge Dev", com.dayedge.app.dev).
 PRODUCT  := $(if $(filter Debug,$(CONFIGURATION)),DayEdge Dev,DayEdge)
 APP      := $(BUILD)/$(PRODUCT).app
+LOCAL_ENTITLEMENTS := $(BUILD)/DayEdge-local.entitlements
 
 ifdef ARCHS
 ARCHITECTURES := ARCHS="$(ARCHS)" ONLY_ACTIVE_ARCH=NO
@@ -55,13 +56,17 @@ endif
 .PHONY: build run test release memory lint clean signing-identity
 
 build:
+	@mkdir -p "$(BUILD)"
+	@cp App/DayEdge.entitlements "$(LOCAL_ENTITLEMENTS)"
+	@/usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.disable-library-validation bool true" "$(LOCAL_ENTITLEMENTS)"
 ifeq ($(HAS_SIGN_IDENTITY),0)
 	@echo "Signing ad hoc: macOS will ask for permissions again after each build (make signing-identity)."
 else
 	@security unlock-keychain -p "$(SIGN_KEYCHAIN_PASSWORD)" "$(SIGN_KEYCHAIN)"
 endif
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIGURATION) \
-		-derivedDataPath $(DERIVED) $(ARCHITECTURES) $(SIGNING) build
+		-derivedDataPath $(DERIVED) $(ARCHITECTURES) $(SIGNING) \
+		DAYEDGE_ENTITLEMENTS="$(abspath $(LOCAL_ENTITLEMENTS))" build
 	rm -rf "$(APP)"
 	cp -R "$(DERIVED)/Build/Products/$(CONFIGURATION)/$(PRODUCT).app" "$(APP)"
 	@echo "Built $(APP)"

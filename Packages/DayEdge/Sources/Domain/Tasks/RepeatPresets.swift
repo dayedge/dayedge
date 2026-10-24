@@ -73,10 +73,13 @@ package struct CustomRepeatDraft: Equatable {
     /// `Calendar` weekday numbers (1 = Sunday); weekly only.
     package var weekdays: Set<Int> = []
     package var ending: Ending = .never
+    /// Where "On Date" starts (`TaskRecurrenceRule.suggestedLastDay`).
+    package let suggestedEnd: Date
 
     /// Starts from the current rule, or a weekly one on the item's weekday.
     package init(rule: TaskRecurrenceRule?, anchor: Date, calendar: Calendar) {
         let weekday = calendar.component(.weekday, from: anchor)
+        suggestedEnd = TaskRecurrenceRule.suggestedLastDay(firstDay: anchor, calendar: calendar)
         guard let rule else {
             weekdays = [weekday]
             return
@@ -92,12 +95,14 @@ package struct CustomRepeatDraft: Equatable {
         }
     }
 
-    package var rule: TaskRecurrenceRule {
+    /// The rule to save. An end date is its whole last day, stored as Quick Add stores it
+    /// (`TaskRecurrenceRule.ending(on:calendar:)`), whatever time the date picker carried.
+    package func rule(calendar: Calendar) -> TaskRecurrenceRule {
         var rule = TaskRecurrenceRule(frequency: frequency, interval: interval)
         if frequency == .weekly { rule.weekdays = weekdays.sorted().map { .init(weekday: $0) } }
         switch ending {
         case .never: break
-        case .onDate(let date): rule.endDate = date
+        case .onDate(let date): rule = rule.ending(on: date, calendar: calendar)
         case .afterCount(let count): rule.occurrenceCount = max(count, 1)
         }
         return rule

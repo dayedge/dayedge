@@ -32,64 +32,6 @@ final class SearchRelevanceTests: XCTestCase {
     }
 }
 
-final class SearchDateFilterTests: XCTestCase {
-    private var dates: DatePresentationFormatter { DatePresentationFormatter(regionalLocale: Locale(identifier: "en_GB"), displayLocale: Locale(identifier: "en"), calendar: calendar) }
-    private let reference = Date(timeIntervalSince1970: 1_791_028_800)  // 3 Oct 2026, noon UTC
-    private var calendar: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        calendar.locale = Locale(identifier: "en_GB")
-        return calendar
-    }
-
-    private func span(_ query: String, _ phrase: String, _ date: DateComponents, day: Bool, month: Bool = true) -> ChronoSpan {
-        let range = (query as NSString).range(of: phrase)
-        return ChronoSpan(utf16Offset: range.location, utf16Length: range.length, date: date,
-                          isDayCertain: day, isTimeCertain: false, isMonthCertain: month, end: nil)
-    }
-
-    func testDaySplitsOffAsThatDay() {
-        let query = "standup tomorrow"
-        let parts = SearchDateFilter.split(query, spans: [span(query, "tomorrow", DateComponents(year: 2026, month: 10, day: 4), day: true)],
-                                           referenceDate: reference, calendar: calendar, dates: dates)
-        XCTAssertEqual(parts.text, "standup")
-        XCTAssertEqual(parts.interval?.start, calendar.date(from: DateComponents(year: 2026, month: 10, day: 4)))
-        XCTAssertEqual(parts.interval?.duration, 86400)
-        XCTAssertEqual(parts.label, "Sun 4 Oct")
-    }
-
-    func testMonthSplitsOffAsTheWholeMonth() {
-        let query = "refinement last March notes"
-        let parts = SearchDateFilter.split(query, spans: [span(query, "March", DateComponents(year: 2027, month: 3, day: 1), day: false)],
-                                           referenceDate: reference, calendar: calendar)
-        XCTAssertEqual(parts.text, "refinement notes")
-        XCTAssertEqual(parts.interval?.start, calendar.date(from: DateComponents(year: 2026, month: 3, day: 1)))
-        XCTAssertEqual(parts.interval?.end, calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)))
-        XCTAssertEqual(parts.label, "March 2026")
-    }
-
-    func testMonthModifiersPickTheYear() {
-        func start(_ query: String, _ month: Int) -> Date? {
-            SearchDateFilter.split(query, spans: [span(query, query.components(separatedBy: " ").last!, DateComponents(year: 2027, month: month, day: 1), day: false)],
-                                   referenceDate: reference, calendar: calendar).interval?.start
-        }
-        func first(_ year: Int, _ month: Int) -> Date? { calendar.date(from: DateComponents(year: year, month: month, day: 1)) }
-        XCTAssertEqual(start("sync March", 3), first(2026, 3), "a bare month is this year's")
-        XCTAssertEqual(start("sync last November", 11), first(2025, 11))
-        XCTAssertEqual(start("sync next March", 3), first(2027, 3))
-        XCTAssertEqual(start("sync next December", 12), first(2026, 12))
-    }
-
-    func testUncertainOrInWordPhrasesStayText() {
-        let vague = "review 2027"
-        XCTAssertEqual(SearchDateFilter.split(vague, spans: [span(vague, "2027", DateComponents(year: 2027), day: false, month: false)],
-                                              referenceDate: reference, calendar: calendar), .plain(vague))
-        let inWord = "Mayday drill"
-        XCTAssertEqual(SearchDateFilter.split(inWord, spans: [span(inWord, "May", DateComponents(year: 2026, month: 5), day: false)],
-                                              referenceDate: reference, calendar: calendar), .plain(inWord))
-    }
-}
-
 @MainActor
 final class SearchSessionDateFilterTests: XCTestCase {
     private let base = Calendar.current.startOfDay(for: Date()).addingTimeInterval(9 * 3600)
@@ -145,23 +87,5 @@ final class SearchSessionDateFilterTests: XCTestCase {
         session.update(query: "daily")
         await session.settle()
         XCTAssertEqual(session.preview.map(\.id), ["event:e2", "event:e50"], "the exact title first, even 38 days ago")
-    }
-}
-
-/// The real chrono parse behind the split.
-final class SearchDateFilterChronoTests: XCTestCase {
-    func testChronoPhrases() async {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
-        let reference = calendar.date(from: DateComponents(year: 2026, month: 10, day: 3, hour: 12))!
-        let tomorrow = await SearchDateFilter.parse("standup tomorrow", referenceDate: reference, calendar: calendar)
-        XCTAssertEqual(tomorrow.text, "standup")
-        XCTAssertEqual(tomorrow.interval?.start, calendar.date(from: DateComponents(year: 2026, month: 10, day: 4)))
-        let march = await SearchDateFilter.parse("refinement last March", referenceDate: reference, calendar: calendar)
-        XCTAssertEqual(march.text, "refinement")
-        XCTAssertEqual(march.interval?.start, calendar.date(from: DateComponents(year: 2026, month: 3, day: 1)))
-        XCTAssertEqual(march.interval?.end, calendar.date(from: DateComponents(year: 2026, month: 4, day: 1)))
-        let plain = await SearchDateFilter.parse("refinement", referenceDate: reference, calendar: calendar)
-        XCTAssertEqual(plain, .plain("refinement"))
     }
 }

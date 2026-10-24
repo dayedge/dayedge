@@ -24,7 +24,7 @@ package enum EventDetailsTool {
         ) { arguments in
             let name = try arguments.string("event")
             var range: DateInterval?
-            if let when = arguments.optionalString("when") { range = try await AssistantWhen.resolve(when, context: context) }
+            if let when = arguments.optionalString("when") { range = try AssistantWhen.resolve(when, context: context) }
             return try await answer(event: name, in: range, context: context)
         }
     }

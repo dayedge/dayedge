@@ -291,10 +291,12 @@
 "acknowledgements.fonts" = "Kroje pisma";
 "acknowledgements.data" = "Dane";
 "license.title" = "Licencja";
-"acknowledgements.role.chrono" = "Rozpoznaje daty i godziny zapisane w języku naturalnym.";
-"acknowledgements.role.dayjs" = "Obliczenia na datach w bibliotece Chrono.";
 "acknowledgements.role.grdb" = "Narzędzia SQLite obsługujące lokalny indeks kalendarza i wyszukiwanie.";
 "acknowledgements.role.tachikoma" = "Łączy funkcję Zapytaj z wybranymi dostawcami modeli językowych.";
+"acknowledgements.role.transformers" = "Dzieli tekst na fragmenty, które czyta model szybkiego dodawania.";
+"acknowledgements.role.jinja" = "Obsługa szablonów, używana przez Swift Transformers.";
+"acknowledgements.role.huggingface" = "Obsługa Hugging Face Hub, używana przez Swift Transformers.";
+"acknowledgements.role.yyjson" = "Szybkie czytanie JSON, używane przez Swift Transformers.";
 "acknowledgements.role.mcp" = "Obsługa Model Context Protocol wykorzystywana przez bibliotekę Tachikoma.";
 "acknowledgements.role.eventsource" = "Przesyłanie odpowiedzi modelu w trakcie ich generowania, wykorzystywane przez bibliotekę Tachikoma.";
 "acknowledgements.role.lifecycle" = "Uruchamianie i zatrzymywanie usług, wykorzystywane przez bibliotekę Tachikoma.";
@@ -325,3 +327,8 @@
 "menubar.item.icon.date.time" = "Ikona oraz data i godzina";
 
 "menubar.item.space.notice" = "Wyświetlanie daty i godziny zajmuje więcej miejsca na pasku menu. Jeśli miejsca jest mało, macOS może automatycznie przenieść lub ukryć DayEdge albo jego wskaźnik spotkania.";
+
+"acknowledgements.role.timewhisper" = "Rozpoznaje daty, zadania i wydarzenia zapisane w języku naturalnym.";
+"acknowledgements.role.kotlin" = "Środowisko wykonawcze i narzędzia dat używane przez TimeWhisper.";
+
+"acknowledgements.role.timewhispermodel" = "Model działający lokalnie, używany przez szybkie dodawanie i wyszukiwanie.";

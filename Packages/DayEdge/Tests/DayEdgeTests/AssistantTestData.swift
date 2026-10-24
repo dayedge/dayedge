@@ -40,18 +40,13 @@ enum AssistantTestData {
         CalendarSource(id: "home", title: "Home", tint: .green)
     ]
 
-    /// Parses only "next friday" (→ Friday 25 September); everything else is
-    /// free text. Keeps tests independent of the real parsers.
     static func context(events: [Int: [AgendaEventModel]] = [:], tasks: [TaskItem] = [],
                         holidays: [String: String] = [:]) -> AssistantToolContext {
         AssistantToolContext(
             data: FakeAssistantData(events: events, snapshot: AssistantTaskSnapshot(tasks: tasks, lists: lists),
                                     holidays: AssistantHolidays(region: "PL", namesByDayKey: holidays)),
             calendar: calendar,
-            now: { now },
-            parseDate: { text, _, _ in
-                text.lowercased() == "next friday" ? .jumpToDate(date(25)) : .freeTextSearch(text)
-            }
+            now: { now }
         )
     }
 }

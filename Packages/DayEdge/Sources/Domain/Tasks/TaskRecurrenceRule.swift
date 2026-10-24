@@ -223,6 +223,35 @@ package struct TaskRecurrenceRule: Hashable, Sendable {
     }
 }
 
+// MARK: - End
+
+extension TaskRecurrenceRule {
+    /// The same rule with no end: how often, without until when.
+    package var withoutEnd: TaskRecurrenceRule {
+        var rule = self
+        rule.endDate = nil
+        rule.occurrenceCount = nil
+        return rule
+    }
+
+    /// The last day an editor offers when an end is first chosen: a month after the first day.
+    package static func suggestedLastDay(firstDay: Date, calendar: Calendar) -> Date {
+        let day = calendar.startOfDay(for: firstDay)
+        return calendar.date(byAdding: .month, value: 1, to: day) ?? day
+    }
+
+    /// The same rule ending with `lastDay` (inclusive: an occurrence late that day still counts),
+    /// or with no end for nil.
+    package func ending(on lastDay: Date?, calendar: Calendar) -> TaskRecurrenceRule {
+        var rule = withoutEnd
+        rule.endDate = lastDay.map { day in
+            let start = calendar.startOfDay(for: day)
+            return calendar.date(byAdding: .day, value: 1, to: start)?.addingTimeInterval(-1) ?? start
+        }
+        return rule
+    }
+}
+
 // MARK: - Presentation
 
 extension TaskRecurrenceRule {

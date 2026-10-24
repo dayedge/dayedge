@@ -277,7 +277,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				CODE_SIGN_ENTITLEMENTS = App/DayEdge.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(DAYEDGE_ENTITLEMENTS)";
+				DAYEDGE_ENTITLEMENTS = App/DayEdge.entitlements;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "DayEdge Dev";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -310,7 +311,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				CODE_SIGN_ENTITLEMENTS = App/DayEdge.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(DAYEDGE_ENTITLEMENTS)";
+				DAYEDGE_ENTITLEMENTS = App/DayEdge.entitlements;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DayEdge;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";

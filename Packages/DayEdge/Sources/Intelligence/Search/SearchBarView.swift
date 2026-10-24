@@ -121,12 +121,7 @@ package struct SearchBarView: View {
                 onMove: { palette.moveSelection($0) },
                 onRefine: { palette.refine() },
                 onTab: { backward in
-                    if let event = palette.eventEdit {
-                        quickAddFocus = QuickAddField.next(after: quickAddFocus, in: QuickAddField.eventOrder(isAllDay: event.isAllDay),
-                                                           backward: backward)
-                    } else {
-                        quickAddFocus = QuickAddField.next(after: quickAddFocus, hasDate: palette.edit?.day != nil, backward: backward)
-                    }
+                    quickAddFocus = QuickAddField.next(after: quickAddFocus, in: palette.quickAddOrder, backward: backward)
                 },
                 onCreate: { palette.createFromKeyboard() }
             )
@@ -172,6 +167,7 @@ package struct SearchBarView: View {
         .animation(.easeOut(duration: isExpanded ? 0.16 : 0.13), value: isExpanded)
         .onAppear {
             searchFocus.wrappedValue = true
+            palette.opened()
             palette.update(query: query)
         }
         .onChange(of: query) { _, newValue in palette.update(query: newValue) }
@@ -202,6 +198,7 @@ package struct SearchBarView: View {
 
             TextField("", text: $query, prompt: Text(L10n.tr("searchbarview.search", "Search")).foregroundStyle(theme.secondaryText))
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 .font(AppTheme.TextStyle.eventTitle)
                 .foregroundStyle(theme.primaryText)
                 .focused(searchFocus)

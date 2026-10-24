@@ -50,11 +50,15 @@ extension SearchPaletteModel {
             onShowResult(selectedResult)
             return true
         }
-        guard !isRefining, let action = selectedAction, action.supportsRefinement, let taskDraft else { return false }
+        guard !isRefining, let action = selectedAction, action.supportsRefinement else { return false }
         // Expanding again picks up the fields as they were left.
         switch action.kind {
-        case .createTask: edit = edit ?? QuickAddEdit(draft: taskDraft, calendar: calendar, referenceDate: now())
-        case .createEvent: eventEdit = eventEdit ?? EventQuickAddEdit(draft: taskDraft, calendar: calendar, referenceDate: now())
+        case .createTask:
+            guard let taskDraft else { return false }
+            edit = edit ?? QuickAddEdit(draft: taskDraft, calendar: calendar, referenceDate: now())
+        case .createEvent:
+            guard let eventDraft else { return false }
+            eventEdit = eventEdit ?? EventQuickAddEdit(draft: eventDraft, calendar: calendar)
         default: return false
         }
         isRefining = true
@@ -119,15 +123,15 @@ extension SearchPaletteModel {
                 guard edit.canCreate else { return }
                 draft = edit.taskDraft(calendar: calendar)
             } else if let taskDraft {
-                draft = taskDraft.taskDraft(calendar: calendar)
+                draft = taskDraft
             } else { return }
             commit(draft)
         case .createEvent:
             if let eventEdit {
                 guard eventEdit.canCreate else { return }
                 commit(eventEdit.eventDraft(calendar: calendar))
-            } else if let taskDraft {
-                commit(taskDraft.eventDraft(calendar: calendar, referenceDate: now()))
+            } else if let eventDraft {
+                commit(eventDraft)
             }
         case .askAI:
             onAsk(query)

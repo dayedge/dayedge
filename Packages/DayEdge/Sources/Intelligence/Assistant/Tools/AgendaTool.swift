@@ -14,7 +14,7 @@ package enum AgendaTool {
                 .init(name: "when", kind: .string, description: "Which days: \(AssistantWhen.accepted). Default today.", isRequired: false)
             ]
         ) { arguments in
-            let interval = try await AssistantWhen.resolve(arguments.optionalString("when") ?? "today", context: context)
+            let interval = try AssistantWhen.resolve(arguments.optionalString("when"), defaultDays: 1, context: context)
             return await answer(for: interval, context: context)
         }
     }

@@ -1,45 +1,16 @@
 import Foundation
 import Domain
 
-/// What the omnibox should show for a resolved `SearchIntent` — a thin
-/// presentation mapping, not a second search pipeline. `SearchIntentPipeline`
-/// (`Intelligence/SearchIntentPipeline.swift`) stays entirely unaware this
-/// type exists; this is purely UI representation of its output.
-package struct SearchSuggestion: Equatable {
-    package let intent: SearchIntent
-    /// SF Symbol name.
-    package let systemImageName: String
-    package let title: String
-    package let isEnabled: Bool
-    /// Shown only for a disabled suggestion — e.g. "Event search not
-    /// available yet." `nil` for an enabled one.
-    package let secondaryText: String?
-
-    package static func make(for intent: SearchIntent, referenceDate: Date, calendar: Calendar,
-                             dates: DatePresentationFormatter = .current) -> SearchSuggestion {
-        switch intent {
-        case .jumpToDate(let date):
-            return SearchSuggestion(
-                intent: intent, systemImageName: "calendar",
-                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: dayLabel(for: date, referenceDate: referenceDate, calendar: calendar, dates: dates)))"),
-                isEnabled: true, secondaryText: nil
-            )
-        case .jumpToMonth(let date):
-            return SearchSuggestion(
-                intent: intent, systemImageName: "calendar",
-                title: L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: dates.with(calendar).monthYear(date)))"),
-                isEnabled: true, secondaryText: nil
-            )
-        case .freeTextSearch(let query):
-            // Full-text event search isn't implemented yet — represented
-            // honestly (a visible, disabled row) rather than silently
-            // doing nothing on Enter, or a fake "no date found" state.
-            return SearchSuggestion(
-                intent: intent, systemImageName: "magnifyingglass",
-                title: L10n.tr("searchsuggestion.search.events.for", "Search events for “\(String(describing: query))”"),
-                isEnabled: false, secondaryText: L10n.tr("searchsuggestion.event.search.not.available.yet", "Event search not available yet")
-            )
+/// How the palette names days: the title of its "Go to …" action, and a day as people say it.
+package enum SearchSuggestion {
+    /// "Go to Tomorrow", "Go to Friday 25 Sep", "Go to September 2024".
+    package static func title(for intent: SearchIntent, referenceDate: Date, calendar: Calendar,
+                              dates: DatePresentationFormatter = .current) -> String {
+        let target = switch intent {
+        case .jumpToDate(let date): dayLabel(for: date, referenceDate: referenceDate, calendar: calendar, dates: dates)
+        case .jumpToMonth(let date): dates.with(calendar).monthYear(date)
         }
+        return L10n.tr("searchsuggestion.go.to", "Go to \(String(describing: target))")
     }
 
     /// "Today" / "Tomorrow" / "Yesterday", else "Friday 25 Sep" — or

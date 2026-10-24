@@ -2,10 +2,10 @@ import Foundation
 import Domain
 
 /// `find_events`: the search field's search, for the model — the same
-/// words and operators (`subject`, `from` incl. "me", `with`, `type`,
-/// `day`, `before`, `after`, `between`) over the whole index, events and
-/// tasks. Arguments become an operator query resolved exactly as typed
-/// ones are; `when` (a period) narrows further. The nearest matches are
+/// words and operators (`subject`, `from` incl. "me", `with`, `type`)
+/// over the whole index, events and tasks. Arguments are read as typed
+/// operators are, except that no date is read from the words: dates come
+/// only from `when`, read exactly. The nearest matches are
 /// listed (upcoming soonest, then the most recent past) with the total.
 /// `order: newest` lists what was added most recently instead (within
 /// `when`, default the next 30 days), one line per repeating series.
@@ -13,7 +13,7 @@ package enum EventSearchTool {
     package static let maxListed = 25
     /// Events read for `order: newest` (it sorts by when they were added).
     package static let newestCandidates = 300
-    package static let newestDefaultWhen = "next 30 days"
+    package static let newestDefaultDays = 30
 
     package enum Order: String, CaseIterable {
         case date, newest
@@ -37,43 +37,36 @@ package enum EventSearchTool {
                       isRequired: false),
                 .init(name: "type", kind: .string, description: "event or task; both if left out.", isRequired: false,
                       enumValues: ["event", "task"]),
-                .init(name: "when", kind: .string, description: "A period: \(AssistantWhen.accepted). Any time if left out.",
+                .init(name: "when", kind: .string, description: "Which days: \(AssistantWhen.acceptedOpen). Any time if left out.",
                       isRequired: false)
             ], optional: [
-                .init(name: "day", kind: .string, description: "One day: 'today', 'friday', '2026-10-15'.", isRequired: false),
-                .init(name: "after", kind: .string, description: "On or after this day.", isRequired: false),
-                .init(name: "before", kind: .string, description: "Before this day.", isRequired: false),
-                .init(name: "between", kind: .string, description: "Two days, both included: '2026-09-01..2026-09-30'.",
-                      isRequired: false),
                 .init(name: "order", kind: .string, description: "date (default) or newest: most recently added first.",
                       isRequired: false, enumValues: Order.allCases.map(\.rawValue))
             ])
         ) { arguments in
             let order = arguments.optionalString("order").flatMap(Order.init) ?? .date
-            let query = operatorQuery(arguments)
-            var parts = await SearchQueryResolver.resolve(query, referenceDate: context.now(), calendar: context.calendar)
-            if let when = arguments.optionalString("when") ?? (order == .newest ? newestDefaultWhen : nil) {
-                let period = try await AssistantWhen.resolve(when, context: context)
-                parts.interval = parts.interval.map { $0.intersection(with: period) ?? DateInterval(start: .distantPast, duration: 0) }
-                    ?? period
+            var (parts, labels) = searchWords(arguments)
+            let when = arguments.optionalString("when")
+            if when != nil || order == .newest {
+                let period = try AssistantWhen.resolve(when, defaultDays: newestDefaultDays, allowsOpenEnds: true, context: context)
+                parts.interval = period
                 parts.hasExplicitDate = true
-                parts.label = [parts.label, AssistantFormat.period(period, calendar: context.calendar)].compactMap { $0 }
-                    .joined(separator: " · ")
+                labels.append(AssistantFormat.period(period, calendar: context.calendar))
             }
+            parts.label = labels.isEmpty ? nil : labels.joined(separator: " · ")
             return await answer(parts, order: order, context: context)
         }
     }
 
-    /// The arguments as the search field would read them.
-    package static func operatorQuery(_ arguments: AssistantToolArguments) -> String {
-        let operators: [(String, SearchOperator)] = [("subject", .subject), ("from", .from), ("with", .with), ("type", .type),
-                                                     ("day", .day), ("after", .after), ("before", .before), ("between", .between)]
-        let terms = operators.compactMap { name, op -> String? in
-            guard let value = arguments.optionalString(name)?.replacingOccurrences(of: "\"", with: "")
-                .trimmingCharacters(in: .whitespaces), !value.isEmpty else { return nil }
-            return op.key + SearchQuerySyntax.quoted(value)
+    /// The arguments as the search field's words and operators, read as typed ones are; no date is read from them.
+    package static func searchWords(_ arguments: AssistantToolArguments) -> (parts: SearchQueryParts, labels: [String]) {
+        let operators: [(String, SearchOperator)] = [("subject", .subject), ("from", .from), ("with", .with), ("type", .type)]
+        var values: [SearchOperator: String] = [:]
+        for (name, op) in operators {
+            if let value = arguments.optionalString(name)?.trimmingCharacters(in: .whitespaces), !value.isEmpty { values[op] = value }
         }
-        return ([arguments.optionalString("text") ?? ""] + terms).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        let text = (arguments.optionalString("text") ?? "").trimmingCharacters(in: .whitespaces)
+        return SearchQueryResolver.words(text, values: values)
     }
 
     package static func answer(_ parts: SearchQueryParts, order: Order = .date, context: AssistantToolContext) async -> String {

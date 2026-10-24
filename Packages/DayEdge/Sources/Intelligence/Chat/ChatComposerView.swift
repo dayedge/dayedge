@@ -34,6 +34,7 @@ package struct ChatComposerView: View {
                       prompt: Text(L10n.tr("chatcomposerview.ask.about.your.schedule", "Ask about your schedule…")).foregroundStyle(theme.chat.composerPlaceholder),
                       axis: .vertical)
                 .textFieldStyle(.plain)
+                .themedTextInput()
                 // The search field's type, so the text doesn't change shape
                 // between them.
                 .font(AppTheme.TextStyle.eventTitle)

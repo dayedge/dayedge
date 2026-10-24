@@ -15,25 +15,26 @@ final class AssistantCalendarToolsTests: XCTestCase {
 
     // MARK: - Dates the model may pass
 
-    func testKeywordsAndISODatesResolveExactly() {
-        func interval(_ text: String) -> DateInterval? { AssistantWhen.exact(text, now: T.now, calendar: calendar) }
-        XCTAssertEqual(interval("today"), DateInterval(start: T.date(23), end: T.date(24)))
-        XCTAssertEqual(interval(" Tomorrow "), DateInterval(start: T.date(24), end: T.date(25)))
-        XCTAssertEqual(interval("next week"), DateInterval(start: T.date(28), end: T.date(5, month: 10)), "Monday-first")
-        XCTAssertEqual(interval("next 7 days"), DateInterval(start: T.date(23), end: T.date(30)))
-        XCTAssertEqual(interval("2026-10-02"), DateInterval(start: T.date(2, month: 10), end: T.date(3, month: 10)))
+    func testISODaysAndRangesResolveExactly() {
+        let context = T.context()
+        func interval(_ text: String, open: Bool = false) -> DateInterval? {
+            try? AssistantWhen.resolve(text, allowsOpenEnds: open, context: context)
+        }
+        XCTAssertEqual(interval(" 2026-10-02 "), DateInterval(start: T.date(2, month: 10), end: T.date(3, month: 10)))
         XCTAssertEqual(interval("2026-09-28..2026-09-30"), DateInterval(start: T.date(28), end: T.date(1, month: 10)))
-        XCTAssertNil(interval("next friday"), "phrases go to the parser")
-        XCTAssertNil(interval("2026-09-30..2026-09-28"), "a backwards range isn't a range")
+        XCTAssertEqual(interval("2026-09-28..", open: true), DateInterval(start: T.date(28), end: .distantFuture))
+        XCTAssertEqual(interval("..2026-09-28", open: true), DateInterval(start: .distantPast, end: T.date(29)))
+        XCTAssertEqual(try? AssistantWhen.resolve(nil, defaultDays: 1, context: context), DateInterval(start: T.date(23), end: T.date(24)))
+        XCTAssertEqual(try? AssistantWhen.resolve("", defaultDays: 7, context: context), DateInterval(start: T.date(23), end: T.date(30)))
+        for rejected in ["tomorrow", "next friday", "2026-02-30", "2026-9-28", "2026-09-30..2026-09-28", "2026-09-28..", "..",
+                         "2026-09-28 10:00"] {
+            XCTAssertNil(interval(rejected), rejected)
+        }
     }
 
-    func testPhrasesGoToTheDateParserAndNonsenseIsExplained() async throws {
-        let context = T.context()
-        let friday = try await AssistantWhen.resolve("next friday", context: context)
-        XCTAssertEqual(friday, DateInterval(start: T.date(25), end: T.date(26)))
-
-        let answer = try await run(AgendaTool.make(context), ["when": .string("whenever")])
-        XCTAssertTrue(answer.hasPrefix("Couldn't read the date “whenever”. Use today, tomorrow"), answer)
+    func testAPhraseIsExplainedNotGuessed() async throws {
+        let answer = try await run(AgendaTool.make(T.context()), ["when": .string("next friday")])
+        XCTAssertEqual(answer, "Couldn't read the date “next friday”. Use \(AssistantWhen.accepted).")
     }
 
     // MARK: - get_agenda
@@ -49,7 +50,7 @@ final class AssistantCalendarToolsTests: XCTestCase {
                 TaskItem(id: "2", title: "Water plants", listID: "home", dueDate: T.date(24))
             ]
         )
-        let answer = try await run(AgendaTool.make(context), ["when": .string("tomorrow")])
+        let answer = try await run(AgendaTool.make(context), ["when": .string("2026-09-24")])
         XCTAssertEqual(answer, """
         Agenda for Thursday 24 September 2026:
         [[D1]] Thursday 24 September 2026
@@ -98,7 +99,7 @@ final class AssistantCalendarToolsTests: XCTestCase {
     }
 
     func testFreeTimeOverSeveralDaysSkipsWeekendsAndPastDays() async throws {
-        let answer = try await run(FreeTimeTool.make(T.context()), ["when": .string("this week")])
+        let answer = try await run(FreeTimeTool.make(T.context()), ["when": .string("2026-09-21..2026-09-27")])
         let days = answer.split(separator: "\n").dropFirst().map { $0.components(separatedBy: ":").first! }
         XCTAssertEqual(days, ["[[D1]] Wednesday 23 September 2026", "[[D2]] Thursday 24 September 2026", "[[D3]] Friday 25 September 2026"])
     }
@@ -136,7 +137,7 @@ final class AssistantCalendarToolsTests: XCTestCase {
         XCTAssertTrue(byPerson.contains("Past 1:1"), "any time, not only from today")
         XCTAssertLessThan(byPerson.range(of: "Past 1:1")!.lowerBound, byPerson.range(of: "Wed 30 Sep")!.lowerBound, "in date order")
 
-        let none = try await run(EventSearchTool.make(context), ["text": .string("dentist"), "when": .string("next week")])
+        let none = try await run(EventSearchTool.make(context), ["text": .string("dentist"), "when": .string("2026-09-28..2026-10-04")])
         XCTAssertEqual(none, "Nothing matches “dentist” · Monday 28 September 2026 – Sunday 4 October 2026.")
     }
 
@@ -152,8 +153,12 @@ final class AssistantCalendarToolsTests: XCTestCase {
         XCTAssertTrue(anywhere.contains("Refinement widok") && anywhere.contains("Daily"))
         let withPawel = try await run(EventSearchTool.make(context), ["with": .string("Paweł")])
         XCTAssertTrue(withPawel.contains("Refinement widok") && !withPawel.contains("Daily"), withPawel)
-        let onDay = try await run(EventSearchTool.make(context), ["day": .string("2026-09-28")])
+        let onDay = try await run(EventSearchTool.make(context), ["when": .string("2026-09-28")])
         XCTAssertTrue(onDay.contains("Planning") && !onDay.contains("Daily"), "a date alone searches")
+        let fromDay = try await run(EventSearchTool.make(context), ["when": .string("2026-09-25..")])
+        XCTAssertTrue(fromDay.contains("Planning") && fromDay.contains("Daily") && !fromDay.contains("Refinement"), fromDay)
+        let wordsAreNotDates = try await run(EventSearchTool.make(context), ["text": .string("daily tomorrow")])
+        XCTAssertTrue(wordsAreNotDates.hasPrefix("Nothing matches"), "no date is read from the words: \(wordsAreNotDates)")
         let tasksOnly = try await run(EventSearchTool.make(context), ["text": .string("refinement"), "type": .string("task")])
         XCTAssertTrue(tasksOnly.hasPrefix("Nothing matches"), tasksOnly)
         let nothing = try await run(EventSearchTool.make(context), [:])
@@ -162,8 +167,13 @@ final class AssistantCalendarToolsTests: XCTestCase {
 
     func testEventSearchArgumentsBecomeTheFieldsQuery() {
         let arguments = AssistantToolArguments(["text": .string("plan"), "with": .string("Jon Nest"), "from": .string("me"),
-                                                "between": .string("2026-09-01..2026-09-30")])
-        XCTAssertEqual(EventSearchTool.operatorQuery(arguments), #"plan from:me with:"Jon Nest" between:2026-09-01..2026-09-30"#)
+                                                "when": .string("2026-09-01..2026-09-30")])
+        let (parts, labels) = EventSearchTool.searchWords(arguments)
+        XCTAssertEqual(parts.text, "plan")
+        XCTAssertTrue(parts.organizedByMe)
+        XCTAssertEqual(parts.attendee, "Jon Nest")
+        XCTAssertNil(parts.interval, "dates are not search words")
+        XCTAssertEqual(labels, ["from me", "with Jon Nest"])
     }
 
     // MARK: - list_tasks
@@ -210,7 +220,7 @@ extension AssistantCalendarToolsTests {
             events: [24: [T.event("Standup", day: 24, from: (9, 0), to: (9, 30))]],
             tasks: [TaskItem(id: "reminder-1", title: "Send invoice", listID: "work", dueDate: T.date(24))]
         )
-        _ = try await AgendaTool.make(context).call(AssistantToolArguments(["when": .string("tomorrow")]))
+        _ = try await AgendaTool.make(context).call(AssistantToolArguments(["when": .string("2026-09-24")]))
 
         XCTAssertEqual(context.references.reference(for: "E1"), .event(ChatEventReference(
             id: "Standup-24", day: T.date(24), snapshot: ChatObjectSnapshot(title: "Standup", detail: "09:00–09:30")

@@ -2,12 +2,11 @@ import Foundation
 import Domain
 
 /// Everything the tools share: where data comes from, the calendar and
-/// clock, and the date parser — all injectable for tests.
+/// clock — all injectable for tests.
 package struct AssistantToolContext: Sendable {
     package let data: any AssistantDataSource
     package var calendar: Calendar = .autoupdatingCurrent
     package var now: @Sendable () -> Date = { Date() }
-    package var parseDate: @Sendable (String, Date, Calendar) async -> SearchIntent = Self.liveParseDate
     /// Short handles for the objects this conversation's tools return.
     package var references = ChatReferenceRegistry()
     /// Whether items carry references (`[[E1]]`) for the model to show.
@@ -24,21 +23,14 @@ package struct AssistantToolContext: Sendable {
     /// "Always allow" is offered — remote models only.
     package var offersAlwaysAllow = false
 
-    /// The app's date parsing (`SearchIntentPipeline.live`).
-    package static let liveParseDate: @Sendable (String, Date, Calendar) async -> SearchIntent = { text, now, calendar in
-        await SearchIntentPipeline.live.resolve(text, referenceDate: now, calendar: calendar)
-    }
-
     package init(data: any AssistantDataSource, calendar: Calendar = .autoupdatingCurrent,
                  now: @escaping @Sendable () -> Date = { Date() },
-                 parseDate: @escaping @Sendable (String, Date, Calendar) async -> SearchIntent = Self.liveParseDate,
                  references: ChatReferenceRegistry = ChatReferenceRegistry(), showsReferences: Bool = true, maxLines: Int = 30,
                  approvals: ChatApprovals? = nil, changes: (any AssistantChangeWriter)? = nil, offersAlwaysAllow: Bool = false,
                  isCompact: Bool = false, timeFormat: @escaping @Sendable () -> TimeFormat = { .twentyFourHour }) {
         self.data = data
         self.calendar = calendar
         self.now = now
-        self.parseDate = parseDate
         self.references = references
         self.showsReferences = showsReferences
         self.maxLines = maxLines

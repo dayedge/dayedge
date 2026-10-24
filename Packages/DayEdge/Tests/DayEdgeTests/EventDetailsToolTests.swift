@@ -48,7 +48,7 @@ final class EventDetailsToolTests: XCTestCase {
 
     func testAReferenceFromAnEarlierAnswerFindsTheSameEvent() async throws {
         let context = T.context(events: [24: [review]])
-        _ = try await AgendaTool.make(context).call(AssistantToolArguments(["when": .string("tomorrow")])) // mints E1
+        _ = try await AgendaTool.make(context).call(AssistantToolArguments(["when": .string("2026-09-24")])) // mints E1
         let answer = try await run(context, ["event": .string("[[E1]]")])
         XCTAssertTrue(answer.contains("Organizer: Anna"), answer)
     }

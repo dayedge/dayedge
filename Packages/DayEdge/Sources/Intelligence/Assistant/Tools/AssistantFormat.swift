@@ -31,6 +31,8 @@ package enum AssistantFormat {
     package static func period(_ interval: DateInterval, calendar: Calendar) -> String {
         let first = calendar.startOfDay(for: interval.start)
         let last = calendar.startOfDay(for: interval.end.addingTimeInterval(-1))
+        if interval.start == .distantPast { return "until \(dayTitle(last, calendar: calendar))" }
+        if interval.end == .distantFuture { return "from \(dayTitle(first, calendar: calendar))" }
         return first == last
             ? dayTitle(first, calendar: calendar)
             : "\(dayTitle(first, calendar: calendar)) – \(dayTitle(last, calendar: calendar))"
@@ -86,6 +88,11 @@ package enum AssistantFormat {
         case let (nil, end?): return "until \(end)"
         case (nil, nil): return ""
         }
+    }
+
+    /// "Fri": the weekday as the dates sheet names it.
+    package static func weekday(_ date: Date, calendar: Calendar) -> String {
+        formatter("EEE", calendar: calendar).string(from: date)
     }
 
     private static func formatter(_ format: String, calendar: Calendar) -> DateFormatter {

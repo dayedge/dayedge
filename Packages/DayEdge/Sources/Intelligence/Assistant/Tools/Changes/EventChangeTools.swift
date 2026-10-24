@@ -23,9 +23,10 @@ package enum EventChangeTools {
                 .init(name: "title", kind: .string, description: "The event's title."),
                 .init(name: "start", kind: .string,
                       description: context.brief("When it starts: \(AssistantMoment.accepted). A day without a time makes an all-day event.",
-                                                 "Day and time, e.g. friday 15:00."))
+                                                 "Day and time: 2026-10-02 15:00."))
             ], optional: [
-                .init(name: "end", kind: .string, description: "When it ends (a time, or a day and time). Omit to use duration_minutes.", isRequired: false),
+                .init(name: "end", kind: .string, description: "When it ends: a time (16:00) on the start's day, or a day and time. Omit to use duration_minutes.",
+                      isRequired: false),
                 .init(name: "duration_minutes", kind: .integer, description: "Length in minutes when there's no end. Default 60.", isRequired: false),
                 .init(name: "calendar", kind: .string, description: "The calendar's name. Omit for the default calendar.", isRequired: false),
                 .init(name: "location", kind: .string, description: "Where.", isRequired: false),
@@ -36,9 +37,9 @@ package enum EventChangeTools {
             let title = try arguments.string("title").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !title.isEmpty else { return "An event needs a title." }
             let calendar = context.calendar
-            let start = try await AssistantMoment.resolve(try arguments.string("start"), context: context)
+            let start = try AssistantMoment.resolve(try arguments.string("start"), context: context)
             let isAllDay = !start.hasTime
-            let end = try await endDate(arguments, start: start, context: context)
+            let end = try endDate(arguments, start: start, context: context)
             guard end > start.date else { return "The end is before the start. Ask the user for the right times." }
 
             let target: WritableCalendar
@@ -73,12 +74,12 @@ package enum EventChangeTools {
     /// The new event's end: the next day for an all-day event, the `end`
     /// argument if given, else the start plus `duration_minutes`.
     private static func endDate(_ arguments: AssistantToolArguments, start: AssistantMoment,
-                                context: AssistantToolContext) async throws -> Date {
+                                context: AssistantToolContext) throws -> Date {
         if !start.hasTime {
             return context.calendar.date(byAdding: .day, value: 1, to: start.date) ?? start.date
         }
         if let endText = arguments.optionalString("end").flatMap(TaskChangeTools.nonEmpty) {
-            return try await AssistantMoment.resolve(endText, on: start.date, context: context).date
+            return try AssistantMoment.resolve(endText, on: start.date, context: context).date
         }
         let minutes = arguments.integer("duration_minutes", in: 5...(14 * 1440)) ?? defaultMinutes
         return start.date.addingTimeInterval(Double(minutes) * 60)
@@ -112,12 +113,13 @@ package enum EventChangeTools {
             parameters: context.parameters([
                 .init(name: "event", kind: .string, description: context.brief(eventArgument, "The event's title.")),
                 .init(name: "start", kind: .string,
-                      description: context.brief("New start: \(AssistantMoment.accepted), or just a time to keep its day.", "New time, or day and time."),
+                      description: context.brief("New start: \(AssistantMoment.accepted); a time alone (15:00) keeps its day, a day alone its time.",
+                                                 "New time, or day and time: 2026-10-02 15:00."),
                       isRequired: false),
                 .init(name: "title", kind: .string, description: "New title.", isRequired: false)
             ], optional: [
                 .init(name: "when", kind: .string, description: whenArgument, isRequired: false),
-                .init(name: "end", kind: .string, description: "New end time.", isRequired: false),
+                .init(name: "end", kind: .string, description: "New end: a time (16:00) on the start's day, or a day and time.", isRequired: false),
                 .init(name: "location", kind: .string, description: "New location ('none' to remove it).", isRequired: false)
             ])
         ) { arguments in
@@ -135,31 +137,27 @@ package enum EventChangeTools {
 
             var change = EventChange()
             var fields: [ChangeField] = []
-            var newStart = oldStart
-            var newEnd = oldEnd
+            // The editors' rule: a new start keeps the length.
+            var timing = EventTiming(start: oldStart, end: oldEnd, isAllDay: event.isAllDay, calendar: calendar)
             if let startText = arguments.optionalString("start").flatMap(TaskChangeTools.nonEmpty) {
-                let moment = try await AssistantMoment.resolve(startText, on: oldStart, context: context)
-                if moment.hasTime {
-                    newStart = moment.date
-                } else {
-                    // A new day, same time of day.
-                    let time = calendar.dateComponents([.hour, .minute], from: oldStart)
-                    newStart = calendar.date(bySettingHour: time.hour ?? 0, minute: time.minute ?? 0, second: 0, of: moment.date) ?? moment.date
-                }
-                newEnd = newStart.addingTimeInterval(oldEnd.timeIntervalSince(oldStart))
-                change.start = newStart
+                let moment = try AssistantMoment.resolve(startText, on: oldStart, keepsTime: !event.isAllDay, context: context)
+                if moment.hasTime { timing.start = moment.date } else { timing.firstDay = moment.date }
+                change.start = timing.start
             }
             if let endText = arguments.optionalString("end").flatMap(TaskChangeTools.nonEmpty) {
-                newEnd = try await AssistantMoment.resolve(endText, on: newStart, context: context).date
-                change.end = newEnd
+                // Unlike an editor, an end before the start is not read as the next day: the model is asked to check.
+                let end = try AssistantMoment.resolve(endText, on: timing.start, context: context).date
+                guard end > timing.start else { return "The end would be before the start. Ask the user for the right times." }
+                timing.end = end
+                change.end = end
             }
-            guard newEnd > newStart else { return "The end would be before the start. Ask the user for the right times." }
             if change.start != nil || change.end != nil {
                 fields.append(ChangeField(
                     label: "Time",
                     before: ChangeRunner.span(start: oldStart, end: oldEnd, isAllDay: event.isAllDay, now: now, calendar: calendar, format: context.timeFormat()),
-                    after: ChangeRunner.span(start: newStart, end: newEnd, isAllDay: event.isAllDay, now: now, calendar: calendar, format: context.timeFormat()),
-                    assistantAfter: ChangeRunner.span(start: newStart, end: newEnd, isAllDay: event.isAllDay, now: now, calendar: calendar,
+                    after: ChangeRunner.span(start: timing.start, end: timing.end, isAllDay: event.isAllDay, now: now, calendar: calendar,
+                                             format: context.timeFormat()),
+                    assistantAfter: ChangeRunner.span(start: timing.start, end: timing.end, isAllDay: event.isAllDay, now: now, calendar: calendar,
                                                       format: .twentyFourHour, locale: Locale(identifier: "en"))
                 ))
             }

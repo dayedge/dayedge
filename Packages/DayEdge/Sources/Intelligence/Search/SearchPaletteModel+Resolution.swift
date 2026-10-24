@@ -9,8 +9,8 @@ extension SearchPaletteModel {
     /// Re-resolves for new query text. The previous actions stay until the
     /// new ones are ready, so rows don't flicker while typing.
     package func update(query: String) {
-        results.update(query: query)
         resolution?.cancel()
+        results.cancelPendingResolution()
         generation += 1
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -21,20 +21,31 @@ extension SearchPaletteModel {
         let referenceDate = now()
         let calendar = self.calendar
         let lists = taskLists()
+        let pause = typingPause
         resolution = Task { @MainActor [weak self] in
-            guard let self else { return }
+            if pause > .zero { try? await Task.sleep(for: pause) }
+            guard let self, !Task.isCancelled else { return }
             // Operators (`from:`, `day:` …) make it a search: no Go to or
             // Create for "refinement day:today".
             let isSearchOnly = SearchQuerySyntax.parse(trimmed).hasOperators
-            let intent = isSearchOnly ? .freeTextSearch(trimmed) : await resolveDate(trimmed, referenceDate, calendar)
-            // Strict date first; the task parser only runs when it says no.
-            let calendars = isSearchOnly || intent.isNavigation ? [] : await eventCalendars()
-            let task = isSearchOnly || intent.isNavigation || (lists.isEmpty && calendars.isEmpty)
-                ? nil : await resolveTask(trimmed, referenceDate, calendar, lists, calendars)
-            let conflict = await conflict(for: task, calendars: calendars, referenceDate: referenceDate)
+            let found = isSearchOnly ? nil : await findTemporal(trimmed, referenceDate, calendar)
+            let intent = found.flatMap { TemporalPresentation.navigation($0, calendar: calendar) }
+            // A date alone is Go to; only other text is read for a task or an event. (The library runs one request at a
+            // time, so reading both at once saved nothing.)
+            let calendars = isSearchOnly || intent != nil ? [] : await eventCalendars()
+            let offered = isSearchOnly || intent != nil ? [] : await parse(trimmed, referenceDate, calendar, lists, calendars)
+            let conflict = await conflict(for: offered)
+            let parts: SearchQueryParts
+            if isSearchOnly {
+                parts = await SearchQueryResolver.resolve(trimmed, referenceDate: referenceDate, calendar: calendar)
+            } else {
+                parts = TemporalPresentation.searchParts(trimmed, found: found, calendar: calendar)
+            }
             guard !Task.isCancelled, current == generation else { return }
             self.query = trimmed
-            apply(intent: intent, task: task, lists: lists, calendars: calendars, conflict: conflict,
+            self.candidates = offered
+            results.update(query: trimmed, resolvedParts: parts)
+            apply(intent: intent, candidates: offered, lists: lists, calendars: calendars, conflict: conflict,
                   referenceDate: referenceDate)
         }
     }
@@ -76,24 +87,20 @@ extension SearchPaletteModel {
 
     /// The new event's time against the days it touches (first
     /// occurrence only); nil when no event is offered or it's all day.
-    private func conflict(for task: QuickAddDraft?, calendars: [CalendarSource], referenceDate: Date) async -> EventConflict? {
-        guard let task, !calendars.isEmpty, QuickAddKindDecision.decide(task).kinds.contains(.event) else { return nil }
-        let event = task.eventDraft(calendar: calendar, referenceDate: referenceDate)
-        guard !event.isAllDay else { return nil }
+    private func conflict(for candidates: [QuickAddCandidate]) async -> EventConflict? {
+        guard let event = candidates.lazy.compactMap(\.event).first, !event.isAllDay else { return nil }
         return EventConflict.check(start: event.start, end: event.end, against: await events(touching: event.start, event.end))
     }
 
-    private func apply(intent: SearchIntent, task: QuickAddDraft?, lists: [CalendarSource], calendars: [CalendarSource],
+    private func apply(intent: SearchIntent?, candidates: [QuickAddCandidate], lists: [CalendarSource], calendars: [CalendarSource],
                        conflict: EventConflict? = nil, referenceDate: Date) {
-        dateIntent = intent.isNavigation ? intent : nil
-        taskDraft = task
+        dateIntent = intent
         eventCalendarOptions = calendars
-        actions = PaletteActions.build(dateIntent: dateIntent, task: task, lists: lists, calendars: calendars,
+        actions = PaletteActions.build(dateIntent: intent, candidates: candidates, lists: lists, calendars: calendars,
                                        conflict: conflict,
                                        isSearchable: SearchSession.isSearchable(query),
                                        referenceDate: referenceDate, calendar: calendar,
                                        format: timeFormat(), dates: dates())
-        // The first real action owns the selection; placeholders never do.
         chosen = actions.first(where: \.isEnabled).map { .action($0.kind) }
         resetQuickAdd()
     }
@@ -109,7 +116,7 @@ extension SearchPaletteModel {
         eventDetailRequest = nil
         presentedEventID = nil
         dateIntent = nil
-        taskDraft = nil
+        candidates = []
         query = ""
         resetQuickAdd()
     }

@@ -292,10 +292,12 @@
 "acknowledgements.fonts" = "Fonts";
 "acknowledgements.data" = "Data";
 "license.title" = "License";
-"acknowledgements.role.chrono" = "Understands dates and times written in plain language.";
-"acknowledgements.role.dayjs" = "Date arithmetic inside Chrono.";
 "acknowledgements.role.grdb" = "The SQLite toolkit behind the local calendar index and search.";
 "acknowledgements.role.tachikoma" = "Connects Ask to the language-model providers you choose.";
+"acknowledgements.role.transformers" = "Splits text into the pieces Quick Add's tagger model reads.";
+"acknowledgements.role.jinja" = "Template support, used by Swift Transformers.";
+"acknowledgements.role.huggingface" = "Hugging Face Hub support, used by Swift Transformers.";
+"acknowledgements.role.yyjson" = "Fast JSON reading, used by Swift Transformers.";
 "acknowledgements.role.mcp" = "Model Context Protocol support, used by Tachikoma.";
 "acknowledgements.role.eventsource" = "Streams model replies as they're written, used by Tachikoma.";
 "acknowledgements.role.lifecycle" = "Service start-up and shutdown, used by Tachikoma.";
@@ -326,3 +328,8 @@
 "menubar.item.icon.date.time" = "Icon and Date & Time";
 
 "menubar.item.space.notice" = "Showing date and time uses more menu bar space. If space is limited, macOS may move or hide DayEdge or its meeting indicator automatically.";
+
+"acknowledgements.role.timewhisper" = "Understands dates, tasks and events written in plain language.";
+"acknowledgements.role.kotlin" = "The runtime and date utilities used by TimeWhisper.";
+
+"acknowledgements.role.timewhispermodel" = "The on-device model used by Quick Add and search.";

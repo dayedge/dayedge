@@ -16,7 +16,7 @@ package enum FreeTimeTool {
                 .init(name: "minutes", kind: .integer, description: "Shortest useful slot in minutes. Default 30.", isRequired: false)
             ]
         ) { arguments in
-            let interval = try await AssistantWhen.resolve(arguments.optionalString("when") ?? "today", context: context)
+            let interval = try AssistantWhen.resolve(arguments.optionalString("when"), defaultDays: 1, context: context)
             let minutes = arguments.integer("minutes", in: 5...1440) ?? defaultMinutes
             return await answer(for: interval, minutes: minutes, context: context)
         }

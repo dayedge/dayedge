@@ -3,7 +3,7 @@ import Foundation
 /// The open-source software, fonts and open data the app is built with,
 /// shown in About → Acknowledgements. Apple's own Swift packages aren't
 /// listed. Keep in step with `Package.resolved` and the bundled resources
-/// (`chrono.js`, `BricolageGrotesque.ttf`).
+/// (including the wordmark font and TimeWhisper runtime).
 struct Acknowledgement: Identifiable, Hashable {
     enum Kind: String, CaseIterable {
         case software = "Software"
@@ -29,14 +29,18 @@ struct Acknowledgement: Identifiable, Hashable {
     let homepage: URL
 
     static let all: [Acknowledgement] = [
-        .init(name: "Chrono", kind: .software, license: "MIT",
-              role: L10n.tr("acknowledgements.role.chrono", "Understands dates and times written in plain language."),
-              copyright: "Copyright © 2014 Wanasit Tanakitrungruang",
-              homepage: URL(string: "https://github.com/wanasit/chrono")!),
-        .init(name: "Day.js", kind: .software, license: "MIT",
-              role: L10n.tr("acknowledgements.role.dayjs", "Date arithmetic inside Chrono."),
-              copyright: "Copyright © 2018 iamkun",
-              homepage: URL(string: "https://github.com/iamkun/dayjs")!),
+        .init(name: "TimeWhisper", kind: .software, license: "MPL-2.0",
+              role: L10n.tr("acknowledgements.role.timewhisper", "Understands dates, tasks and events written in plain language."),
+              copyright: "The TimeWhisper contributors",
+              homepage: URL(string: "https://github.com/dayedge/time-whisper")!),
+        .init(name: "TimeWhisper Model", kind: .software, license: "MPL-2.0 / Apache 2.0",
+              role: L10n.tr("acknowledgements.role.timewhispermodel", "The on-device model used by Quick Add and search."),
+              copyright: "The TimeWhisper contributors; Sentence Transformers and Microsoft",
+              homepage: URL(string: "https://github.com/dayedge/time-whisper-model")!),
+        .init(name: "Kotlin runtime", kind: .software, license: "Apache 2.0",
+              role: L10n.tr("acknowledgements.role.kotlin", "The runtime and date utilities used by TimeWhisper."),
+              copyright: "Copyright © JetBrains s.r.o. and Kotlin Programming Language contributors",
+              homepage: URL(string: "https://github.com/JetBrains/kotlin")!),
         .init(name: "GRDB", kind: .software, license: "MIT",
               role: L10n.tr("acknowledgements.role.grdb", "The SQLite toolkit behind the local calendar index and search."),
               copyright: "Copyright © 2015–2025 Gwendal Roué",
@@ -57,6 +61,22 @@ struct Acknowledgement: Identifiable, Hashable {
               role: L10n.tr("acknowledgements.role.lifecycle", "Service start-up and shutdown, used by Tachikoma."),
               copyright: "Copyright © 2019–2023 The ServiceLifecycle Project",
               homepage: URL(string: "https://github.com/swift-server/swift-service-lifecycle")!),
+        .init(name: "Swift Transformers", kind: .software, license: "Apache 2.0",
+              role: L10n.tr("acknowledgements.role.transformers", "Splits text into the pieces Quick Add's tagger model reads."),
+              copyright: "Copyright © Hugging Face",
+              homepage: URL(string: "https://github.com/huggingface/swift-transformers")!),
+        .init(name: "Swift Jinja", kind: .software, license: "Apache 2.0",
+              role: L10n.tr("acknowledgements.role.jinja", "Template support, used by Swift Transformers."),
+              copyright: "Copyright © Hugging Face",
+              homepage: URL(string: "https://github.com/huggingface/swift-jinja")!),
+        .init(name: "Swift Hugging Face", kind: .software, license: "Apache 2.0",
+              role: L10n.tr("acknowledgements.role.huggingface", "Hugging Face Hub support, used by Swift Transformers."),
+              copyright: "Copyright © Hugging Face",
+              homepage: URL(string: "https://github.com/huggingface/swift-huggingface")!),
+        .init(name: "yyjson", kind: .software, license: "MIT",
+              role: L10n.tr("acknowledgements.role.yyjson", "Fast JSON reading, used by Swift Transformers."),
+              copyright: "Copyright © 2020 YaoYuan",
+              homepage: URL(string: "https://github.com/ibireme/yyjson")!),
         .init(name: "Bricolage Grotesque", kind: .font, license: "SIL OFL 1.1",
               role: L10n.tr("acknowledgements.role.bricolage", "The Day/Edge wordmark."),
               copyright: "Copyright © 2022 The Bricolage Grotesque Project Authors",

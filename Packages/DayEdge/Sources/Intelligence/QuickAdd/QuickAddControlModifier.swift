@@ -15,3 +15,17 @@ extension View {
             }
     }
 }
+
+extension KeyEquivalent {
+    /// How far an arrow key steps a closed control's value: ← / → by `small`, ↑ / ↓ by `large`, ← and ↑ backwards.
+    /// Days step 1 and 7, times 15 and 60 minutes. Any other key does not step.
+    func step(small: Int, large: Int) -> Int {
+        switch self {
+        case .leftArrow: -small
+        case .rightArrow: small
+        case .upArrow: -large
+        case .downArrow: large
+        default: 0
+        }
+    }
+}

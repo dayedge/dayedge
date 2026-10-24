@@ -186,7 +186,7 @@ extension PaletteBase {
     }
 
     var editor: ThemePaletteValues.EditorColors {
-        ThemePaletteValues.EditorColors(text: primaryText.opacity(0.92),
+        ThemePaletteValues.EditorColors(text: primaryText.opacity(0.92), caret: apple ? blue : Color.accentColor,
             focusRing: (apple ? blue : Color.accentColor).opacity(0.75),
             selectionFill: (apple ? blue : Color.accentColor).opacity(0.85),
             titleText: primaryText, labelText: secondaryText, placeholderText: secondaryText,

@@ -177,8 +177,9 @@ final class SearchSessionOperatorTests: XCTestCase {
 final class SearchPaletteOperatorTests: XCTestCase {
     func testOperatorsMakeItASearchNotGoToOrCreate() async {
         var resolvedDate = false
-        let model = SearchPaletteModel(resolveDate: { text, _, _ in resolvedDate = true; return .jumpToDate(Date()) },
-                                       resolveTask: { _, _, _, _, _ in nil })
+        let model = SearchPaletteModel(findTemporal: { _, _, _ in resolvedDate = true; return nil },
+                                       parse: { _, _, _, _, _ in [] })
+        model.typingPause = .zero
         model.update(query: "standup day:tomorrow")
         await model.settle()
         XCTAssertFalse(resolvedDate)

@@ -54,8 +54,8 @@ final class AssistantChangeToolsTests: XCTestCase {
         return (try await run.value, card)
     }
 
-    private func task(_ id: String, list: String = "home", due: Date? = nil, done: Bool = false) -> TaskItem {
-        TaskItem(id: id, title: id, listID: list, dueDate: due, isCompleted: done)
+    private func task(_ id: String, list: String = "home", due: Date? = nil, hasTime: Bool = false, done: Bool = false) -> TaskItem {
+        TaskItem(id: id, title: id, listID: list, dueDate: due, hasDueTime: hasTime, isCompleted: done)
     }
 
     private func ownEvent(_ title: String, day: Int, from: (Int, Int), to: (Int, Int), recurring: Bool = false,
@@ -79,7 +79,7 @@ final class AssistantChangeToolsTests: XCTestCase {
     func testCreatingATaskShowsTheCardAndCreatesOnlyAfterAllow() async throws {
         let context = context()
         let (output, card) = try await call(tool("create_task", context),
-                                            ["title": .string("Call mom"), "due": .string("tomorrow 10:00"), "list": .string("Home")])
+                                            ["title": .string("Call mom"), "due": .string("2026-09-24 10:00"), "list": .string("Home")])
         XCTAssertEqual(card?.kind, .createTask)
         XCTAssertEqual(card?.subject.title, "Call mom")
         XCTAssertEqual(card?.subject.detail, "Tomorrow 10:00 · Home")
@@ -164,11 +164,19 @@ final class AssistantChangeToolsTests: XCTestCase {
 
     func testUpdatingATaskShowsBeforeAndAfterAndUndoRestoresIt() async throws {
         let context = context(tasks: [task("Faktura", due: T.date(23))])
-        let (_, card) = try await call(tool("update_task", context), ["task": .string("Faktura"), "due": .string("next friday")])
+        let (_, card) = try await call(tool("update_task", context), ["task": .string("Faktura"), "due": .string("2026-09-25")])
         XCTAssertEqual(card?.fields, [ChangeField(label: "Due", before: "Today", after: "Fri 25 Sep")])
         await approvals.undo(receipts[0])
         guard case .due(let date, _)? = writer.taskChanges.last?.change else { return XCTFail("expected the due date put back") }
         XCTAssertEqual(date, T.date(23))
+    }
+
+    func testMovingATaskToADayKeepsItsDueTime() async throws {
+        let context = context(tasks: [task("Faktura", due: T.date(23, 15), hasTime: true)])
+        _ = try await call(tool("update_task", context), ["task": .string("Faktura"), "due": .string("2026-09-25")])
+        guard case .due(let date, let hasTime)? = writer.taskChanges.first?.change else { return XCTFail("expected a new due date") }
+        XCTAssertEqual(date, T.date(25, 15))
+        XCTAssertTrue(hasTime)
     }
 
     func testAFailedTaskWriteIsAFailedReceiptWithoutUndo() async throws {
@@ -183,7 +191,7 @@ final class AssistantChangeToolsTests: XCTestCase {
     func testAPartlyFailedTaskUpdatePutsBackWhatWasSaved() async throws {
         writer.failingTaskChange = 1   // the second field
         let context = context(tasks: [task("Faktura", due: T.date(23))])
-        _ = try await call(tool("update_task", context), ["task": .string("Faktura"), "due": .string("next friday"),
+        _ = try await call(tool("update_task", context), ["task": .string("Faktura"), "due": .string("2026-09-25"),
                                                            "title": .string("Invoice")])
         guard case .failed? = receipts.first?.state else { return XCTFail("expected a failed receipt, got \(receipts)") }
         // Saved the first field, failed the second, then put the first back.
@@ -214,6 +222,18 @@ final class AssistantChangeToolsTests: XCTestCase {
         XCTAssertTrue(receipts[0].canUndo)
     }
 
+    func testMovingAnEventToADayKeepsItsTimeAndLength() async throws {
+        let standup = ownEvent("Standup", day: 23, from: (10, 30), to: (11, 0))
+        let context = context(events: [23: [standup]])
+        let (_, card) = try await call(tool("update_event", context), ["event": .string("Standup"), "start": .string("2026-09-25")])
+        XCTAssertEqual(card?.fields.first?.after, "Fri 25 Sep 10:30–11:00")
+        XCTAssertEqual(writer.eventUpdates.first?.change.start, T.date(25, 10, 30))
+        XCTAssertNil(writer.eventUpdates.first?.change.end, "the length goes with the start")
+
+        let (output, _) = try await call(tool("update_event", context), ["event": .string("Standup"), "end": .string("09:00")])
+        XCTAssertTrue(output.contains("The end would be before the start"), output)
+    }
+
     func testInvitationsCantBeChangedAndDeletingOneWarns() async throws {
         let review = ownEvent("Review", day: 23, from: (14, 0), to: (15, 0), invitationFrom: "Anna", attendees: ["Anna"])
         let context = context(events: [23: [review]])
@@ -237,7 +257,7 @@ final class AssistantChangeToolsTests: XCTestCase {
     }
 
     func testCreatingAnEventUsesTheDefaultCalendarAndAnHour() async throws {
-        let (_, card) = try await call(tool("create_event", context()), ["title": .string("Lunch"), "start": .string("tomorrow 12:30")])
+        let (_, card) = try await call(tool("create_event", context()), ["title": .string("Lunch"), "start": .string("2026-09-24 12:30")])
         XCTAssertEqual(card?.subject.detail, "Tomorrow 12:30–13:30 · Personal")
         XCTAssertEqual(writer.eventCreates.first?.calendarIdentifier, "personal")
         XCTAssertEqual(writer.eventCreates.first?.end, T.date(24, 13, 30))
@@ -245,30 +265,23 @@ final class AssistantChangeToolsTests: XCTestCase {
 
     // MARK: - Times
 
-    func testMoments() async throws {
+    func testMomentsAreReadExactly() throws {
         let context = T.context()
-        func moment(_ text: String, on day: Date? = nil) async throws -> AssistantMoment {
-            try await AssistantMoment.resolve(text, on: day, context: context)
+        func moment(_ text: String, on day: Date? = nil) throws -> AssistantMoment {
+            try AssistantMoment.resolve(text, on: day, context: context)
         }
-        let tomorrow = try await moment("tomorrow 15:00")
-        let meridiem = try await moment("tomorrow at 3pm")
-        let iso = try await moment("2026-10-02T09:30")
-        let dayOnly = try await moment("tomorrow")
-        let timeOnDay = try await moment("9.30", on: T.date(25))
-        XCTAssertEqual(tomorrow, AssistantMoment(date: T.date(24, 15), hasTime: true))
-        XCTAssertEqual(meridiem, AssistantMoment(date: T.date(24, 15), hasTime: true))
-        XCTAssertEqual(iso, AssistantMoment(date: T.date(2, 9, 30, month: 10), hasTime: true))
-        XCTAssertEqual(dayOnly, AssistantMoment(date: T.date(24), hasTime: false))
-        XCTAssertEqual(timeOnDay, AssistantMoment(date: T.date(25, 9, 30), hasTime: true))
-        do {
-            _ = try await AssistantMoment.resolve("15:00", context: context)
-            XCTFail("a time alone needs a day")
-        } catch is AssistantMoment.NeedsDay {}
-        XCTAssertNil(AssistantMoment.clock("3"), "a bare number isn't a time")
-        let atTen = try await moment("tomorrow at 10")
-        XCTAssertEqual(atTen, AssistantMoment(date: T.date(24, 10), hasTime: true), "…unless it follows “at”")
+        XCTAssertEqual(try moment("2026-09-24 15:00"), AssistantMoment(date: T.date(24, 15), hasTime: true))
+        XCTAssertEqual(try moment("2026-10-02T09:30"), AssistantMoment(date: T.date(2, 9, 30, month: 10), hasTime: true))
+        XCTAssertEqual(try moment("2026-10-02T09:30:00"), AssistantMoment(date: T.date(2, 9, 30, month: 10), hasTime: true))
+        XCTAssertEqual(try moment(" 2026-09-24 "), AssistantMoment(date: T.date(24), hasTime: false))
+        XCTAssertEqual(try moment("9:30", on: T.date(25, 14)), AssistantMoment(date: T.date(25, 9, 30), hasTime: true), "a time alone keeps the day")
+        XCTAssertThrowsError(try moment("15:00")) { XCTAssertTrue($0 is AssistantMoment.NeedsDay, "a time alone needs a day") }
+        for rejected in ["tomorrow", "tomorrow 15:00", "2026-09-24 3pm", "2026-09-24 24:00", "2026-09-31", "9.30", "2026-09-24 15:00 Europe/Warsaw"] {
+            XCTAssertThrowsError(try moment(rejected, on: T.date(25))) {
+                XCTAssertEqual($0 as? AssistantWhen.Unrecognized, AssistantWhen.Unrecognized(text: rejected, expected: AssistantMoment.accepted), rejected)
+            }
+        }
         XCTAssertEqual(AssistantTargetResolver.titleMatches("Dentist checkup", in: ["Dentist", "Standup"], title: \.self), ["Dentist"])
-        XCTAssertNil(AssistantMoment.clock("25:00"))
     }
 
     // MARK: - Settings

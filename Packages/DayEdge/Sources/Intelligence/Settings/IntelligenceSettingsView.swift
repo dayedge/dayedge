@@ -113,6 +113,7 @@ package struct IntelligenceSettingsView: View {
                         }
                     }
                     .textFieldStyle(.roundedBorder)
+                    .themedTextInput()
                     .frame(width: 260)
 
                     Button { isKeyVisible.toggle() } label: {
@@ -136,6 +137,7 @@ package struct IntelligenceSettingsView: View {
                 SettingsRow(title: L10n.tr("intelligencesettingsview.model.id", "Model id")) {
                     TextField(kind.suggestedModelID, text: modelID(kind))
                         .textFieldStyle(.roundedBorder)
+                        .themedTextInput()
                         .frame(width: 260)
                 }
                 SettingsRow(title: L10n.tr("intelligencesettingsview.connection", "Connection")) { testControl(kind, configuration) }

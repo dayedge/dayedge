@@ -5,44 +5,15 @@ import UI
 extension EventQuickAddEditorView {
     // MARK: Controls
 
-    func choiceControl<Value: Hashable>(_ field: QuickAddField, value: String, options: [(Value, String)],
-                                        selection: Value, choose: @escaping (Value) -> Void) -> some View {
-        control(field, value: value, placeholder: "", hasMenu: true, minWidth: QuickAddGrid.menuControlWidth) {
-            QuickAddChoiceList(options: options, selection: selection) { value in
-                choose(value)
-                openEditor = nil
-            }
-        }
-        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
-            guard let index = options.firstIndex(where: { $0.0 == selection }) else { return .ignored }
-            let step = press.key == .rightArrow ? 1 : -1
-            choose(options[(index + step + options.count) % options.count].0)
-            return .handled
-        }
+    var form: QuickAddForm {
+        QuickAddForm(focus: focus, openEditor: $openEditor, repeating: $edit.repeating, calendar: calendar,
+                     dateFormatter: dateFormatter, name: accessibilityName)
     }
 
-    func control<Editor: View>(_ field: QuickAddField, value: String?, placeholder: String, hasMenu: Bool = false,
-                               minWidth: CGFloat, @ViewBuilder editor: @escaping () -> Editor) -> some View {
-        QuickAddControl(
-            text: value ?? placeholder,
-            isPlaceholder: value == nil,
-            hasMenu: hasMenu,
-            isFocused: focus.wrappedValue == field,
-            minWidth: minWidth
-        )
-        .quickAddControl(field, focus: focus) { open(field) }
-        .onKeyPress(keys: [.date, .time, .endTime].contains(field) ? [.leftArrow, .rightArrow, .upArrow, .downArrow, .delete] : []) { press in
-            step(field, press.key)
-        }
-        .popover(isPresented: Binding(get: { openEditor == field }, set: { if !$0, openEditor == field { openEditor = nil } }),
-                 arrowEdge: .bottom) {
-            editor()
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityName(field))
-        .accessibilityValue(value ?? placeholder)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { open(field) }
+    /// A day in the compact, locale-aware style both dates use.
+    func dateControl<Editor: View>(_ field: QuickAddField, day: Date, @ViewBuilder editor: @escaping () -> Editor) -> some View {
+        form.control(field, value: form.format(day), placeholder: "", minWidth: QuickAddGrid.shortControlWidth,
+                     step: { step(field, $0) }, editor: editor)
     }
 
     /// Location is typed, on the same surface as the other controls.
@@ -51,6 +22,7 @@ extension EventQuickAddEditorView {
         let isFocused = focus.wrappedValue == .location
         return TextField(L10n.tr("eventquickaddeditorview.controls.add.location", "Add location"), text: $edit.location)
             .textFieldStyle(.plain)
+            .themedTextInput()
             .foregroundStyle(theme.editor.text)
             .opacity(edit.location.isEmpty ? theme.editor.nativePlaceholderOpacity : 1)
             .focused(focus, equals: .location)
@@ -64,37 +36,39 @@ extension EventQuickAddEditorView {
             .accessibilityLabel(L10n.tr("eventquickaddeditorview.controls.location", "Location"))
     }
 
-    private func open(_ field: QuickAddField) {
-        focus.wrappedValue = field
-        if field == .time, edit.isAllDay { edit.isAllDay = false }
-        openEditor = field
-    }
-
     // MARK: Stepping (closed controls)
 
     /// ← / → a day or 15 minutes, ↑ / ↓ a week or an hour; Delete makes it
-    /// all day (Starts).
-    private func step(_ field: QuickAddField, _ key: KeyEquivalent) -> KeyPress.Result {
+    /// all day (Starts' time).
+    func step(_ field: QuickAddField, _ key: KeyEquivalent) -> KeyPress.Result {
+        let timing = edit.timing
         switch field {
-        case .date:
+        case .date, .endDate:
             guard key != .delete else { return .ignored }
-            let days = key == .leftArrow ? -1 : key == .rightArrow ? 1 : key == .upArrow ? -7 : 7
-            edit.move(to: calendar.date(byAdding: .day, value: days, to: edit.day) ?? edit.day, calendar: calendar)
+            stepDay(field == .date ? \.firstDay : \.lastDay, by: key.step(small: 1, large: 7))
         case .time:
-            if key == .delete { edit.isAllDay = true; return .handled }
-            guard !edit.isAllDay else { edit.isAllDay = false; return .handled }
-            edit.setStart(edit.start.addingTimeInterval(Self.minutes(key) * 60))
+            if key == .delete { edit.timing.isAllDay = true; return .handled }
+            guard !timing.isAllDay else { edit.timing.isAllDay = false; return .handled }
+            edit.timing.start = timing.start.addingTimeInterval(Self.seconds(key))
         case .endTime:
             guard key != .delete else { return .ignored }
-            let end = edit.end.addingTimeInterval(Self.minutes(key) * 60)
-            if end > edit.start { edit.end = end }
+            // A step back that would reach the start is refused, rather than wrapping to the next day.
+            let end = timing.end.addingTimeInterval(Self.seconds(key))
+            if end > timing.start { edit.timing.end = end }
         default:
             return .ignored
         }
         return .handled
     }
 
-    private static func minutes(_ key: KeyEquivalent) -> Double {
-        key == .leftArrow ? -15 : key == .rightArrow ? 15 : key == .upArrow ? -60 : 60
+    /// The start or the end day, a number of days on; the timing keeps its rules.
+    private func stepDay(_ day: WritableKeyPath<EventTiming, Date>, by days: Int) {
+        let current = edit.timing[keyPath: day]
+        edit.timing[keyPath: day] = calendar.date(byAdding: .day, value: days, to: current) ?? current
+    }
+
+    /// A time's step: 15 minutes, or an hour.
+    private static func seconds(_ key: KeyEquivalent) -> TimeInterval {
+        TimeInterval(key.step(small: 15, large: 60) * 60)
     }
 }
