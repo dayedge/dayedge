@@ -64,6 +64,13 @@ package enum AgendaSelection: Equatable {
         if case .task(let selection) = self { return selection }
         return nil
     }
+
+    package var date: Date {
+        switch self {
+        case .event(let selection): selection.date
+        case .task(let selection): selection.date
+        }
+    }
 }
 
 /// Space in a calendar view: complete the keyboard-selected task.

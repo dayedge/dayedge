@@ -103,6 +103,14 @@ extension RootView {
         }
     }
 
+    /// The agenda is already at this date because the user scrolled (or
+    /// moved the keyboard selection) there. Update only the grid selection;
+    /// feeding it back as a new target would fight native momentum.
+    private func followAgenda(to date: Date) {
+        guard !Calendar.autoupdatingCurrent.isDate(date, inSameDayAs: models.viewModel.selectedDate) else { return }
+        agendaNavigation.selectDate(date, preparingMonthAgenda: false)
+    }
+
     @ViewBuilder
     private var monthColumn: some View {
         let viewModel = models.viewModel
@@ -138,16 +146,10 @@ extension RootView {
                 taskIndex: calendarTaskIndex,
                 taskCoordinator: calendarTasks,
                 taskCompletionRequest: taskCompletionRequest,
-                onCurrentSectionChange: { date in
-                    guard !Calendar.autoupdatingCurrent.isDate(
-                        date, inSameDayAs: viewModel.selectedDate
-                    ) else { return }
-                    // The agenda is already at this date because the user
-                    // scrolled there. Update only the grid selection; feeding
-                    // it back as a new target would fight native momentum.
-                    agendaNavigation.selectDate(date, preparingMonthAgenda: false)
-                },
+                onCurrentSectionChange: followAgenda,
                 onKeyboardSelection: { selection in
+                    // Moving the grid clears the keyboard selection, so it goes first.
+                    if let selection { followAgenda(to: selection.date) }
                     eventDetail.selectKeyboardEvent(selection?.event)
                     calendarTasks.select(selection?.task)
                 },
