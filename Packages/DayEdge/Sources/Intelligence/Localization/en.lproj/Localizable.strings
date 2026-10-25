@@ -229,3 +229,6 @@
 "intelligence.provider.key.storage" = "Your key is stored on this Mac, in DayEdge's settings file.";
 "intelligence.context.window" = "Context window";
 "intelligence.languages" = "Languages";
+"palette.complete" = "Complete";
+"tagcompletion.list" = "List";
+"tagcompletion.calendar" = "Calendar";

@@ -5,18 +5,30 @@ import UI
 extension SearchBarView {
     /// Icon | title over interpretation. No keys here — see the footer.
     func actionRow(_ action: PaletteAction, subtitle: String? = nil, onTap: (() -> Void)? = nil) -> some View {
-        let isSelected = palette.selectedKind == action.kind
         let metadata = subtitle ?? action.subtitle
-        // One line: icon, the title (what it is), and the metadata (when,
-        // how many) at the trailing edge. A long title runs on and fades out
-        // where the metadata begins — never wraps, never "…".
-        return HStack(alignment: .firstTextBaseline, spacing: Self.iconToText) {
+        return paletteRow(isSelected: palette.selectedKind == action.kind, title: action.title, metadata: metadata) {
             icon(for: action.kind)
                 .overlay(alignment: .topTrailing) { conflictDot(action.conflict) }
+        }
+        .onTapGesture {
+            palette.select(action.kind)
+            if let onTap { onTap() } else { palette.executeSelected() }
+        }
+        .accessibilityLabel(action.accessibilityLabel ?? action.title)
+        .accessibilityValue(metadata ?? "")
+    }
+
+    /// A row of the palette's list: the leading mark in the icon column, the title, and the metadata at the trailing
+    /// edge, one line high. A long title runs on and fades out where the metadata begins — never wraps, never "…".
+    /// The caller adds what a click does and what VoiceOver says.
+    func paletteRow(isSelected: Bool, title: String, metadata: String?, @ViewBuilder leading: () -> some View) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Self.suggestionRowCornerRadius, style: .continuous)
+        return HStack(alignment: .firstTextBaseline, spacing: Self.iconToText) {
+            leading()
                 .frame(width: Self.iconColumn, height: 16)
                 .alignmentGuide(.firstTextBaseline) { d in d[VerticalAlignment.center] + 4 }
 
-            Text(action.title)
+            Text(title)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(theme.primaryText)
                 .fadingOverflow()
@@ -30,20 +42,10 @@ extension SearchBarView {
             }
         }
         .padding(.horizontal, Self.rowInsetH)
-        .padding(.vertical, Self.rowInsetV)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: Self.suggestionRowCornerRadius, style: .continuous)
-                .fill(isSelected ? theme.chrome.rowHover : Color.clear)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: Self.suggestionRowCornerRadius, style: .continuous))
-        .onTapGesture {
-            palette.select(action.kind)
-            if let onTap { onTap() } else { palette.executeSelected() }
-        }
+        .frame(maxWidth: .infinity, minHeight: Self.rowHeight, alignment: .leading)
+        .background(shape.fill(isSelected ? theme.chrome.rowHover : Color.clear))
+        .contentShape(shape)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(action.accessibilityLabel ?? action.title)
-        .accessibilityValue(subtitle ?? action.subtitle ?? "")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 

@@ -55,6 +55,8 @@ package struct SearchBarView: View {
     static let suggestionRowCornerRadius: CGFloat = 12
     static let rowInsetH: CGFloat = 12
     static let rowInsetV: CGFloat = 10
+    /// One line of the palette's list: its text and `rowInsetV` above and below.
+    static let rowHeight: CGFloat = 36
     static let iconColumn: CGFloat = 18
     static let iconToText: CGFloat = 10
     static let rowSpacing: CGFloat = 4
@@ -106,11 +108,14 @@ package struct SearchBarView: View {
         // their boundary.
         VStack(spacing: 0) {
             headerRow
-            if showsSurface, !palette.actions.isEmpty {
-                resultsList
-                    .padding(.horizontal, Self.suggestionRowHorizontalInset)
-                    .padding(.top, Self.suggestionRowTopGap)
-                    .padding(.bottom, Self.suggestionRowBottomInset)
+            if showsSurface, palette.tagCompletion != nil || !palette.actions.isEmpty {
+                // A `#tag` being typed shows what it can name in place of the actions.
+                Group {
+                    if let completion = palette.tagCompletion { tagCompletionList(completion) } else { resultsList }
+                }
+                .padding(.horizontal, Self.suggestionRowHorizontalInset)
+                .padding(.top, Self.suggestionRowTopGap)
+                .padding(.bottom, Self.suggestionRowBottomInset)
                 keyHintFooter
             }
         }
@@ -119,7 +124,7 @@ package struct SearchBarView: View {
                 isEnabled: isExpanded,
                 isRefining: palette.isRefining,
                 onMove: { palette.moveSelection($0) },
-                onRefine: { palette.refine() },
+                onRefine: { if !completeTag() { palette.refine() } },
                 onTab: { backward in
                     quickAddFocus = QuickAddField.next(after: quickAddFocus, in: palette.quickAddOrder, backward: backward)
                 },
@@ -202,7 +207,7 @@ package struct SearchBarView: View {
                 .font(AppTheme.TextStyle.eventTitle)
                 .foregroundStyle(theme.primaryText)
                 .focused(searchFocus)
-                .onSubmit { palette.submitQuery() }
+                .onSubmit { if !completeTag() { palette.submitQuery() } }
                 // Collapsed and empty, the field is as wide as "Search": the
                 // rest of the row is the panel's drag area (it's focused on
                 // open anyway, so typing just works).

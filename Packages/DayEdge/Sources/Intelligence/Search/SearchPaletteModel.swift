@@ -71,6 +71,12 @@ package final class SearchPaletteModel {
     package internal(set) var isCommitting = false
     /// Events and tasks matching the query — Search's counts and preview.
     package let results = SearchSession()
+    /// The `#tag` being typed at the end of the query and the lists and calendars it can name; while it shows, ↑ / ↓
+    /// choose among them and Tab or Return completes (`+TagCompletion`).
+    package internal(set) var tagCompletion: TagCompletion?
+    /// Calendars a new event can go to, as last read: when the palette opens, and by each resolution that reads them.
+    /// What a `#tag` can name (resolution reads them only after the typing pause).
+    @ObservationIgnored var writableCalendars: [CalendarSource] = []
 
     // Resolved payloads for the actions.
     @ObservationIgnored var dateIntent: SearchIntent?
@@ -150,10 +156,15 @@ package final class SearchPaletteModel {
         self.prepareParser = prepareParser
     }
 
-    /// The palette opened: the parser's model starts loading in the background.
+    /// The palette opened: the parser's model starts loading in the background, and the calendars a `#tag` can name
+    /// are read.
     package func opened() {
         let calendar = calendar
         Task(priority: .utility) { [prepareParser] in await prepareParser(calendar) }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            writableCalendars = await eventCalendars()
+        }
     }
 
     package var selectedAction: PaletteAction? { actions.first { $0.kind == selectedKind } }
@@ -202,6 +213,7 @@ package final class SearchPaletteModel {
 
     /// The footer's key hints for the current state.
     package var keyHints: [PaletteKeyHint] {
+        if tagCompletion != nil { return Self.tagCompletionHints }
         if isResultsViewShown {
             let back = PaletteKeyHint(key: .escape, label: L10n.tr("palette.back", "Back"))
             return (results.selectedRowItem.map(PaletteActions.hints(for:)) ?? []) + [back]

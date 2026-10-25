@@ -64,6 +64,8 @@ extension RootView {
         let closesInnermost: [() -> Bool] = [
             // A search result's details closed; the palette stays.
             { searchPalette.dismissResultDetails() || models.searchTasks.dismissDetail() },
+            // A #tag's lists and calendars hidden; the query stays.
+            { searchPalette.dismissTagCompletion() },
             // Back from the Search view to the palette, query kept.
             { searchPalette.closeResultsView() },
             // Quick Add's date picker closed; Quick Add stays.
