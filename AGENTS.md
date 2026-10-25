@@ -71,7 +71,8 @@ Shell ─┬─ Agenda ───────┐
 
 ## Lint
 - `make lint`: SwiftLint strict, no baseline + module imports + localizations.
-- Fix findings. Disable only where the fix makes code worse, inline with a reason: `// swiftlint:disable:next <rule> - <why>`.
+- No lint errors, ever: every change leaves `make lint` clean (release CI fails on any).
+- Fix findings. A finding kept for pragmatic reasons needs the reviewer's approval and an inline suppression with a short reason: `// swiftlint:disable:next <rule> - <why>`.
 
 ## Commands
 ```

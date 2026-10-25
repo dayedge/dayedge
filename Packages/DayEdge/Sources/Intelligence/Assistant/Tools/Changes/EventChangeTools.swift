@@ -36,7 +36,6 @@ package enum EventChangeTools {
             guard let changes = context.changes else { return "Changes aren't available here." }
             let title = try arguments.string("title").trimmingCharacters(in: .whitespacesAndNewlines)
             guard !title.isEmpty else { return "An event needs a title." }
-            let calendar = context.calendar
             let start = try AssistantMoment.resolve(try arguments.string("start"), context: context)
             let isAllDay = !start.hasTime
             let end = try endDate(arguments, start: start, context: context)
@@ -52,7 +51,7 @@ package enum EventChangeTools {
                                    calendarIdentifier: target.identifier,
                                    location: arguments.optionalString("location").flatMap(TaskChangeTools.nonEmpty),
                                    notes: arguments.optionalString("notes").flatMap(TaskChangeTools.nonEmpty))
-            let when = ChangeRunner.span(start: start.date, end: end, isAllDay: isAllDay, now: context.now(), calendar: calendar, format: context.timeFormat())
+            let when = ChangeRunner.span(start: start.date, end: end, isAllDay: isAllDay, now: context.now(), calendar: context.calendar, format: context.timeFormat())
             let proposal = ChangeProposal(
                 kind: .createEvent,
                 subject: ChangeSubject(marker: .dot(target.color), title: title,

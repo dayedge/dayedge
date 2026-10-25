@@ -2,7 +2,6 @@ import Foundation
 import Domain
 
 package enum SearchQueryResolver {
-    // swiftlint:disable cyclomatic_complexity function_body_length - one branch per search operator
     /// Operators out first; date values through the app's date parsing
     /// (TimeWhisper). A date phrase in the free words
     /// still narrows ("standup tomorrow") unless an operator set a date.
@@ -50,7 +49,6 @@ package enum SearchQueryResolver {
         parts.label = labels.isEmpty ? nil : labels.joined(separator: " · ")
         return parts
     }
-    // swiftlint:enable cyclomatic_complexity function_body_length
 
     /// The free words and the operators that are not dates (subject, from — "me" too —, with, type), with how each
     /// reads in the label. The assistant's search takes these as they are and its dates separately.

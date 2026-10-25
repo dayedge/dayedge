@@ -43,17 +43,18 @@ package struct EventQuickAddEditorView<OverlapRow: View>: View {
                     dateControl(.date, day: edit.timing.firstDay) { datePopover($edit.timing.firstDay) }
                     form.control(.time, value: edit.timing.isAllDay ? nil : timeFormat.time(edit.timing.start),
                                  placeholder: L10n.tr("eventquickaddeditorview.all.day", "All day"), minWidth: QuickAddGrid.timeControlWidth,
-                                 step: { step(.time, $0) }, prepare: { edit.timing.isAllDay = false }) {
+                                 step: { step(.time, $0) }, prepare: { edit.timing.isAllDay = false }, editor: {
                         timePopover($edit.timing.start, removeTitle: L10n.tr("eventquickaddeditorview.editors.all.day", "All Day")) {
                             edit.timing.isAllDay = true
                         }
-                    }
+                    })
                 }
                 QuickAddRow(L10n.tr("eventquickaddeditorview.ends", "Ends")) {
                     dateControl(.endDate, day: edit.timing.lastDay) { datePopover($edit.timing.lastDay) }
                     if !edit.timing.isAllDay {
                         form.control(.endTime, value: timeFormat.time(edit.timing.end), placeholder: "",
-                                     minWidth: QuickAddGrid.timeControlWidth, step: { step(.endTime, $0) }) { timePopover($edit.timing.end) }
+                                     minWidth: QuickAddGrid.timeControlWidth, step: { step(.endTime, $0) },
+                                     editor: { timePopover($edit.timing.end) })
                     }
                 }
                 QuickAddRow(L10n.tr("eventquickaddeditorview.location", "Location")) { locationField }

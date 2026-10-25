@@ -83,9 +83,8 @@ struct QuickAddForm {
                 control(.repeatEnd, value: repeating.wrappedValue.lastDay.map(format), placeholder: RepeatEndPopover.never,
                         minWidth: QuickAddGrid.shortControlWidth,
                         step: { repeating.wrappedValue.handle($0, firstDay: firstDay, calendar: calendar) },
-                        prepare: { repeating.wrappedValue.startEnd(firstDay: firstDay, calendar: calendar) }) {
-                    RepeatEndPopover(lastDay: repeating.lastDay, firstDay: firstDay, calendar: calendar, close: close)
-                }
+                        prepare: { repeating.wrappedValue.startEnd(firstDay: firstDay, calendar: calendar) },
+                        editor: { RepeatEndPopover(lastDay: repeating.lastDay, firstDay: firstDay, calendar: calendar, close: close) })
             }
         }
     }

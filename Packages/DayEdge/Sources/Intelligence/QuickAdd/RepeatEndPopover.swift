@@ -15,11 +15,11 @@ struct RepeatEndPopover: View {
 
     var body: some View {
         let first = calendar.startOfDay(for: firstDay)
-        QuickAddPopover(removeTitle: Self.never, remove: { lastDay = nil }, close: close) {
+        QuickAddPopover(removeTitle: Self.never, remove: { lastDay = nil }, close: close, picker: {
             DatePicker(Self.title, selection: Binding(get: { lastDay ?? first }, set: { lastDay = calendar.startOfDay(for: $0) }),
                        in: first..., displayedComponents: .date)
                 .datePickerStyle(.graphical)
-        }
+        })
     }
 }
 

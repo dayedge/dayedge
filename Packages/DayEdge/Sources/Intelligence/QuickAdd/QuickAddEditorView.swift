@@ -66,13 +66,14 @@ package struct QuickAddEditorView: View {
                 QuickAddRow(L10n.tr("quickaddeditorview.date", "Date")) {
                     form.control(.date, value: edit.day.map(form.format), placeholder: L10n.tr("quickaddeditorview.add.date", "Add date"),
                                  minWidth: QuickAddGrid.shortControlWidth, step: stepDate,
-                                 prepare: { if edit.day == nil { edit.day = calendar.startOfDay(for: Date()) } }) { datePopover }
+                                 prepare: { if edit.day == nil { edit.day = calendar.startOfDay(for: Date()) } },
+                                 editor: { datePopover })
                 }
                 if edit.day != nil {
                     QuickAddRow(L10n.tr("quickaddeditorview.time", "Time")) {
                         form.control(.time, value: edit.hasTime ? timeFormat.time(edit.time) : nil,
                                      placeholder: L10n.tr("quickaddeditorview.add.time", "Add time"), minWidth: QuickAddGrid.shortControlWidth,
-                                     step: stepTime, prepare: { edit.hasTime = true }) { timePopover }
+                                     step: stepTime, prepare: { edit.hasTime = true }, editor: { timePopover })
                     }
                 }
                 QuickAddRow(L10n.tr("quickaddeditorview.priority", "Priority")) {
@@ -126,21 +127,21 @@ package struct QuickAddEditorView: View {
             edit.day = nil
             edit.hasTime = false
             edit.repeating.recurrence = .never
-        }, close: form.close) {
+        }, close: form.close, picker: {
             DatePicker(L10n.tr("quickaddeditorview.date", "Date"), selection: Binding(
                 get: { edit.day ?? calendar.startOfDay(for: Date()) },
                 set: { edit.day = calendar.startOfDay(for: $0) }
             ), displayedComponents: .date)
                 .datePickerStyle(.graphical)
-        }
+        })
     }
 
     private var timePopover: some View {
         QuickAddPopover(removeTitle: L10n.tr("quickaddeditorview.remove.time", "Remove Time"), remove: { edit.hasTime = false },
-                        close: form.close) {
+                        close: form.close, picker: {
             DatePicker(L10n.tr("quickaddeditorview.time", "Time"), selection: $edit.time, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.stepperField)
-        }
+        })
     }
 
     // MARK: Stepping (closed controls)
