@@ -115,7 +115,16 @@ extension AgendaScrollCoordinator {
             targetIndex = direction == .up ? 0 : anchors.count - 1
         }
 
-        select(anchors[targetIndex], proxy: proxy, onKeyboardSelection: onKeyboardSelection)
+        let target = anchors[targetIndex]
+        // The list ignores visibility while the keyboard scrolls it, and a
+        // held key never lets a scroll land: page from what is on screen
+        // and where the selection goes.
+        let days = Set(visibleAnchors.map(\.sectionID)).union([target.sectionID])
+        switch direction {
+        case .up: considerTopPaging(days, proxy: proxy, afterLoad: true)
+        case .down: considerBottomPaging(days, proxy: proxy, afterLoad: true)
+        }
+        select(target, proxy: proxy, onKeyboardSelection: onKeyboardSelection)
     }
 
     /// Space: completes the keyboard-selected task and moves selection to
