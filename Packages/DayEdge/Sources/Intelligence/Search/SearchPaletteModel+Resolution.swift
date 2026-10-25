@@ -12,6 +12,8 @@ extension SearchPaletteModel {
         resolution?.cancel()
         results.cancelPendingResolution()
         generation += 1
+        let lists = taskLists()
+        updateTagCompletion(for: query, lists: lists)
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             clear()
@@ -20,7 +22,6 @@ extension SearchPaletteModel {
         let current = generation
         let referenceDate = now()
         let calendar = self.calendar
-        let lists = taskLists()
         let pause = typingPause
         resolution = Task { @MainActor [weak self] in
             if pause > .zero { try? await Task.sleep(for: pause) }
@@ -32,8 +33,9 @@ extension SearchPaletteModel {
             let intent = found.flatMap { TemporalPresentation.navigation($0, calendar: calendar) }
             // A date alone is Go to; only other text is read for a task or an event. (The library runs one request at a
             // time, so reading both at once saved nothing.)
-            let calendars = isSearchOnly || intent != nil ? [] : await eventCalendars()
-            let offered = isSearchOnly || intent != nil ? [] : await parse(trimmed, referenceDate, calendar, lists, calendars)
+            let createsSomething = !isSearchOnly && intent == nil
+            let calendars = createsSomething ? await eventCalendars() : []
+            let offered = createsSomething ? await parse(trimmed, referenceDate, calendar, lists, calendars) : []
             let conflict = await conflict(for: offered)
             let parts: SearchQueryParts
             if isSearchOnly {
@@ -44,6 +46,7 @@ extension SearchPaletteModel {
             guard !Task.isCancelled, current == generation else { return }
             self.query = trimmed
             self.candidates = offered
+            if createsSomething { writableCalendars = calendars }
             results.update(query: trimmed, resolvedParts: parts)
             apply(intent: intent, candidates: offered, lists: lists, calendars: calendars, conflict: conflict,
                   referenceDate: referenceDate)
@@ -118,6 +121,7 @@ extension SearchPaletteModel {
         dateIntent = nil
         candidates = []
         query = ""
+        tagCompletion = nil
         resetQuickAdd()
     }
 

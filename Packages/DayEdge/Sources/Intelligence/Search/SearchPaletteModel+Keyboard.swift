@@ -23,6 +23,10 @@ extension SearchPaletteModel {
     /// as Search.
     package func moveSelection(_ delta: Int) {
         guard !isRefining else { return }
+        if tagCompletion != nil {
+            tagCompletion?.move(delta)
+            return
+        }
         if isResultsViewShown {
             results.select(delta)
             return

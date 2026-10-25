@@ -226,3 +226,6 @@
 "intelligence.provider.key.storage" = "Klucz jest przechowywany na tym Macu, w pliku ustawień DayEdge.";
 "intelligence.context.window" = "Okno kontekstu";
 "intelligence.languages" = "Języki";
+"palette.complete" = "Uzupełnij";
+"tagcompletion.list" = "Lista";
+"tagcompletion.calendar" = "Kalendarz";
