@@ -5,7 +5,7 @@ Paths relative to `Packages/DayEdge/Sources/`.
 ## Modules
 - Dependency graph and import rules: `AGENTS.md`. Allowed imports per target: `scripts/check-modules.sh`.
 - Features get services via: Domain protocols; environment (`\.weatherProvider`, `\.eventActionCoordinator`); shell closures (`PanelRouter`); `PanelRevealing` for the panel reveal. Holidays reach `WorkdayStore` from `RootModels`.
-- `RootModels` builds the panel object graph once and hands Platform types to features as Domain protocols.
+- `RootModels` is the panel object graph: built once by `AppDelegate`, handed to the root view, and hands Platform types to features as Domain protocols.
 - `CalendarIndex` package never imports EventKit; `CalendarIndexEventKit` is the only adapter.
 
 ## Data flow
@@ -32,7 +32,10 @@ Paths relative to `Packages/DayEdge/Sources/`.
 ## Structure
 - Pure logic (projections, layouts, plans, magnetism) in value types, SwiftUI-free where possible.
 - `@Observable` coordinators own non-view work: `PanelRouter` (all cross-feature routes), `ChatCoordinator`, `PanelRefreshCoordinator`, `EventActionCoordinator`.
-- `RootView` is presentation only; triggers in `RootView+Lifecycle`, keys in `RootView+Keyboard`.
+- Two hosts over one `RootModels`: the popover's `RootView` and the Command Window's `CommandRootView` (`Shell/CommandWindow`), both in a `PopoverWindowController` and sharing one `PopoverPresentationCoordinator` (only one is open at a time). `RootLifecycle` sits on `RootView` only and keeps the shared models current for both; `PanelHostPresentation` says when the Command Window itself is on screen.
+- Commands: `PanelCommand` (`.action(PanelAction)` / `.viewMode`) is the one identity of what the user can ask for — keys, menus, Settings and the Actions list (⌘K) all name it; `PanelKeyHandler` runs it. Contextual operations stay the event/task menu plans (`EventContextMenuPlan`, `TaskContextMenuPlan`) with their executors; the Actions list (`PanelActionList`) lists those first.
+- `DayAgendaView` and `TasksView` take their header from the window composing them (the popover's `DayHeaderView` / `TasksNavigatorHeader`, the Command Window's `DayPaneHeading` / `TasksTitleHeader`); the document below is shared.
+- `RootView` is presentation only; triggers in `RootView+Lifecycle`, keys in `PanelKeyHandler` (installed by `PanelKeyMonitors`), footer pickers in `PanelSelectorPickers`.
 - Transient `NSPanel`s guard async completions with `presentationGeneration`.
 - Menu bar: `MenuBarStateController` resolves a pure composition plan: Icon mode combines calendar and meeting presentation; date/time modes use separate primary and meeting items. Both controllers share meeting rendering, with native text outside bounded image caches. Shared readiness-window logic lives in `Shell/Meetings`, used by the menu bar and Meeting HUD.
 - Status menu: pure `StatusMenuPlan`, rebuilt on each open; navigation sends `PopoverCommand` after the popover is revealed.

@@ -42,5 +42,25 @@
 			<string>%lld wyników</string>
 		</dict>
 	</dict>
+	<key>tasksidebar.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>few</key>
+			<string>%lld zadania</string>
+			<key>many</key>
+			<string>%lld zadań</string>
+			<key>one</key>
+			<string>%lld zadanie</string>
+			<key>other</key>
+			<string>%lld zadania</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

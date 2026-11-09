@@ -33,6 +33,8 @@ package struct ChatView<Footer: View>: View {
     @State private var isRevealed = false
     /// Whether the jump-to-latest arrow shows.
     @State private var follow = ChatScrollFollow()
+    /// Ask's width — what the composer's reveal opens to.
+    @State private var width = AppTheme.Metrics.popoverWidth
 
     package var body: some View {
         ChatTranscriptView(messages: session.messages, objects: objects, approvals: session.approvals,
@@ -96,6 +98,7 @@ package struct ChatView<Footer: View>: View {
                     .animation(timing(0.16), value: isRevealed)
             }
             .background(theme.contentBackdrop.opacity(isRevealed ? 1 : 0).animation(timing(0.14), value: isRevealed))
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .onAppear {
                 isRevealed = isPresented
                 // The query has already been sent: typing goes to the composer.
@@ -117,7 +120,7 @@ package struct ChatView<Footer: View>: View {
     /// arrives from it or leaves into it.
     private var composerRevealWidth: CGFloat {
         guard !isRevealed, !reduceMotion else {
-            return AppTheme.Metrics.popoverWidth + 2 * Self.shadowRoom
+            return width + 2 * Self.shadowRoom
         }
         return Self.shadowRoom + AppTheme.Chat.composerArrivingWidth
     }

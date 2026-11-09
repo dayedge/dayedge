@@ -11,11 +11,12 @@ private struct SectionOffsetKey: PreferenceKey {
 }
 
 /// The Tasks column: one continuous document — Needs attention, then a
-/// section per list. The navigator on top jumps between those landmarks
-/// (like month navigation in Calendar); ← / → do the same from the
-/// keyboard, ↑ / ↓ move between tasks. Permanently mounted like Month and
-/// Day; keyboard handling is only live while `isActive`.
-package struct TasksView: View {
+/// section per list — under a header its window composes (the popover's
+/// title and navigator chips, the Command Window's title beside its
+/// sidebar). Navigation jumps between those landmarks (like month
+/// navigation in Calendar); ← / → do the same from the keyboard, ↑ / ↓ move
+/// between tasks. Keyboard handling is only live while `isActive`.
+package struct TasksView<Header: View>: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.timeFormat) private var timeFormat
 
@@ -24,10 +25,11 @@ package struct TasksView: View {
     package let query: String
     package let isActive: Bool
     package let navigationRequest: VerticalNavigationRequest?
+    @ViewBuilder package let header: () -> Header
 
-    private static let scrollSpace = "tasksScroll"
+    private static var scrollSpace: String { "tasksScroll" }
     /// Below the top of the pinned area where a section counts as reached.
-    private static let activationSlack: CGFloat = 28
+    private static var activationSlack: CGFloat { 28 }
 
     /// True only while the user's own scroll gesture is driving the view, so
     /// programmatic jumps never fight the scrollspy.
@@ -119,42 +121,13 @@ package struct TasksView: View {
         ))
     }
 
-    // MARK: Top bar (title + navigator)
+    // MARK: Top bar
 
+    /// The window's header, backed so scrolled rows pass under it, and
+    /// measured for the scrollspy.
     private var topBar: some View {
-        let subtitle = store.headerSubtitle(query: query)
-        return VStack(alignment: .leading, spacing: 0) {
-            LargeTitleHeader {
-                Text(L10n.tr("tasksview.tasks", "Tasks"))
-            } subtitle: {
-                if let subtitle {
-                    PeriodHeaderSubtitle(text: subtitle)
-                }
-            }
-
-            if !isSearching {
-                let items = navigatorItems
-                if !items.isEmpty {
-                    // Location (scrolling chips) and arrangement (a fixed
-                    // sort control) stay separate: the button never
-                    // scrolls away with the chips.
-                    HStack(spacing: 0) {
-                        TaskNavigatorView(
-                            items: items,
-                            activeID: store.currentSectionID(query: query),
-                            trailingInset: 12,
-                            onSelect: { store.jump(to: $0) }
-                        )
-                        Rectangle()
-                            .fill(theme.secondaryControl.divider)
-                            .frame(width: 1, height: 16)
-                        TaskSortButton(store: store)
-                            .padding(.leading, 10)
-                            .padding(.trailing, AppTheme.horizontalPadding - 4)
-                    }
-                    .padding(.top, 8)
-                }
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            header()
             Color.clear.frame(height: AppTheme.PeriodHeader.subtitleToContent - 2)
         }
         // Match the shell's material while shielding the title from scrolled rows.
@@ -170,16 +143,17 @@ package struct TasksView: View {
         )
     }
 
-    private var navigatorItems: [TaskNavigatorItem] {
-        TaskNavigatorItem.items(from: store.sections(query: ""))
-    }
-
     private var emptyState: some View {
-        Text(isSearching ? L10n.tr("tasksview.no.matching.reminders", "No matching tasks") : L10n.tr("tasksview.no.reminders", "No tasks"))
-            .font(AppTheme.TextStyle.eventSubtitle)
-            .foregroundStyle(theme.secondaryText)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 80)
+        VStack(spacing: 10) {
+            Image(systemName: isSearching ? "magnifyingglass" : "tray")
+                .font(.system(size: 30, weight: .light))
+                .accessibilityHidden(true)
+            Text(isSearching ? L10n.tr("tasksview.no.matching.reminders", "No matching tasks") : L10n.tr("tasksview.no.reminders", "No tasks"))
+                .font(AppTheme.TextStyle.eventSubtitle)
+        }
+        .foregroundStyle(theme.secondaryText)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 80)
     }
 
     // MARK: Sections
@@ -301,10 +275,12 @@ package struct TasksView: View {
         TaskContextMenuItems(task: task, isReadOnly: store.isReadOnly(task)) { store.perform($0, on: task) }
     }
 
-    package init(store: TaskStore, query: String, isActive: Bool, navigationRequest: VerticalNavigationRequest?) {
+    package init(store: TaskStore, query: String, isActive: Bool, navigationRequest: VerticalNavigationRequest?,
+                 @ViewBuilder header: @escaping () -> Header) {
         self.store = store
         self.query = query
         self.isActive = isActive
         self.navigationRequest = navigationRequest
+        self.header = header
     }
 }

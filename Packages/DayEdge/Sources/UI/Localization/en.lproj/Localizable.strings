@@ -1,5 +1,8 @@
 
 /* App-owned presentation text. %@ placeholders are verbatim values in source order. */
+"actionslistview.checked" = "Checked";
+"actionslistview.no.actions" = "No matching actions";
+"actionslistview.search.actions" = "Search actions";
 "agendadayheaderview.today" = "Today";
 "agendaeventrowview.join" = "Join";
 "agendaeventrowview.join.09c8d1" = "Join %@";
@@ -131,15 +134,22 @@
 "keyboardcommands.go.to.today" = "Go to Today";
 "keyboardcommands.join.selected.meeting" = "Join Selected Meeting";
 "keyboardcommands.copy.meeting.link" = "Copy Meeting Link";
+"keyboardcommands.new.chat" = "New Chat";
+"keyboardcommands.new.event" = "New Event";
+"keyboardcommands.new.task" = "New Task";
 "keyboardcommands.open.in.calendar" = "Open in Apple Calendar";
 "keyboardcommands.go.to.next.occurrence" = "Go to Next Occurrence";
 "keyboardcommands.go.to.previous.occurrence" = "Go to Previous Occurrence";
 "keyboardcommands.next.day" = "Next Day";
 "keyboardcommands.next.week" = "Next Week";
 "keyboardcommands.open.event.details" = "Open Event Details";
+"keyboardcommands.open.settings" = "Settings…";
 "keyboardcommands.previous.day" = "Previous Day";
 "keyboardcommands.previous.week" = "Previous Week";
+"keyboardcommands.show.actions" = "Actions";
 "keyboardcommands.sort.tasks" = "Sort Tasks";
+"panelactionlist.submenu.choice" = "%@: %@";
+"panelactionlist.show.list" = "Show List: %@";
 "permissionstateview.allow.calendar.access" = "Allow Calendar Access";
 "permissionstateview.allow.reminders.access" = "Allow Reminders Access";
 "permissionstateview.calendar.access.is.off" = "Calendar access is off";
@@ -233,12 +243,12 @@
 "transientnoticehost.undo" = "Undo";
 "agendadayheaderview.no.date" = "NO DATE";
 "keyboardcommands.switch.to" = "Switch to %@";
+"keyboardcommands.show.task.view" = "Show %@";
 "shortcuts.fixed.arrows" = "Arrow keys";
 "shortcuts.fixed.show.search.result" = "Show search result";
 "shortcuts.fixed.quick.add.fields" = "Quick Add fields";
 "shortcuts.fixed.allow.change" = "Create in Quick Add, Allow in Ask";
 "shortcuts.fixed.delete.in.ask" = "Delete in Ask";
-"shortcuts.fixed.new.chat" = "New chat in Ask";
 "shortcuts.fixed.settings" = "Settings";
 "shortcutrecorder.needs.modifier" = "Add ⌘ or ⌃";
 "shortcutrecorder.unsupported.key" = "This key can't be used";

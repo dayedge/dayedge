@@ -36,19 +36,12 @@ extension AgendaScrollCoordinator {
                 navigationTask = Task { @MainActor in
                     await Task.yield()
                     guard !Task.isCancelled, self.activeProgrammaticID == target.requestID else { return }
-                    self.issueScroll(
-                        to: anchor,
-                        requestID: target.requestID,
-                        animated: target.animated && isActive,
-                        proxy: proxy
-                    )
-                    onScrollPrepared(target)
+                    self.land(target, at: anchor, isActive: isActive, proxy: proxy, report: onScrollPrepared)
                 }
             } else {
-                issueScroll(to: anchor, requestID: target.requestID, animated: target.animated && isActive, proxy: proxy)
-                onScrollPrepared(target)
+                land(target, at: anchor, isActive: isActive, proxy: proxy, report: onScrollPrepared)
             }
-            selectNavigatedItem(anchor, onKeyboardSelection: onKeyboardSelection)
+            if !target.restoresPosition { selectNavigatedItem(anchor, onKeyboardSelection: onKeyboardSelection) }
             return
         }
 
@@ -66,9 +59,8 @@ extension AgendaScrollCoordinator {
                 onScrollPrepared(target)
                 return
             }
-            self.issueScroll(to: anchor, requestID: target.requestID, animated: target.animated && isActive, proxy: proxy)
-            onScrollPrepared(target)
-            self.selectNavigatedItem(anchor, onKeyboardSelection: onKeyboardSelection)
+            self.land(target, at: anchor, isActive: isActive, proxy: proxy, report: onScrollPrepared)
+            if !target.restoresPosition { self.selectNavigatedItem(anchor, onKeyboardSelection: onKeyboardSelection) }
         }
     }
 
@@ -161,6 +153,14 @@ extension AgendaScrollCoordinator {
         }
     }
 
+    /// A click selects its row as ↑ / ↓ would — one selection, whichever
+    /// way it was made — without scrolling: the row is already in view.
+    package func selectClicked(_ anchor: AgendaScrollAnchor, onKeyboardSelection: (AgendaSelection?) -> Void) {
+        guard keyboardAnchor != anchor else { return }
+        keyboardAnchor = anchor
+        onKeyboardSelection(selection(for: anchor))
+    }
+
     private func select(_ target: AgendaScrollAnchor, proxy: ScrollViewProxy, onKeyboardSelection: (AgendaSelection?) -> Void) {
         keyboardAnchor = target
         onKeyboardSelection(selection(for: target))
@@ -168,6 +168,56 @@ extension AgendaScrollCoordinator {
         activeProgrammaticID = requestID
         isProgrammaticScroll = true
         issueScroll(to: target, requestID: requestID, animated: true, proxy: proxy)
+    }
+
+    /// A target's scroll, then its report (`reportPrepared`): animated only
+    /// where it's seen; a restored position puts its row back at the top.
+    private func land(_ target: AgendaScrollTarget, at anchor: AgendaScrollAnchor, isActive: Bool, proxy: ScrollViewProxy,
+                      report: @escaping (AgendaScrollTarget) -> Void) {
+        let animated = target.animated && isActive
+        issueScroll(to: anchor, requestID: target.requestID, animated: animated, proxy: proxy,
+                    alignment: target.restoresPosition ? .top : nil)
+        reportPrepared(target, at: anchor, animated: animated, report: report)
+    }
+
+    /// `target` is prepared: at once for a jump the reader watches; for an
+    /// unseen one, once its day is on screen — or after the fallback.
+    func reportPrepared(_ target: AgendaScrollTarget, at anchor: AgendaScrollAnchor, animated: Bool,
+                        report: @escaping (AgendaScrollTarget) -> Void) {
+        landingFallback?.cancel()
+        pendingLanding = nil
+        guard !animated else {
+            report(target)
+            return
+        }
+        pendingLanding = PendingLanding(target: target, sectionID: anchor.sectionID, report: report)
+        landingFallback = Task { @MainActor in
+            try? await Task.sleep(for: self.landingFallbackDelay)
+            guard !Task.isCancelled, let landing = self.pendingLanding, landing.target.requestID == target.requestID else { return }
+            self.pendingLanding = nil
+            landing.report(landing.target)
+        }
+    }
+
+    /// The pending jump's day came on screen: one more layout pass (the
+    /// corrections after a far jump), then it's prepared.
+    func reportLandingIfVisible() {
+        guard let landing = pendingLanding, visibleAnchors.contains(where: { $0.sectionID == landing.sectionID }) else { return }
+        pendingLanding = nil
+        landingFallback?.cancel()
+        Task { @MainActor in
+            await Task.yield()
+            landing.report(landing.target)
+        }
+    }
+
+    /// The list came on screen: the last unseen jump once more, without
+    /// animation, so a correction it still owed never shows.
+    package func snapToLastJump(proxy: ScrollViewProxy) {
+        guard let lastJump, !isUserScrolling else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { proxy.scrollTo(lastJump.anchor, anchor: lastJump.alignment) }
     }
 
     func selection(for anchor: AgendaScrollAnchor) -> AgendaSelection? {
@@ -187,9 +237,10 @@ extension AgendaScrollCoordinator {
         to anchor: AgendaScrollAnchor,
         requestID: UUID,
         animated: Bool,
-        proxy: ScrollViewProxy
+        proxy: ScrollViewProxy,
+        alignment: UnitPoint? = nil
     ) {
-        let unitPoint: UnitPoint = {
+        let unitPoint: UnitPoint = alignment ?? {
             switch anchor {
             case .day: .top
             case .event, .task: .center
@@ -203,6 +254,7 @@ extension AgendaScrollCoordinator {
             }
         }()
 
+        lastJump = animated ? nil : (anchor, unitPoint)
         if animated {
             withAnimation(.smooth(duration: 0.35)) {
                 proxy.scrollTo(anchor, anchor: unitPoint)

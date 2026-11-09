@@ -64,7 +64,7 @@ extension AgendaListView {
             detailPresentationRequest: detailPresentationRequest,
             detailActionRequest: detailActionRequest,
             onDetailPresentationChange: { isShowing in
-                onEventDetailPresentationChange(event.id, isShowing)
+                eventDetailPresentationChanged(event, in: section, isShowing: isShowing)
             },
             onDetailActionFocusChange: { action in
                 onEventDetailActionFocusChange(event.id, action)
@@ -92,13 +92,22 @@ extension AgendaListView {
                 isKeyboardSelected: isKeyboardSelected,
                 isActive: isActive,
                 isProjected: isProjected,
-                onComplete: { [completion] in completion.handler?(task.id, section.id) }
+                onComplete: { [completion] in completion.handler?(task.id, section.id) },
+                onSelect: { scroll.selectClicked(anchor, onKeyboardSelection: onKeyboardSelection) }
             )
             }
             .equatable()
             .id(anchor)
             .transition(.opacity)
         }
+    }
+
+    /// Opening an event's details, by click or ↩, selects it.
+    private func eventDetailPresentationChanged(_ event: AgendaEventModel, in section: AgendaDaySection, isShowing: Bool) {
+        if isShowing {
+            scroll.selectClicked(.event(sectionID: section.id, eventID: event.id), onKeyboardSelection: onKeyboardSelection)
+        }
+        onEventDetailPresentationChange(event.id, isShowing)
     }
 
     private func eventRow(_ event: AgendaEventModel, in section: AgendaDaySection, isOngoing: Bool) -> some View {
@@ -115,7 +124,7 @@ extension AgendaListView {
             detailPresentationRequest: detailPresentationRequest,
             detailActionRequest: detailActionRequest,
             onDetailPresentationChange: { isShowing in
-                onEventDetailPresentationChange(event.id, isShowing)
+                eventDetailPresentationChanged(event, in: section, isShowing: isShowing)
             },
             onDetailActionFocusChange: { action in
                 onEventDetailActionFocusChange(event.id, action)

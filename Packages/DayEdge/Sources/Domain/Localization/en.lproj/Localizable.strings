@@ -58,6 +58,10 @@
 "tasksettings.last.days" = "Last %@ days";
 "tasksmartsection.attention" = "Attention";
 "tasksmartsection.completed" = "Completed";
+"tasksmartview.attention" = "Needs Attention";
+"tasksmartview.today" = "Today";
+"tasksmartview.next.week" = "Next 7 Days";
+"tasksmartview.all" = "All Tasks";
 "tasksorter.as.in.reminders" = "As in Reminders";
 "tasksorter.created" = "Created";
 "tasksorter.due.date" = "Due Date";

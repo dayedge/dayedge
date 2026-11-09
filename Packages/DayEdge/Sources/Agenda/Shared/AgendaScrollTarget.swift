@@ -44,6 +44,9 @@ package struct AgendaScrollTarget: Equatable {
     package var taskID: String?
     package var nowTarget: AgendaNowTarget?
     package var animated: Bool
+    /// Back to where the list was left (`rememberMonthPosition`): its top
+    /// row at the top again, nothing selected on the way.
+    package var restoresPosition = false
 
     package init(
         requestID: UUID = UUID(),

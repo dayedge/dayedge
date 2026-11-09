@@ -24,6 +24,12 @@ package enum TaskPriority: Int, Codable, CaseIterable, Sendable {
         case .high: return L10n.tr("taskitem.high", "High")
         }
     }
+
+    /// Reminders' marks — "!", "!!", "!!!" — nil for none. Not words, so
+    /// not translated.
+    package var mark: String? {
+        self == .none ? nil : String(repeating: "!", count: rawValue)
+    }
 }
 
 /// A reminder as the Tasks view sees it. Storage-agnostic: the mock
@@ -55,6 +61,20 @@ package struct TaskItem: Identifiable, Hashable, Sendable {
     package var sourceOrder: Int
 
     package var isRecurring: Bool { recurrence.isRepeating }
+
+    /// The notes' first line with something on it, trimmed — a row's
+    /// one-line preview; nil when there's nothing to show.
+    package var notesPreview: String? {
+        // Line by line, stopping at the first: rows ask on every redraw.
+        var rest = notes?[...] ?? ""
+        while !rest.isEmpty {
+            let end = rest.firstIndex(where: \.isNewline) ?? rest.endIndex
+            let line = rest[..<end].trimmingCharacters(in: .whitespaces)
+            if !line.isEmpty { return line }
+            rest = end == rest.endIndex ? "" : rest[rest.index(after: end)...]
+        }
+        return nil
+    }
 
     /// The rule to compute later occurrences with; nil when not repeating
     /// or not computable.

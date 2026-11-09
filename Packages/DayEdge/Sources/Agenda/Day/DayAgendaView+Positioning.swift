@@ -4,7 +4,7 @@ import UI
 
 extension DayAgendaView {
     /// Shared by scroll repositioning and the bar above the grid, so they move together.
-    static let positioningAnimation = Animation.smooth(duration: 0.25)
+    static var positioningAnimation: Animation { .smooth(duration: 0.25) }
 
     /// Keeps whatever the grid was positioned on in place after something
     /// above it resized — only on screen; a hidden Day view never scrolls itself.

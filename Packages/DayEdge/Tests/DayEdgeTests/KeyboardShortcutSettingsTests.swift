@@ -53,8 +53,8 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
     }
 
     private func store() -> KeyboardShortcutSettings { KeyboardShortcutSettings(defaults: defaults) }
-    private let join = ShortcutCommand.action(.joinSelectedMeeting)
-    private let sort = ShortcutCommand.action(.openSortMenu)
+    private let join = PanelCommand.action(.joinSelectedMeeting)
+    private let sort = PanelCommand.action(.openSortMenu)
 
     // MARK: Defaults and changes
 
@@ -64,6 +64,32 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
         XCTAssertEqual(settings.shortcut(for: .viewMode(.ask))?.displayLabel, "⌘4")
         XCTAssertNil(settings.shortcut(for: sort), "⌘S is Save everywhere else")
         XCTAssertFalse(settings.hasCustomizations)
+    }
+
+    func testTaskViewsDefaultToOptionCommandDigits() {
+        let settings = store()
+        XCTAssertEqual(TaskSmartView.allCases.map { settings.shortcut(for: .taskView($0))?.displayLabel },
+                       ["⌥⌘1", "⌥⌘2", "⌥⌘3", "⌥⌘4"])
+    }
+
+    func testTaskViewDefaultsAreEligible() {
+        for view in TaskSmartView.allCases {
+            let key = PanelCommand.taskView(view).defaultShortcut!
+            XCTAssertNil(KeyboardShortcutSettings.eligibility(key), key.displayLabel)
+        }
+    }
+
+    func testCreationActionsAndNewChatHaveTheirOwnKeys() {
+        let settings = store()
+        XCTAssertEqual(settings.shortcut(for: .action(.newEvent))?.displayLabel, "⌘N")
+        XCTAssertEqual(settings.shortcut(for: .action(.newTask))?.displayLabel, "⇧⌘N")
+        XCTAssertEqual(settings.shortcut(for: .action(.newChat))?.displayLabel, "⌥⌘N")
+        XCTAssertEqual(settings.shortcut(for: .action(.showActions))?.displayLabel, "⌘K")
+    }
+
+    func testStoredIdsOutliveTheRename() {
+        XCTAssertEqual(PanelCommand.action(.today).id, "action.today")
+        XCTAssertEqual(PanelCommand.viewMode(.month).id, "viewMode.month")
     }
 
     func testOneKeyOneCommand() {
@@ -136,7 +162,7 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
         let commandK = try JSONSerialization.jsonObject(with: JSONEncoder().encode(KeyboardCommand(key: "k")))
         storeRaw([join.id: commandK, sort.id: commandK])
         let settings = store()
-        let owners = ShortcutCommand.commands.filter { settings.shortcut(for: $0) == KeyboardCommand(key: "k") }
+        let owners = PanelCommand.commands.filter { settings.shortcut(for: $0) == KeyboardCommand(key: "k") }
         XCTAssertEqual(owners.count, 1)
     }
 
@@ -165,7 +191,7 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
         XCTAssertEqual(settings.collision(KeyboardCommand(keyCode: 123, modifiers: .shift), for: join),
                        .command(.action(.previousDay)), "a fixed navigation key")
         XCTAssertEqual(settings.collision(KeyboardCommand(keyCode: 36, modifiers: .command), for: join)?.title,
-                       KeyboardCommands.fixedKeys.first { $0.shortcut == KeyboardCommand(keyCode: 36, modifiers: .command) }?.owner,
+                       PanelCommands.fixedKeys.first { $0.shortcut == KeyboardCommand(keyCode: 36, modifiers: .command) }?.owner,
                        "Ask's Allow")
         XCTAssertNil(settings.collision(KeyboardCommand(key: "j"), for: join), "its own key")
         XCTAssertNil(settings.collision(KeyboardCommand(key: "s"), for: sort))
@@ -176,7 +202,7 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
     // MARK: Dispatch
 
     private func resolve(_ settings: KeyboardShortcutSettings, _ event: NSEvent?, recording: Bool = false,
-                         tracking: Bool = false) -> ShortcutCommand? {
+                         tracking: Bool = false) -> PanelCommand? {
         event.flatMap { settings.resolve($0, isRecording: recording, isMenuTracking: tracking) }
     }
 
@@ -209,7 +235,7 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
         let settings = store()
         settings.set(KeyboardCommand(key: "k", modifiers: [.command, .option]), for: join)
         let restarted = store()
-        for command in ShortcutCommand.commands {
+        for command in PanelCommand.commands {
             XCTAssertEqual(restarted.shortcut(for: command), settings.shortcut(for: command))
         }
         XCTAssertEqual(restarted.shortcut(for: join)?.swiftUIShortcut?.key, "k")

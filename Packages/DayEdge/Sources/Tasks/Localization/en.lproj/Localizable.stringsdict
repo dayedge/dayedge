@@ -34,5 +34,21 @@
 			<string>%lld results</string>
 		</dict>
 	</dict>
+	<key>tasksidebar.count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld task</string>
+			<key>other</key>
+			<string>%lld tasks</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

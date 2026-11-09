@@ -585,6 +585,24 @@ final class SearchPalettePreviewTests: XCTestCase {
         XCTAssertEqual(opened, ["t"])
     }
 
+    func testThePreviewResultUnderTheArrowsIsHighlighted() async {
+        let model = await model(events: 2)
+        model.moveSelection(1)
+        XCTAssertEqual(model.highlightedResult?.id, "event:e0")
+    }
+
+    func testOnSearchItselfNoResultIsHighlighted() async {
+        let model = await model(events: 2)
+        XCTAssertNil(model.highlightedResult)
+    }
+
+    func testTheSearchViewHighlightsItsOwnSelection() async {
+        let model = await model(events: 5)
+        model.refine()
+        model.moveSelection(2)
+        XCTAssertEqual(model.highlightedResult?.id, "event:e2")
+    }
+
     func testSearchItselfHasNoReturnAction() async {
         let model = await model(events: 2)
         var asked = false

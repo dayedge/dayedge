@@ -1,4 +1,5 @@
 /* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
+"chatselectionpopover.new.chat.shortcut" = "Nowa rozmowa (%@)";
 "chip.agenda.label" = "Dzisiejsza agenda";
 "chip.agenda.prompt" = "Co mam dziś w planie?";
 "chip.free.label" = "Wolne w tym tygodniu";
@@ -46,7 +47,6 @@
 "chatselectionpopover.chat" = "Rozmowa";
 "chatselectionpopover.chats" = "Rozmowy";
 "chatselectionpopover.new.chat" = "Nowa rozmowa";
-"chatselectionpopover.new.chat.n" = "Nowa rozmowa (⌘N)";
 "chatselectionpopover.no.chats.yet" = "Brak rozmów";
 "chatsession.something.went.wrong.try.again" = "Coś poszło nie tak. Spróbuj ponownie.";
 "chattranscriptrowview.thinking" = "Myślę…";
@@ -143,6 +143,7 @@
 "repeatendpopover.never" = "Nigdy";
 "searchbarview.overlaps.an.accepted.event" = "Nakłada się na zaakceptowane wydarzenie";
 "searchbarview.overlaps.an.event.not.yet.accepted" = "Nakłada się na niezaakceptowane wydarzenie";
+"searchbarview.command.prompt" = "Szukaj, twórz, przejdź do daty lub zapytaj…";
 "searchbarview.search" = "Szukaj";
 "searchbarview.time.is.free" = "Termin jest wolny";
 "searchresultrow.all.day" = "cały dzień";

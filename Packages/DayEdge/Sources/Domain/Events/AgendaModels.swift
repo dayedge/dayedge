@@ -143,6 +143,9 @@ package struct AgendaEventModel: Identifiable, Hashable {
     /// EventKit reports no start/end time string for an all-day event.
     package var isAllDay: Bool { startTime == nil && endTime == nil }
 
+    /// Takes up time: timed, not cancelled, not declined.
+    package var blocksTime: Bool { !isAllDay && status != .cancelled && myResponseStatus != .declined }
+
     /// Minutes since midnight, parsed from the "HH:mm" display strings.
     /// The agenda list only ever needs the display strings, but the day
     /// timeline needs actual numbers to position event blocks.

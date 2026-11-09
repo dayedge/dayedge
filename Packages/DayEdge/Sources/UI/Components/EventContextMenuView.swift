@@ -18,7 +18,7 @@ package struct EventContextMenuView: View {
                     Divider()
                 } else {
                     MenuRow(title(item.element), symbol: item.element.symbolName,
-                            role: Self.isDestructive(item.element) ? .destructive : nil,
+                            role: item.element.isDestructive ? .destructive : nil,
                             shortcut: Self.shortcut(for: item.element)) {
                         if item.element == .showInCalendar { searchResultReveal?() } else { actions.perform(item.element, for: event) }
                     }
@@ -31,37 +31,11 @@ package struct EventContextMenuView: View {
     }
 
     private static func shortcut(for action: EventContextMenuAction) -> KeyboardShortcut? {
-        if action == .showInCalendar { return KeyboardCommands.showSearchResult.swiftUIShortcut }
+        if action == .showInCalendar { return PanelCommands.showSearchResult.swiftUIShortcut }
         return action.shortcut.flatMap { KeyboardShortcutSettings.shared.shortcut(for: .action($0))?.swiftUIShortcut }
     }
 
-    private static func isDestructive(_ action: EventContextMenuAction) -> Bool {
-        action == .removeFromCalendar || action == .deleteEvent
-    }
-
-    // swiftlint:disable:next cyclomatic_complexity - one case per menu action
     private func title(_ action: EventContextMenuAction) -> String {
-        switch action {
-        case .joinVideoCall: return L10n.tr("eventcontextmenuview.join", "Join")
-        case .copyMeetingLink: return L10n.tr("eventcontextmenuview.copy.link", "Copy Link")
-        case .openLocationInMaps: return L10n.tr("eventcontextmenuview.show.in.maps", "Show in Maps")
-        case .showInCalendar: return L10n.tr("eventcontextmenuview.show.in.calendar", "Show in Calendar")
-        // External, like "Open in Reminders"; "Show in …" stays for
-        // navigation inside the app.
-        case .openInAppleCalendar: return L10n.tr("eventcontextmenuview.open.in.calendar", "Open in Apple Calendar")
-        case .nextOccurrence: return L10n.tr("eventcontextmenuview.go.to.next.occurrence", "Go to Next Occurrence")
-        case .previousOccurrence: return L10n.tr("eventcontextmenuview.go.to.previous.occurrence", "Go to Previous Occurrence")
-        // "Alerts", not "Reminders": Reminders are the tasks.
-        case .muteReminders: return L10n.tr("eventcontextmenuview.mute.event.alerts", "Mute Event Alerts")
-        case .restoreReminders: return L10n.tr("eventcontextmenuview.unmute.event.alerts", "Unmute Event Alerts")
-        // Ellipsis: a confirmation follows (a small panel near the cursor).
-        case .removeFromCalendar: return L10n.tr("eventcontextmenuview.remove.from.calendar", "Remove from Calendar…")
-        // "…" when a decision follows; a plain delete just happens (Undo).
-        case .deleteEvent:
-            return actions.deletionAsks(event)
-                ? L10n.tr("eventcontextmenuview.delete.event", "Delete Event…")
-                : L10n.tr("eventcontextmenuview.delete.event.d45eff", "Delete Event")
-        case .divider: return ""
-        }
+        EventContextMenuPlan.title(for: action, deletionAsks: actions.deletionAsks(event))
     }
 }

@@ -5,6 +5,14 @@ import XCTest
 
 @MainActor
 final class ScrollEdgeDissolveTests: XCTestCase {
+    func testWideLayoutDropsTheBottomDissolve() {
+        XCTAssertEqual(ScrollEdgeDissolve.edges(.all, in: .wide), .top)
+    }
+
+    func testCompactLayoutKeepsBothDissolves() {
+        XCTAssertEqual(ScrollEdgeDissolve.edges(.all, in: .compact), .all)
+    }
+
     func testTopEdgeIsHiddenAtStart() {
         XCTAssertEqual(ScrollEdgeDissolve.visibility(at: .top, metrics: metrics(offset: 0)), 0)
     }

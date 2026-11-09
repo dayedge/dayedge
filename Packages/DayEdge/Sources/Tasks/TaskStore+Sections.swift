@@ -78,39 +78,48 @@ extension TaskStore {
 
     // MARK: - Sections
 
-    package func sections(query: String) -> [TaskSection] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let current = now()
-        let key = CacheKey(
-            revision: revision, expanded: expandedSectionIDs, query: trimmed,
+    /// Everything that changes the sections; search leaves the filter out.
+    func cacheKey(query: String, at current: Date) -> CacheKey {
+        CacheKey(
+            revision: revision, expanded: expandedSectionIDs, query: query,
             completedExpanded: completedExpanded, completedLimit: completedLimit,
             sortMode: sortMode, sortDirection: sortDirection,
             hidden: listVisibility.hiddenIDs, excluded: listVisibility.excludedIDs, lingering: lingeringIDs,
-            minute: Int(current.timeIntervalSince1970 / 60)
+            minute: Int(current.timeIntervalSince1970 / 60),
+            filter: query.isEmpty ? filter : .all
         )
-        if let cache, cache.key == key { return cache.sections }
+    }
 
-        // A hidden or excluded list leaves the document entirely.
-        let shownTasks = tasks.filter { listVisibility.isVisible($0.listID) }
-        let shownLists = lists.filter { listVisibility.isVisible($0.id) }
+    package func sections(query: String) -> [TaskSection] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let current = now()
+        let key = cacheKey(query: trimmed, at: current)
+        if let hit = trimmed.isEmpty ? cache : searchCache, hit.key == key { return hit.sections }
 
         let computed: [TaskSection]
         if trimmed.isEmpty {
+            let filter = key.filter
+            let today = calendar.startOfDay(for: current)
             computed = TaskBuckets.sections(
-                tasks: shownTasks, lists: shownLists, now: current, calendar: calendar,
-                options: TaskBucketOptions(
+                tasks: shownTasks.filter { task in
+                    let placed = placementSnapshots[task.id] ?? task
+                    let isCompleted = lingeringIDs.contains(task.id) ? !task.isCompleted : placed.isCompleted
+                    return filter.includes(placed, isCompleted: isCompleted, today: today, calendar: calendar)
+                },
+                lists: shownLists, now: current, calendar: calendar,
+                options: filter.options(from: TaskBucketOptions(
                     expandedSectionIDs: expandedSectionIDs, completedExpanded: completedExpanded,
                     showsAttention: isSmartVisible(.attention), showsCompleted: isSmartVisible(.completed),
                     completedLimit: completedLimit,
                     sortMode: sortMode, sortDirection: sortDirection
-                ),
+                )),
                 lingeringIDs: lingeringIDs,
                 placementOverrides: placementSnapshots
             )
         } else {
             computed = TaskBuckets.searchResults(tasks: shownTasks, query: trimmed, now: current, calendar: calendar)
         }
-        cache = (key, computed)
+        if trimmed.isEmpty { cache = (key, computed) } else { searchCache = (key, computed) }
         return computed
     }
 

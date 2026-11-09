@@ -57,6 +57,10 @@
 "tasksettings.last.days" = "Ostatnie %@ dni";
 "tasksmartsection.attention" = "Wymagają uwagi";
 "tasksmartsection.completed" = "Ukończone";
+"tasksmartview.attention" = "Wymagają uwagi";
+"tasksmartview.today" = "Dzisiaj";
+"tasksmartview.next.week" = "Następne 7 dni";
+"tasksmartview.all" = "Wszystkie zadania";
 "tasksorter.as.in.reminders" = "Jak w Przypomnieniach";
 "tasksorter.created" = "Utworzono";
 "tasksorter.due.date" = "Termin";

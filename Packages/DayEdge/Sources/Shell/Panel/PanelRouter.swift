@@ -32,12 +32,16 @@ final class PanelRouter {
         self.chat = chat
     }
 
-    var isSearchExpanded: Bool {
-        !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    /// The palette is open: a query typed, or Quick Add started empty.
+    var isSearchExpanded: Bool { searchPalette.isOpen(query: searchQuery) }
 
     /// Ask is the view on screen.
     var isAskShown: Bool { agendaNavigation.displayedViewMode == .ask }
+
+    /// Open search dims the window behind its palette.
+    var isSearchScrimShown: Bool {
+        isSearchExpanded && !isAskShown && !searchPalette.isResultsViewShown
+    }
 
     /// Every view change goes through here: Ask needs its conversation to
     /// exist before it's shown.
@@ -46,6 +50,27 @@ final class PanelRouter {
         if searchPalette.isResultsViewShown { searchQuery = "" }
         if mode == .ask { chat.ensureConversation() }
         agendaNavigation.selectViewMode(mode)
+    }
+
+    /// Tasks, on an Overview row: its filter, or Needs attention's section.
+    func showTasks(_ view: TaskSmartView) {
+        selectViewMode(.tasks)
+        if let filter = view.filter { taskStore.select(filter) } else { taskStore.show(section: TaskSection.Kind.needsAttention.id) }
+    }
+
+    /// Tasks, at a list's section.
+    func showTaskList(_ id: String) {
+        selectViewMode(.tasks)
+        taskStore.show(section: TaskSection.Kind.list(id).id)
+    }
+
+    /// A view switch's key: a view mode, or Tasks on one of its views.
+    func switchView(_ command: PanelCommand) {
+        switch command {
+        case .viewMode(let mode): selectViewMode(mode)
+        case .taskView(let view): showTasks(view)
+        case .action: break
+        }
     }
 
     /// A date in a chat answer opens that day in the calendar.
@@ -71,11 +96,7 @@ final class PanelRouter {
     func perform(_ command: PopoverCommand, focusSearch: () -> Void) async {
         switch command {
         case .search:
-            // Search lives over the calendar views, not the app.
-            if isAskShown {
-                let preferred = GeneralSettings.defaultView()
-                selectViewMode(preferred == .ask ? .month : preferred)
-            }
+            leaveAsk()
             focusSearch()
         case .ask:
             selectViewMode(.ask)
@@ -85,6 +106,27 @@ final class PanelRouter {
         case .showTodayTasks:
             selectViewMode(.tasks)
         }
+    }
+
+    /// Search and creating live over the calendar views, not Ask: from Ask,
+    /// back to the preferred calendar view.
+    func leaveAsk() {
+        guard isAskShown else { return }
+        let preferred = GeneralSettings.defaultView()
+        selectViewMode(preferred == .ask ? .month : preferred)
+    }
+
+    /// New Event / New Task: Quick Add, empty, in the palette — no parsing.
+    func startCreating(_ item: SearchPaletteModel.NewItem) {
+        leaveAsk()
+        searchQuery = ""
+        Task { await searchPalette.startCreating(item) }
+    }
+
+    /// New Chat: Ask, on a fresh conversation.
+    func startNewChat() {
+        selectViewMode(.ask)
+        chat.newChat(animation: ChatAnimation.collapse(reduceMotion: reduceMotion))
     }
 
     func handle(_ intent: SearchIntent) {

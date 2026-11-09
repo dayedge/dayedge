@@ -23,6 +23,9 @@ package enum EventContextMenuAction: Hashable {
     case deleteEvent
     case divider
 
+    /// Shown as destructive (red) wherever it's listed.
+    package var isDestructive: Bool { self == .removeFromCalendar || self == .deleteEvent }
+
     /// The SF Symbol, as Calendar's menu would show it.
     package var symbolName: String? {
         switch self {
@@ -41,8 +44,8 @@ package enum EventContextMenuAction: Hashable {
     }
 
     /// The panel shortcut that does the same for the selected event, shown
-    /// beside the item (`KeyboardCommands` is the one registry).
-    package var shortcut: KeyboardCommandAction? {
+    /// beside the item (`PanelCommands` is the one registry).
+    package var shortcut: PanelAction? {
         switch self {
         case .joinVideoCall: return .joinSelectedMeeting
         case .copyMeetingLink: return .copySelectedMeetingLink
@@ -63,6 +66,32 @@ package enum EventContextMenuAction: Hashable {
 /// rule. Destructive items: removing a genuinely cancelled event, and
 /// deleting where `EventEditability` allows (editing is the popover's).
 package enum EventContextMenuPlan {
+    /// The item's title; Delete gets "…" when a decision follows it.
+    package static func title(for action: EventContextMenuAction, deletionAsks: Bool) -> String { // swiftlint:disable:this cyclomatic_complexity - one case per menu action
+        switch action {
+        case .joinVideoCall: return L10n.tr("eventcontextmenuview.join", "Join")
+        case .copyMeetingLink: return L10n.tr("eventcontextmenuview.copy.link", "Copy Link")
+        case .openLocationInMaps: return L10n.tr("eventcontextmenuview.show.in.maps", "Show in Maps")
+        case .showInCalendar: return L10n.tr("eventcontextmenuview.show.in.calendar", "Show in Calendar")
+        // External, like "Open in Reminders"; "Show in …" stays for
+        // navigation inside the app.
+        case .openInAppleCalendar: return L10n.tr("eventcontextmenuview.open.in.calendar", "Open in Apple Calendar")
+        case .nextOccurrence: return L10n.tr("eventcontextmenuview.go.to.next.occurrence", "Go to Next Occurrence")
+        case .previousOccurrence: return L10n.tr("eventcontextmenuview.go.to.previous.occurrence", "Go to Previous Occurrence")
+        // "Alerts", not "Reminders": Reminders are the tasks.
+        case .muteReminders: return L10n.tr("eventcontextmenuview.mute.event.alerts", "Mute Event Alerts")
+        case .restoreReminders: return L10n.tr("eventcontextmenuview.unmute.event.alerts", "Unmute Event Alerts")
+        // Ellipsis: a confirmation follows (a small panel near the cursor).
+        case .removeFromCalendar: return L10n.tr("eventcontextmenuview.remove.from.calendar", "Remove from Calendar…")
+        // "…" when a decision follows; a plain delete just happens (Undo).
+        case .deleteEvent:
+            return deletionAsks
+                ? L10n.tr("eventcontextmenuview.delete.event", "Delete Event…")
+                : L10n.tr("eventcontextmenuview.delete.event.d45eff", "Delete Event")
+        case .divider: return ""
+        }
+    }
+
     /// Calendar's grouping: the event's own actions, its occurrences (next
     /// first, as there), its alerts, then deleting — dividers only between
     /// groups that have something.

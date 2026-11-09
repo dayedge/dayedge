@@ -6,6 +6,7 @@ import UI
 /// streams or the composer is typed in.
 package struct ChatTranscriptRowView: View, Equatable {
     @Environment(\.themePalette) private var theme
+    @Environment(\.panelLayout) private var panelLayout
 
     package let row: ChatTranscriptRow
     package let objects: ChatObjectContext
@@ -20,8 +21,22 @@ package struct ChatTranscriptRowView: View, Equatable {
     }
 
     package var body: some View {
-        content
-            .padding(.top, row.topGap)
+        Group {
+            // The Command Window: the reply keeps a reading width at the
+            // leading edge; the user's bubbles stay on the trailing one.
+            if panelLayout == .wide, !isUserRow {
+                content
+                    .frame(maxWidth: AppTheme.Chat.wideReadingWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                content
+            }
+        }
+        .padding(.top, row.topGap)
+    }
+
+    private var isUserRow: Bool {
+        if case .user = row.kind { true } else { false }
     }
 
     @ViewBuilder
@@ -40,7 +55,8 @@ package struct ChatTranscriptRowView: View, Equatable {
                         RoundedRectangle(cornerRadius: AppTheme.Chat.userBubbleRadius, style: .continuous)
                             .fill(theme.chat.userBubbleFill)
                     )
-                    .frame(maxWidth: AppTheme.Chat.userBubbleMaxWidth, alignment: .trailing)
+                    .frame(maxWidth: panelLayout == .wide ? AppTheme.Chat.wideUserBubbleMaxWidth : AppTheme.Chat.userBubbleMaxWidth,
+                           alignment: .trailing)
             }
             .padding(.horizontal, AppTheme.horizontalPadding)
         case .receipt(let receipt):

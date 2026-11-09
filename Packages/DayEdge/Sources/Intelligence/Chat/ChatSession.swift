@@ -87,14 +87,18 @@ package final class ChatSession {
         }
     }
 
-    /// Esc in the app: a waiting change is declined; otherwise the answer
-    /// stops. Never anything else — Esc doesn't hide the panel.
-    package func escape() {
+    /// Esc: denies a pending change, else stops a reply. Whether it did
+    /// either — with nothing to stop, Esc is the window's.
+    @discardableResult
+    package func escape() -> Bool {
         if approvals.pending != nil {
             approvals.decide(.deny)
         } else if isResponding {
             stop()
+        } else {
+            return false
         }
+        return true
     }
 
     /// Waits for the reply in flight (tests).

@@ -8,6 +8,7 @@
 "daytimelineeventview.since" = "Od %@ – %@";
 "daytimelinesegmentlabel.midnight" = "Północ";
 "daytimelinesegmentlabel.yesterday" = "Wczoraj";
+"dayweatherpanel.no.forecast" = "Brak prognozy na ten dzień";
 "eventdotsview.more.events" = "Więcej wydarzeń";
 "eventdotsview.open.tasks" = "Otwórz zadania";
 "nowindicatorview.current.time" = "Bieżąca godzina, %@";

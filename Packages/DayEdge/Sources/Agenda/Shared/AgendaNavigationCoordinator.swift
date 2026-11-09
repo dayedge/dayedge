@@ -63,7 +63,7 @@ package final class AgendaNavigationCoordinator {
     }
 
     /// Shared by the switcher's tap handler and `ViewModeShortcutMonitor`'s
-    /// ⌘1/⌘2/⌘3 (see `KeyboardCommands`), so both routes to a mode agree
+    /// ⌘1/⌘2/⌘3 (see `PanelCommands`), so both routes to a mode agree
     /// on what "select it" means — in particular, Month is revealed only
     /// once prepared, never unconditionally.
     package func selectViewMode(_ mode: ViewMode) {
@@ -157,6 +157,23 @@ package final class AgendaNavigationCoordinator {
         requestedMonthAgendaDate = AgendaScrollTarget(date: day, taskID: taskID, animated: true)
     }
 
+    /// The Month agenda was taken off screen with `anchor` at its top
+    /// (rebuilt when it's back: the Command Window's views, the popover's
+    /// while that window was used). Coming back, it returns to that row —
+    /// unless a date is asked for meanwhile (Day's, Today, a found item),
+    /// which replaces this as any request does.
+    package func rememberMonthPosition(_ anchor: AgendaScrollAnchor?) {
+        guard let anchor else { return }
+        var target = AgendaScrollTarget(date: anchor.sectionID, animated: false)
+        switch anchor {
+        case .event(_, let eventID): target.eventID = eventID
+        case .task(_, let taskID): target.taskID = taskID
+        case .day, .now: break
+        }
+        target.restoresPosition = true
+        requestedMonthAgendaDate = target
+    }
+
     package func moveSelectedDay(by offset: Int) {
         let calendar = Calendar.autoupdatingCurrent
         guard let date = calendar.date(byAdding: .day, value: offset, to: viewModel.selectedDate) else { return }
@@ -195,6 +212,12 @@ package final class AgendaNavigationCoordinator {
                 nowTarget: target,
                 animated: animated
             )
+            // Tasks and Ask show nothing this positions: no view to wait
+            // for, so the window can show now.
+            if displayedViewMode == .tasks || displayedViewMode == .ask,
+               let openRequestID = presentationCoordinator.openRequestID {
+                presentationCoordinator.markReady(openRequestID)
+            }
         }
     }
 

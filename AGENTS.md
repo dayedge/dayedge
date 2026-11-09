@@ -13,8 +13,8 @@ Canonical instructions; `CLAUDE.md` points here. Details per area in `docs/` —
 
 ## Toolchain
 - Xcode 26 (Swift 6.2+ compiler) for app, lint, full features. Manifests `swift-tools-version: 5.9`; Swift 5 language mode; app target `MainActor` default isolation. No new concurrency warnings.
-- Command Line Tools must still build the packages: `#if HAS_MACOS26_SDK` / `HAS_MACOS26_4_SDK` (set in `Packages/DayEdge/Package.swift` from the SDK) gate new APIs; Tachikoma only under `#if compiler(>=6.2)`, sources `#if canImport(Tachikoma)`.
-- Dependencies: GRDB, Tachikoma. Adding one needs explicit approval.
+- Command Line Tools must still build the packages: `#if HAS_MACOS26_SDK` / `HAS_MACOS26_4_SDK` (set in `Packages/DayEdge/Package.swift` from the SDK) gate new APIs; Tachikoma and KeyboardShortcuts only under `#if compiler(>=6.2)`, sources `#if canImport(…)` (the CLT build has no global shortcut).
+- Dependencies: GRDB, Tachikoma, KeyboardShortcuts. Adding one needs explicit approval.
 
 ## Required tools
 | Tool | Used by | Install |
@@ -45,7 +45,7 @@ Shell ─┬─ Agenda ───────┐
 - `Platform`: implements contracts — EventKit, index runtime, permissions, weather, holidays. No SwiftUI.
 - `UI`: shared theme, components, presentation plans, shared coordinators. Never Platform.
 - `Agenda` (Month, Day), `Tasks`, `Intelligence` (search, Quick Add, chat): features.
-- `Shell`: composition (`RootModels`), panel, menu bar, Meeting HUD, onboarding, Settings.
+- `Shell`: composition (`RootModels`), panel, Command Window, menu bar, Meeting HUD, onboarding, Settings.
 
 ## Rules
 - Only `Shell` imports `Platform`. Features import `Domain` + `UI` only, never each other; cross-feature routes via `PanelRouter`. Enforced by `scripts/check-modules.sh`.

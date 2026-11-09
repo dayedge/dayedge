@@ -7,6 +7,16 @@ package struct TaskSection: Identifiable {
         case list(String)
         case completed
         case results
+
+        /// Its section's id ("list-<id>"), for jumps to a section by kind.
+        package var id: String {
+            switch self {
+            case .needsAttention: return "attention"
+            case .list(let id): return "list-\(id)"
+            case .completed: return "completed"
+            case .results: return "results"
+            }
+        }
     }
 
     package let kind: Kind
@@ -37,14 +47,7 @@ package struct TaskSection: Identifiable {
     /// Short chip label ("Needs attention" reads "Attention" in the rail).
     package var navigatorTitle: String { kind == .needsAttention ? L10n.tr("taskbuckets.attention", "Attention") : title }
 
-    package var id: String {
-        switch kind {
-        case .needsAttention: return "attention"
-        case .list(let id): return "list-\(id)"
-        case .completed: return "completed"
-        case .results: return "results"
-        }
-    }
+    package var id: String { kind.id }
 }
 
 package struct TaskBucketOptions: Equatable {
@@ -211,10 +214,13 @@ package enum TaskBuckets {
     /// today — not every open reminder, and not undated high priority ones.
     package static func actionableTodayCount(tasks: [TaskItem], now: Date, calendar: Calendar) -> Int {
         let today = calendar.startOfDay(for: now)
-        return tasks.filter { task in
-            guard !task.isCompleted, let due = task.dueDate else { return false }
-            return calendar.startOfDay(for: due) <= today
-        }.count
+        return tasks.filter { !$0.isCompleted && isDue($0, by: today, calendar: calendar) }.count
+    }
+
+    /// Due on `day` or earlier (overdue counts); never an undated task.
+    package static func isDue(_ task: TaskItem, by day: Date, calendar: Calendar) -> Bool {
+        guard let due = task.dueDate else { return false }
+        return calendar.startOfDay(for: due) <= day
     }
 
     package static func isOverdue(_ task: TaskItem, now: Date, calendar: Calendar) -> Bool {

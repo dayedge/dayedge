@@ -52,6 +52,12 @@ package final class ScrollEdgeDissolve {
         fadeView = ContentFadeView(edge: edge)
     }
 
+    /// The wide window's panes keep only their top dissolve: no bar floats
+    /// over their bottom edge, so content runs plainly to it.
+    nonisolated package static func edges(_ requested: VerticalEdge.Set, in layout: PanelLayout) -> VerticalEdge.Set {
+        layout == .wide ? requested.subtracting(.bottom) : requested
+    }
+
     nonisolated package static func visibility(at edge: Edge, metrics: ScrollMetrics) -> CGFloat {
         guard metrics.maximumOffset > 0 else { return 0 }
         let distance = edge == .top ? metrics.offset : metrics.maximumOffset - metrics.offset

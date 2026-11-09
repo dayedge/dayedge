@@ -54,6 +54,7 @@ package struct ScrollIndicatorStyle: Equatable {
 /// position binding when it needs programmatic scrolling.
 package struct ThemedScrollView<Content: View>: View {
     @Environment(\.themePalette) private var theme
+    @Environment(\.panelLayout) private var panelLayout
 
     private let externalPosition: Binding<ScrollPosition>?
     private let configuredIndicatorStyle: ScrollIndicatorStyle?
@@ -105,6 +106,10 @@ package struct ThemedScrollView<Content: View>: View {
         return style
     }
 
+    private var dissolvedEdges: VerticalEdge.Set {
+        ScrollEdgeDissolve.edges(edgeDissolve, in: panelLayout)
+    }
+
     private var position: Binding<ScrollPosition> {
         externalPosition ?? $internalPosition
     }
@@ -118,7 +123,7 @@ package struct ThemedScrollView<Content: View>: View {
                     NativeThemedScrollIndicator(style: indicatorStyle, onTracking: onScrollerTracking)
                 }
                 .background {
-                    if !edgeDissolve.isEmpty {
+                    if !dissolvedEdges.isEmpty {
                         NativeScrollEdgeDissolve(visibility: isDissolveActive ? dissolveVisibility : .init(metrics: ScrollMetrics()),
                                                 topConfiguration: topDissolve, bottomConfiguration: bottomDissolve)
                     }
@@ -127,6 +132,8 @@ package struct ThemedScrollView<Content: View>: View {
         .scrollPosition(position)
 
         let measuredScrollView = reportingMetrics(scrollView)
+        // Native edges stay hidden wherever a dissolve was asked for, even
+        // an edge the wide layout drops: the system blur never stands in.
         if !edgeDissolve.isEmpty {
             measuredScrollView.hidingNativeScrollEdges()
         } else if appliesTopEdgeEffect && appliesBottomEdgeEffect {
@@ -144,7 +151,7 @@ package struct ThemedScrollView<Content: View>: View {
 
     @ViewBuilder
     private func reportingMetrics<Surface: View>(_ surface: Surface) -> some View {
-        if onMetricsChange != nil || !edgeDissolve.isEmpty {
+        if onMetricsChange != nil || !dissolvedEdges.isEmpty {
             surface.onScrollGeometryChange(for: ScrollMetrics.self) { geometry in
                 let insetHeight = geometry.contentInsets.top + geometry.contentInsets.bottom
                 return ScrollMetrics(
@@ -154,8 +161,8 @@ package struct ThemedScrollView<Content: View>: View {
                 )
             } action: { _, newMetrics in
                 metrics.post(newMetrics) { value in
-                    if !edgeDissolve.isEmpty {
-                        let visibility = ScrollEdgeDissolve.Visibility(metrics: value, edges: edgeDissolve)
+                    if !dissolvedEdges.isEmpty {
+                        let visibility = ScrollEdgeDissolve.Visibility(metrics: value, edges: dissolvedEdges)
                         if visibility != dissolveVisibility { dissolveVisibility = visibility }
                     }
                     onMetricsChange?(value)

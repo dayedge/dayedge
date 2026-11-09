@@ -8,7 +8,7 @@ package struct ActionShortcutMonitor: NSViewRepresentable {
     package let isNavigationEnabled: Bool
     /// Runs the action; false = it doesn't apply here (wrong view, nothing
     /// selected), and the key goes on to whoever else wants it.
-    package let onAction: (KeyboardCommandAction) -> Bool
+    package let onAction: (PanelAction) -> Bool
 
     package func makeNSView(context: Context) -> NSView {
         let view = NSView(frame: .zero)
@@ -35,17 +35,17 @@ package struct ActionShortcutMonitor: NSViewRepresentable {
     /// Space and Return edit text and Esc cancels the edit (the field's
     /// own handling) instead of closing the popover. With no field active,
     /// Esc closes as usual. The main window keeps its routing.
-    package static func shouldHandle(_ action: KeyboardCommandAction, inChildWindow: Bool, isTextEditing: Bool) -> Bool {
+    package static func shouldHandle(_ action: PanelAction, inChildWindow: Bool, isTextEditing: Bool) -> Bool {
         !(inChildWindow && isTextEditing)
     }
 
     package final class Coordinator {
         package weak var hostView: NSView?
         package var isNavigationEnabled: Bool
-        package var onAction: (KeyboardCommandAction) -> Bool
+        package var onAction: (PanelAction) -> Bool
         private var monitor: Any?
 
-        package init(isNavigationEnabled: Bool, onAction: @escaping (KeyboardCommandAction) -> Bool) {
+        package init(isNavigationEnabled: Bool, onAction: @escaping (PanelAction) -> Bool) {
             self.isNavigationEnabled = isNavigationEnabled
             self.onAction = onAction
         }
@@ -71,8 +71,7 @@ package struct ActionShortcutMonitor: NSViewRepresentable {
                     isTextEditing: eventWindow.firstResponder is NSTextView
                 ) else { return event }
 
-                let worksWhileEditing = action == .focusSearch || action == .escapeSearch || action == .today
-                guard self.isNavigationEnabled || worksWhileEditing else { return event }
+                guard self.isNavigationEnabled || action.worksWhileEditing else { return event }
 
                 return Self.outcome(of: event, handled: self.onAction(action))
             }
@@ -87,7 +86,7 @@ package struct ActionShortcutMonitor: NSViewRepresentable {
         }
     }
 
-    package init(isNavigationEnabled: Bool, onAction: @escaping (KeyboardCommandAction) -> Bool) {
+    package init(isNavigationEnabled: Bool, onAction: @escaping (PanelAction) -> Bool) {
         self.isNavigationEnabled = isNavigationEnabled
         self.onAction = onAction
     }

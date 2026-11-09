@@ -19,12 +19,6 @@ extension RootView {
             && agendaNavigation.displayedViewMode != .tasks
     }
 
-    /// Month or Day is the view, but Calendar isn't allowed.
-    private var isAccessCardShown: Bool {
-        !searchPalette.isResultsViewShown && !models.calendarAccess.isGranted
-            && [.month, .day].contains(agendaNavigation.displayedViewMode)
-    }
-
     /// The calendar mode: Month, Day and Tasks under the search field.
     var calendarBody: some View {
         VStack(spacing: 0) {
@@ -53,10 +47,12 @@ extension RootView {
                     query: router.searchQuery,
                     isActive: agendaNavigation.selectedViewMode == .tasks,
                     navigationRequest: verticalNavigationRequest
-                )
+                ) {
+                    TasksNavigatorHeader(store: taskStore, query: router.searchQuery)
+                }
                 .panelColumn(isShown: isColumnShown(.tasks))
 
-                if isAccessCardShown {
+                if models.isAccessCardShown {
                     PermissionStateView(subject: .calendar, status: models.calendarAccess.status) {
                         models.refresh.requestCalendarAccess()
                     }
@@ -86,128 +82,32 @@ extension RootView {
         }
     }
 
-    /// Scheduled reminders for the agenda and day view; empty when turned
-    /// off in Settings, which leaves those views exactly as without tasks.
     var calendarTaskIndex: ScheduledTaskIndex {
-        showsTasksInCalendar ? taskStore.repository.scheduledIndex() : .empty
+        models.calendarTaskIndex(showsTasksInCalendar: showsTasksInCalendar)
     }
 
-    /// The month grid's task tick: the list color of the task each day's
-    /// agenda lists first. Same open-task rule as the menu bar's ring.
-    private func monthTaskColor() -> (Date) -> Color? {
-        let index = calendarTaskIndex
-        let store = taskStore
-        let fallback = theme.secondaryText
-        return { date in
-            index.tasks(on: date).first.map { store.list(for: $0)?.color ?? fallback }
-        }
-    }
-
-    /// The agenda is already at this date because the user scrolled (or
-    /// moved the keyboard selection) there. Update only the grid selection;
-    /// feeding it back as a new target would fight native momentum.
-    private func followAgenda(to date: Date) {
-        guard !Calendar.autoupdatingCurrent.isDate(date, inSameDayAs: models.viewModel.selectedDate) else { return }
-        agendaNavigation.selectDate(date, preparingMonthAgenda: false)
-    }
-
-    @ViewBuilder
     private var monthColumn: some View {
-        let viewModel = models.viewModel
-        let eventDetail = models.eventDetail
-        let calendarTasks = models.calendarTasks
         VStack(spacing: 0) {
-            MonthGridSection(
-                viewModel: viewModel,
-                workdayStore: models.workdayStore,
-                showsWeekNumbers: showsWeekNumbers,
-                taskColor: monthTaskColor(),
-                onToday: { agendaNavigation.goToToday() },
-                onPrevious: { agendaNavigation.moveToAdjacentMonth(.left) },
-                onNext: { agendaNavigation.moveToAdjacentMonth(.right) },
-                onSelect: { date in
-                    if Calendar.autoupdatingCurrent.isDateInToday(date) {
-                        agendaNavigation.goToToday()
-                    } else {
-                        agendaNavigation.selectDate(date, preparingMonthAgenda: true)
-                    }
-                },
-                onSelectedDateChange: { models.daySnapshot.selectedDateDidChange(to: $0) }
-            )
-
-            AgendaListView(
-                store: models.agendaStore,
-                scrollTarget: agendaNavigation.requestedMonthAgendaDate,
-                nowPresentation: agendaNavigation.agendaNowPresentation,
-                keyboardNavigationRequest: verticalNavigationRequest,
-                // Only the visible calendar view answers Return.
-                detailPresentationRequest: agendaNavigation.displayedViewMode == .month ? eventDetail.detailPresentationRequest : nil,
-                detailActionRequest: eventDetail.detailActionRequest,
-                taskIndex: calendarTaskIndex,
-                taskCoordinator: calendarTasks,
-                taskCompletionRequest: taskCompletionRequest,
-                onCurrentSectionChange: followAgenda,
-                onKeyboardSelection: { selection in
-                    // Moving the grid clears the keyboard selection, so it goes first.
-                    if let selection { followAgenda(to: selection.date) }
-                    eventDetail.selectKeyboardEvent(selection?.event)
-                    calendarTasks.select(selection?.task)
-                },
-                onEventDetailPresentationChange: { eventID, isShowing in
-                    eventDetail.presentationChanged(eventID: eventID, isShowing: isShowing)
-                },
-                onEventDetailActionFocusChange: { eventID, action in
-                    eventDetail.actionFocusChanged(eventID: eventID, action: action)
-                },
-                isActive: isColumnShown(.month) && !isAskShown,
-                onScrollPrepared: { target in
-                    agendaNavigation.scrollPrepared(target: target)
-                }
-            )
-            .equatable()
+            PanelMonthGrid(models: models, taskIndex: calendarTaskIndex, showsWeekNumbers: showsWeekNumbers)
+            PanelMonthAgenda(models: models, taskIndex: calendarTaskIndex,
+                             isActive: isColumnShown(.month) && !isAskShown,
+                             verticalNavigationRequest: verticalNavigationRequest,
+                             taskCompletionRequest: taskCompletionRequest)
         }
     }
 
-    @ViewBuilder
     private var dayColumn: some View {
         let snapshot = models.daySnapshot
-        let eventDetail = models.eventDetail
-        let calendarTasks = models.calendarTasks
-        let inputs = snapshot.inputs
-        let dayDate = inputs.date
-        let isDayShown = isColumnShown(.day) && !isAskShown
-        DayAgendaView(
-            date: dayDate,
-            isToday: Calendar.autoupdatingCurrent.isDateInToday(dayDate),
-            events: inputs.events,
-            onPrevious: { agendaNavigation.moveSelectedDay(by: -1) },
-            onNext: { agendaNavigation.moveSelectedDay(by: 1) },
-            onToday: { agendaNavigation.goToToday() },
-            keyboardNavigationRequest: verticalNavigationRequest,
-            positioningRequest: inputs.positioningRequest,
-            nowPresentation: inputs.nowPresentation,
-            isActive: isDayShown,
-            onPositioned: { agendaNavigation.dayPositioned() },
-            // Only while Day is on screen: scrolling Month moves the selected
-            // date constantly, and the hidden Day view must not re-lay out
-            // (or re-scroll) its task area on every one of those changes.
-            tasks: isDayShown ? calendarTaskIndex.tasks(on: dayDate) : .none,
-            taskCoordinator: calendarTasks,
-            taskCompletionRequest: taskCompletionRequest,
-            detailPresentationRequest: isDayShown ? eventDetail.detailPresentationRequest : nil,
-            onKeyboardSelection: { selection in
-                eventDetail.selectKeyboardEvent(selection?.event)
-                calendarTasks.select(selection?.task)
-            },
-            onEventDetailPresentationChange: { eventID, isShowing in
-                eventDetail.presentationChanged(eventID: eventID, isShowing: isShowing)
-            }
-        )
-        .task(id: isDayShown ? dayDate : nil) {
-            guard agendaNavigation.displayedViewMode == .day else { return }
-            await models.agendaStore.ensureLoaded(covering: dayDate)
+        let navigation = agendaNavigation
+        return PanelDayColumn(models: models, taskIndex: calendarTaskIndex,
+                              isActive: isColumnShown(.day) && !isAskShown,
+                              verticalNavigationRequest: verticalNavigationRequest,
+                              taskCompletionRequest: taskCompletionRequest) { facts in
+            DayHeaderView(facts, onToday: { navigation.goToToday() },
+                          onPrevious: { navigation.moveSelectedDay(by: -1) },
+                          onNext: { navigation.moveSelectedDay(by: 1) })
         }
-        .onChange(of: models.agendaStore.sections) { _, _ in snapshot.agendaDidChange() }
-        .onChange(of: agendaNavigation.displayedViewMode) { old, _ in snapshot.viewModeDidChange(from: old) }
+            .onChange(of: models.agendaStore.sections) { _, _ in snapshot.agendaDidChange() }
+            .onChange(of: agendaNavigation.displayedViewMode) { old, _ in snapshot.viewModeDidChange(from: old) }
     }
 }

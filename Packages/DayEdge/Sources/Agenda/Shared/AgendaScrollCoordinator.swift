@@ -37,6 +37,24 @@ package final class AgendaScrollCoordinator {
     var isUserScrolling: Bool { isGestureScrolling || isScrollerTracking }
     var activeProgrammaticID: UUID?
     var navigationTask: Task<Void, Never>?
+    /// A jump made unseen (no animation) is reported prepared only once
+    /// its day is on screen: a lazy list lands a far jump in steps, and
+    /// what waits for "prepared" (the window, Month) must not show the
+    /// rest of them. `landingFallback` reports it anyway if it never shows.
+    @ObservationIgnored var pendingLanding: PendingLanding?
+    @ObservationIgnored var landingFallback: Task<Void, Never>?
+    /// Long enough for a far jump to land; short enough that a target that
+    /// never shows (an empty day, no access) doesn't hold the window back.
+    @ObservationIgnored var landingFallbackDelay = Duration.milliseconds(300)
+    /// The last unseen jump, applied once more when the list comes on
+    /// screen (`snapToLastJump`); a scroll by the user clears it.
+    @ObservationIgnored var lastJump: (anchor: AgendaScrollAnchor, alignment: UnitPoint)?
+
+    struct PendingLanding {
+        let target: AgendaScrollTarget
+        let sectionID: Date
+        let report: (AgendaScrollTarget) -> Void
+    }
 
     /// The first/last rendered section's date the last time a
     /// content-edge-triggered (not date-threshold-triggered) load was
@@ -78,6 +96,13 @@ package final class AgendaScrollCoordinator {
 
     var sections: [AgendaDaySection] { store.sections }
 
+    /// The row to come back to when the list is taken off screen — none
+    /// mid-jump: the jump is still the request, not a row it passed on
+    /// the way (the other window's list may be landing it).
+    package var leavingAnchor: AgendaScrollAnchor? {
+        isProgrammaticScroll ? nil : visibleAnchors.first
+    }
+
     package func cancelNavigation() {
         navigationTask?.cancel()
         navigationTask = nil
@@ -101,6 +126,8 @@ package final class AgendaScrollCoordinator {
 
     package func scrollPhaseChanged(isTracking: Bool) {
         isGestureScrolling = isTracking
+        // The reader moved it: no jump to repeat.
+        if isTracking { lastJump = nil }
     }
 
     /// Dragging the scroll bar's knob (or clicking its track) is the

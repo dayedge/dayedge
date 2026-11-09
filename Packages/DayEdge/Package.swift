@@ -50,16 +50,31 @@ let remoteModelDependencies: [Package.Dependency] = []
 let remoteModelProducts: [Target.Dependency] = []
 #endif
 
+// KeyboardShortcuts (the Command Window's global ⌃⌥D) builds only with
+// Xcode's toolchain: its SwiftUI previews need Xcode's macro plugin. Same
+// split as Tachikoma; sources gate on `#if canImport(KeyboardShortcuts)`.
+#if compiler(>=6.2)
+let globalShortcutDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "2.4.0")
+]
+let globalShortcutProducts: [Target.Dependency] = [
+    .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts")
+]
+#else
+let globalShortcutDependencies: [Package.Dependency] = []
+let globalShortcutProducts: [Target.Dependency] = []
+#endif
+
 // The local SQLite mirror of EventKit (event source and search index).
 let packageDependencies: [Package.Dependency] = remoteModelDependencies + [
     .package(path: "../CalendarIndex"),
     .package(url: "https://github.com/dayedge/time-whisper.git", exact: "0.7.1"),
     .package(url: "https://github.com/dayedge/time-whisper-model.git", exact: "0.7.1")
-]
+] + globalShortcutDependencies
 let shellDependencies: [Target.Dependency] = [
     .product(name: "CalendarIndex", package: "CalendarIndex"),
     .product(name: "CalendarIndexEventKit", package: "CalendarIndex")
-]
+] + globalShortcutProducts
 
 let package = Package(
     name: "DayEdge",

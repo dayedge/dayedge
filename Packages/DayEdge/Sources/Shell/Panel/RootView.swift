@@ -1,6 +1,5 @@
 import AppKit
 import SwiftUI
-import EventKit
 import Domain
 import Platform
 import UI
@@ -19,8 +18,12 @@ struct RootView: View {
     var presentationStyle: PanelPresentationStyle = .standalone
     var onOpenSettings: (SettingsDestination?) -> Void = { _ in }
     let indexActivity: CalendarIndexActivity?
+    /// The Command Window's presence: while it's up, this hidden panel's
+    /// views stop following keys and scrolling (the same models drive both).
+    var commandPresentation: PanelHostPresentation?
 
-    @State var models: RootModels
+    /// Built once by `AppDelegate`, shared with the Command Window.
+    let models: RootModels
     @State var isSelectorPresented = false
     /// Ask's own: Ask stays mounted behind the other views, so sharing
     /// `isSelectorPresented` would open the chats list over theirs.
@@ -33,30 +36,16 @@ struct RootView: View {
     @AppStorage(TaskSettings.showsInCalendarKey) var showsTasksInCalendar = true
     @AppStorage(GeneralSettings.showsWeekNumbersKey) var showsWeekNumbers = false
 
-    init(eventStore: EKEventStore,
-         dataProvider: CalendarDataProviding,
-         visibilityStore: SourceVisibilityStore,
-         taskRepository: TaskRepository,
-         reminderSuppression: ReminderSuppressionStore,
-         assistantSettings: AssistantSettingsStore,
-         presentationCoordinator: PopoverPresentationCoordinator,
-         calendarAccess: CalendarPermissionMonitor,
+    init(models: RootModels,
          presentationStyle: PanelPresentationStyle = .standalone,
          indexActivity: CalendarIndexActivity? = nil,
+         commandPresentation: PanelHostPresentation? = nil,
          onOpenSettings: @escaping (SettingsDestination?) -> Void = { _ in }) {
+        self.models = models
+        self.commandPresentation = commandPresentation
         self.indexActivity = indexActivity
         self.presentationStyle = presentationStyle
         self.onOpenSettings = onOpenSettings
-        self._models = State(initialValue: RootModels(
-            eventStore: eventStore,
-            dataProvider: dataProvider,
-            visibilityStore: visibilityStore,
-            taskRepository: taskRepository,
-            reminderSuppression: reminderSuppression,
-            assistantSettings: assistantSettings,
-            presentationCoordinator: presentationCoordinator,
-            calendarAccess: calendarAccess
-        ))
     }
 
     var router: PanelRouter { models.router }
@@ -68,19 +57,23 @@ struct RootView: View {
 
     var isAskShown: Bool { router.isAskShown }
 
-    /// Open search dims the panel behind its palette.
-    private var isSearchScrimShown: Bool {
-        router.isSearchExpanded && !isAskShown && !searchPalette.isResultsViewShown
-    }
-
-    private var chatObjects: ChatObjectContext {
-        ChatObjectContext(event: models.chat.eventLookup, taskActions: taskStore.actions,
-                          taskCoordinator: models.chatTasks, showDay: { router.showDay($0) })
-    }
+    var isCommandWindowShown: Bool { commandPresentation?.isPresented == true }
 
     var body: some View {
+        ZStack {
+            // While the Command Window is open, this hidden panel has no
+            // views: they'd redraw and re-measure with every change made
+            // there (measured). Its lifecycle below keeps running for both.
+            if !isCommandWindowShown { panel }
+        }
+        .takesOfferedSize(width: AppTheme.Metrics.popoverWidth)
+        .modifier(PanelKeyMonitors(handler: keyHandler))
+        .modifier(lifecycle)
+    }
+
+    private var panel: some View {
         @Bindable var router = router
-        ZStack(alignment: .top) {
+        return ZStack(alignment: .top) {
             // One shell for all four views: Month, Day and Tasks, and — once
             // visited — Ask, which stays mounted so its conversation persists.
             ZStack {
@@ -89,7 +82,7 @@ struct RootView: View {
                     .accessibilityHidden(isAskShown)
 
                 if let chat = models.chat.current {
-                    ChatView(session: chat, isPresented: isAskShown, objects: chatObjects) { chatFooter }
+                    ChatView(session: chat, isPresented: isAskShown, objects: models.chatObjects) { chatFooter }
                     .allowsHitTesting(isAskShown)
                     .accessibilityHidden(!isAskShown)
                     // One view per conversation: switching (New chat,
@@ -120,7 +113,7 @@ struct RootView: View {
                     // last point, which overlaps the bubble's (already
                     // dimmed) top edge.
                     .overlay(alignment: .top) {
-                        if isSearchScrimShown {
+                        if router.isSearchScrimShown {
                             BubblePointerShape()
                                 .fill(theme.chrome.searchScrim)
                                 .mask(alignment: .top) { Rectangle().frame(height: max(pointer.height - 1, 0)) }
@@ -139,7 +132,7 @@ struct RootView: View {
             // dismiss behavior is attached to it.
             // The whole bubble, toolbar band included — the palette draws
             // over it — so nothing around the field stays lighter.
-            if isSearchScrimShown {
+            if router.isSearchScrimShown {
                 theme.chrome.searchScrim
                     .allowsHitTesting(false)
                     // Rounded as the bubble itself, then moved below the
@@ -207,35 +200,27 @@ struct RootView: View {
         .animation(.easeOut(duration: router.isSearchExpanded ? 0.16 : 0.13), value: router.isSearchExpanded)
         .frame(minWidth: AppTheme.Metrics.popoverWidth, maxWidth: AppTheme.Metrics.popoverWidth, maxHeight: .infinity)
         .modifier(PanelBottomZone(notices: models.noticeCenter, decisions: decisions))
-        .environment(\.eventActionCoordinator, models.eventActions)
-        .environment(\.weatherProvider, CachingWeatherService.shared)
-        .environment(\.openAppSettings, onOpenSettings)
-        .environment(\.reminderSuppressionStore, models.reminderSuppression)
-
-        // The panel moves only by its empty background: content in front
-        // (events, rows, buttons) always takes a press first, so dragging an
-        // event can never become a window drag.
-        .background {
-            // Preserve normal caret navigation once the user has started a
-            // search. With an empty query the arrows belong to the calendar.
-            ArrowKeyMonitor(isEnabled: router.searchQuery.isEmpty && !isAskShown, onArrowKey: handleArrowKey)
-                .frame(width: 0, height: 0)
-            ViewModeShortcutMonitor(onSelectMode: { router.selectViewMode($0) })
-                .frame(width: 0, height: 0)
-            ActionShortcutMonitor(
-                // The sort menu owns ↑ ↓ Return while it is open.
-                isNavigationEnabled: router.searchQuery.isEmpty && !isAskShown && !taskStore.isSortMenuPresented && !isSelectorPresented,
-                onAction: handleShortcutAction
-            )
-            .frame(width: 0, height: 0)
-        }
-        .modifier(lifecycle)
+        .modifier(PanelEnvironment(models: models, onOpenSettings: onOpenSettings))
     }
 
     /// The triggers that keep the panel current; `PanelRefreshCoordinator`
     /// and `PanelRouter` do the work.
     private var lifecycle: RootLifecycle {
         RootLifecycle(models: models, reduceMotion: reduceMotion, calendarTaskIndex: calendarTaskIndex,
-                      focusSearch: { _ = handleShortcutAction(.focusSearch) })
+                      focusSearch: { _ = keyHandler.handleShortcutAction(.focusSearch) })
+    }
+}
+
+/// What the views of either window read from the environment.
+struct PanelEnvironment: ViewModifier {
+    let models: RootModels
+    let onOpenSettings: (SettingsDestination?) -> Void
+
+    func body(content: Content) -> some View {
+        content
+        .environment(\.eventActionCoordinator, models.eventActions)
+        .environment(\.weatherProvider, CachingWeatherService.shared)
+        .environment(\.openAppSettings, onOpenSettings)
+        .environment(\.reminderSuppressionStore, models.reminderSuppression)
     }
 }

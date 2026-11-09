@@ -100,6 +100,12 @@ package struct DatePresentationFormatter: Hashable {
         formatter("d").string(from: date)
     }
 
+    /// "Monday 26" — the weekday and the day of the month, no month: a
+    /// day's title where its month is already on screen.
+    package func weekdayDay(_ date: Date) -> String {
+        formatter(usesEnglishPatterns ? "EEEE d" : localizedPattern("EEEEd")).string(from: date)
+    }
+
     /// "7 October" / "October 7" (or "Oct") — day and month in the region's
     /// order, no year: the Day view's title.
     package func dayMonth(_ date: Date, abbreviated: Bool) -> String {

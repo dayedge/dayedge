@@ -52,9 +52,13 @@ package final class WorkdayStore {
 
     /// Whether to tint the day: a holiday on a work day only, so weekend
     /// holidays are never double-styled.
-    package func isMarkedHoliday(_ date: Date) -> Bool {
-        holidayName(for: date) != nil
-            && !configuration.weekendWeekdays.contains(calendar.component(.weekday, from: date))
+    package func isMarkedHoliday(_ date: Date) -> Bool { holiday(on: date).isMarked }
+
+    /// The day's holiday name and whether to tint it, the name looked up once.
+    package func holiday(on date: Date) -> (isMarked: Bool, name: String?) {
+        let name = holidayName(for: date)
+        let isMarked = name != nil && !configuration.weekendWeekdays.contains(calendar.component(.weekday, from: date))
+        return (isMarked, name)
     }
 
     package func update(visibleMonth: Date) {

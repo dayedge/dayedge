@@ -163,7 +163,7 @@ final class EventContextMenuPlanTests: XCTestCase {
             let symbol = try? XCTUnwrap(item.symbolName)
             XCTAssertNotNil(symbol.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: nil) }, "\(item)")
         }
-        let shortcuts = items.compactMap(\.shortcut).compactMap { ShortcutCommand.action($0).defaultShortcut?.displayLabel }
+        let shortcuts = items.compactMap(\.shortcut).compactMap { PanelCommand.action($0).defaultShortcut?.displayLabel }
         XCTAssertEqual(shortcuts, ["⌘J", "⇧⌘C", "⌘O", "⌘]", "⌘["])
         XCTAssertNil(EventContextMenuAction.deleteEvent.shortcut, "never a key for deleting")
     }
