@@ -110,7 +110,15 @@ package struct KeyboardCommand: Hashable, Codable, Sendable {
     }
 }
 
-package enum KeyboardCommandAction: CaseIterable, Hashable {
+/// Something the user can ask the panel to do — by its shortcut, a menu or
+/// the Actions list (⌘K). `PanelCommand` adds the view switches.
+package enum PanelAction: CaseIterable, Hashable {
+    case newEvent
+    case newTask
+    case newChat
+    case showActions
+    /// Listed in Actions; its key (⌘,) is the app menu's, not the panel's.
+    case openSettings
     case previousDay
     case nextDay
     case previousWeek
@@ -129,6 +137,11 @@ package enum KeyboardCommandAction: CaseIterable, Hashable {
 
     package var title: String {
         switch self {
+        case .newEvent: return L10n.tr("keyboardcommands.new.event", "New Event")
+        case .newTask: return L10n.tr("keyboardcommands.new.task", "New Task")
+        case .newChat: return L10n.tr("keyboardcommands.new.chat", "New Chat")
+        case .showActions: return L10n.tr("keyboardcommands.show.actions", "Actions")
+        case .openSettings: return L10n.tr("keyboardcommands.open.settings", "Settings…")
         case .previousDay: return L10n.tr("keyboardcommands.previous.day", "Previous Day")
         case .nextDay: return L10n.tr("keyboardcommands.next.day", "Next Day")
         case .previousWeek: return L10n.tr("keyboardcommands.previous.week", "Previous Week")
@@ -146,21 +159,58 @@ package enum KeyboardCommandAction: CaseIterable, Hashable {
         case .openSortMenu: return L10n.tr("keyboardcommands.sort.tasks", "Sort Tasks")
         }
     }
+
+    /// Runs while a field is being typed in, the palette is open or Ask
+    /// shows: leaving the field, Today, and the app's own commands (new
+    /// things, Actions, Settings). The rest act on the calendar's selection.
+    package var worksWhileEditing: Bool {
+        switch self {
+        case .focusSearch, .escapeSearch, .today, .newEvent, .newTask, .newChat, .showActions, .openSettings: true
+        default: false
+        }
+    }
+
+    /// Its SF Symbol, beside its title in the Actions list.
+    package var symbolName: String {
+        switch self {
+        case .newEvent: return "calendar.badge.plus"
+        case .newTask: return "checklist"
+        case .newChat: return "bubble.left"
+        case .showActions: return "command"
+        case .openSettings: return "gearshape"
+        case .previousDay, .previousWeek, .previousOccurrence: return "arrow.left"
+        case .nextDay, .nextWeek, .nextOccurrence: return "arrow.right"
+        case .today: return "calendar"
+        case .focusSearch: return "magnifyingglass"
+        case .escapeSearch: return "xmark"
+        case .openEventDetails: return "info.circle"
+        case .joinSelectedMeeting: return "video"
+        case .copySelectedMeetingLink: return "link"
+        case .openSelectedInCalendar: return "calendar"
+        case .completeSelectedTask: return "checkmark.circle"
+        case .openSortMenu: return "arrow.up.arrow.down"
+        }
+    }
 }
 
 /// Every shortcut the app owns, by one stable identity. Commands (⌘-style)
 /// can be re-recorded in Settings; navigation keys can't.
-package enum ShortcutCommand: Hashable, CaseIterable {
-    case action(KeyboardCommandAction)
+package enum PanelCommand: Hashable, CaseIterable {
+    case action(PanelAction)
     case viewMode(ViewMode)
+    /// A Tasks Overview view, from anywhere: it opens Tasks on it.
+    case taskView(TaskSmartView)
 
-    package static let allCases: [ShortcutCommand] =
-        KeyboardCommandAction.allCases.map(ShortcutCommand.action) + ViewMode.allCases.map(ShortcutCommand.viewMode)
+    package static let allCases: [PanelCommand] =
+        PanelAction.allCases.map(PanelCommand.action) + ViewMode.allCases.map(PanelCommand.viewMode)
+        + TaskSmartView.allCases.map(PanelCommand.taskView)
 
     /// The configurable ones, in Settings' order.
-    package static let commands: [ShortcutCommand] = [
+    package static let commands: [PanelCommand] = [
+        .action(.newEvent), .action(.newTask), .action(.newChat), .action(.showActions),
         .action(.today), .action(.focusSearch),
         .viewMode(.month), .viewMode(.day), .viewMode(.tasks), .viewMode(.ask),
+        .taskView(.attention), .taskView(.today), .taskView(.nextWeek), .taskView(.all),
         .action(.joinSelectedMeeting), .action(.copySelectedMeetingLink), .action(.openSelectedInCalendar),
         .action(.nextOccurrence), .action(.previousOccurrence), .action(.openSortMenu)
     ]
@@ -170,6 +220,15 @@ package enum ShortcutCommand: Hashable, CaseIterable {
         switch self {
         case .action(let action): return "action.\(action)"
         case .viewMode(let mode): return "viewMode.\(mode)"
+        case .taskView(let view): return "taskView.\(view.rawValue)"
+        }
+    }
+
+    package var symbolName: String {
+        switch self {
+        case .action(let action): return action.symbolName
+        case .viewMode(let mode): return mode.symbolName
+        case .taskView(let view): return view.symbolName
         }
     }
 
@@ -177,10 +236,19 @@ package enum ShortcutCommand: Hashable, CaseIterable {
         switch self {
         case .action(let action): return action.title
         case .viewMode(let mode): return L10n.tr("keyboardcommands.switch.to", "Switch to \(String(describing: mode.tooltipTitle))")
+        case .taskView(let view): return L10n.tr("keyboardcommands.show.task.view", "Show \(String(describing: view.title))")
         }
     }
 
     private static let configurable = Set(commands)
+
+    /// Switches what the panel shows: a view mode or a Tasks view.
+    package var isViewSwitch: Bool {
+        switch self {
+        case .viewMode, .taskView: true
+        case .action: false
+        }
+    }
 
     /// A command (re-recordable, one-shot: a held key doesn't repeat it), or
     /// a navigation key (fixed, repeats).
@@ -190,15 +258,16 @@ package enum ShortcutCommand: Hashable, CaseIterable {
     /// Save everywhere else).
     package var defaultShortcut: KeyboardCommand? {
         switch self {
-        case .viewMode(let mode): return KeyboardCommands.viewModeDefaults[mode]
-        case .action(let action): return KeyboardCommands.actionDefaults[action]
+        case .viewMode(let mode): return PanelCommands.viewModeDefaults[mode]
+        case .action(let action): return PanelCommands.actionDefaults[action]
+        case .taskView(let view): return PanelCommands.taskViewDefaults[view]
         }
     }
 }
 
 /// The defaults, in code — `KeyboardShortcutSettings` adds the user's
 /// overrides and is what everything reads; nothing reads these directly.
-package enum KeyboardCommands {
+package enum PanelCommands {
     static let viewModeDefaults: [ViewMode: KeyboardCommand] = [
         .month: KeyboardCommand(key: "1"),
         .day: KeyboardCommand(key: "2"),
@@ -206,8 +275,22 @@ package enum KeyboardCommands {
         .ask: KeyboardCommand(key: "4")
     ]
 
+    /// ⌥⌘, beside the views' ⌘1–4: ⌥ alone (or ⇧⌥) types a character in
+    /// the always-focused search field, and ⇧⌘3 / ⇧⌘4 are macOS screenshots.
+    static let taskViewDefaults: [TaskSmartView: KeyboardCommand] = [
+        .attention: KeyboardCommand(key: "1", modifiers: [.command, .option]),
+        .today: KeyboardCommand(key: "2", modifiers: [.command, .option]),
+        .nextWeek: KeyboardCommand(key: "3", modifiers: [.command, .option]),
+        .all: KeyboardCommand(key: "4", modifiers: [.command, .option])
+    ]
+
     /// Arrow and return keys use key codes, stable across layouts.
-    static let actionDefaults: [KeyboardCommandAction: KeyboardCommand] = [
+    static let actionDefaults: [PanelAction: KeyboardCommand] = [
+        .newEvent: KeyboardCommand(key: "n"),
+        .newTask: KeyboardCommand(key: "n", modifiers: [.command, .shift]),
+        // Not ⌘N (New Event) nor ⇧⌘N (New Task); no common app owns it.
+        .newChat: KeyboardCommand(key: "n", modifiers: [.command, .option]),
+        .showActions: KeyboardCommand(key: "k"),
         .previousDay: KeyboardCommand(keyCode: KeyCode.leftArrow, modifiers: .shift),
         .nextDay: KeyboardCommand(keyCode: KeyCode.rightArrow, modifiers: .shift),
         .nextWeek: KeyboardCommand(keyCode: KeyCode.downArrow, modifiers: .shift),
@@ -253,7 +336,6 @@ package enum KeyboardCommands {
                  owner: L10n.tr("shortcuts.fixed.quick.add.fields", "Quick Add fields")),
         FixedKey(shortcut: create, owner: L10n.tr("shortcuts.fixed.allow.change", "Create in Quick Add, Allow in Ask")),
         FixedKey(shortcut: KeyboardCommand(keyCode: KeyCode.delete, modifiers: .command), owner: L10n.tr("shortcuts.fixed.delete.in.ask", "Delete in Ask")),
-        FixedKey(shortcut: KeyboardCommand(key: "n"), owner: L10n.tr("shortcuts.fixed.new.chat", "New chat in Ask")),
         FixedKey(shortcut: KeyboardCommand(key: ","), owner: L10n.tr("shortcuts.fixed.settings", "Settings"))
     ]
 }

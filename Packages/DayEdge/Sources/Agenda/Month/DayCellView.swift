@@ -32,11 +32,8 @@ package struct DayCellView: View {
 
     private var numberColor: Color {
         if isSelected { return theme.selectedDayText }
-        if model.isToday { return theme.todayText }
-        if !model.isCurrentMonth { return theme.dimmedText }
-        if model.isWeekend { return theme.weekendDayTint }
-        if isMarkedHoliday { return theme.holidayTint }
-        return theme.primaryText
+        return DayNumberRole(isToday: model.isToday, isCurrentMonth: model.isCurrentMonth,
+                             isWeekend: model.isWeekend, isMarkedHoliday: isMarkedHoliday).color(in: theme)
     }
 
     /// Sized against the full row height (not just the number glyph) so it

@@ -40,6 +40,12 @@ package final class SearchPaletteModel {
         guard case .result(let id) = selection else { return nil }
         return results.preview.first { $0.id == id }
     }
+    /// The result ↑ / ↓ is on: the Search view's, else the palette
+    /// preview's — what Return and Tab act on, and the Actions list (⌘K).
+    package var highlightedResult: SearchResultRowItem? {
+        if isResultsViewShown { return results.selectedRowItem }
+        return isRefining ? nil : selectedResult
+    }
     /// The detailed Search view replaces the calendar below the field;
     /// while it shows, ↑ / ↓, Return and Tab work its results.
     package var isResultsViewShown = false

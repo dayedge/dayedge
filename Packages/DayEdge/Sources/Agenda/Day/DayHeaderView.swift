@@ -34,16 +34,24 @@ package struct DayHeaderView: View {
                 }
             }
             .buttonStyle(.plain)
-            // The app's own tooltip, not `.help`: the views are stacked
-            // (hidden ones only faded out), and AppKit's tooltips didn't
-            // follow which one is on screen — Day's never showed.
-            .hoverTooltip(KeyboardCommandAction.today.title,
-                             shortcut: KeyboardShortcutSettings.shared.shortcut(for: .action(.today))?.displayLabel, edge: .bottom)
+            .todayTooltip()
         } subtitle: {
             PeriodHeaderSubtitle(text: Self.countText(events: eventCount, tasks: taskCount))
         } trailing: {
             PeriodStepper(onPrevious: onPrevious, onNext: onNext)
         }
+    }
+
+    /// The popover's Day header, from the timeline's facts.
+    package init(_ facts: DayHeaderFacts, onToday: @escaping () -> Void,
+                 onPrevious: @escaping () -> Void, onNext: @escaping () -> Void) {
+        self.date = facts.date
+        self.isToday = facts.isToday
+        self.eventCount = facts.eventCount
+        self.taskCount = facts.taskCount
+        self.onToday = onToday
+        self.onPrevious = onPrevious
+        self.onNext = onNext
     }
 
     /// The day's counts, or Month's "No events" on an empty day — so an

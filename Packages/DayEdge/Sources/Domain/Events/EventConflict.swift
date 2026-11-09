@@ -19,8 +19,7 @@ package enum EventConflict: Equatable, Sendable {
     /// the earliest not accepted; nil when the time is free.
     package static func overlap(start: Date, end: Date, against events: [AgendaEventModel]) -> EventOverlap? {
         let overlapping = events.filter { event in
-            guard event.status != .cancelled, event.myResponseStatus != .declined, !event.isAllDay,
-                  let otherStart = event.startDate, let otherEnd = event.endDate else { return false }
+            guard event.blocksTime, let otherStart = event.startDate, let otherEnd = event.endDate else { return false }
             return otherStart < end && otherEnd > start
         }
         .sorted { ($0.startDate ?? .distantPast) < ($1.startDate ?? .distantPast) }

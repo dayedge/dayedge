@@ -1,4 +1,5 @@
 /* Suggestion chips: label, then the prompt it sends. */
+"chatselectionpopover.new.chat.shortcut" = "New Chat (%@)";
 "chip.agenda.label" = "Today's agenda";
 "chip.agenda.prompt" = "What's on my agenda today?";
 "chip.free.label" = "Free this week";
@@ -49,7 +50,6 @@
 "chatselectionpopover.chat" = "Chat";
 "chatselectionpopover.chats" = "Chats";
 "chatselectionpopover.new.chat" = "New Chat";
-"chatselectionpopover.new.chat.n" = "New Chat (⌘N)";
 "chatselectionpopover.no.chats.yet" = "No chats yet";
 "chatsession.something.went.wrong.try.again" = "Something went wrong. Try again.";
 "chattranscriptrowview.thinking" = "Thinking…";
@@ -146,6 +146,7 @@
 "repeatendpopover.never" = "Never";
 "searchbarview.overlaps.an.accepted.event" = "Overlaps an accepted event";
 "searchbarview.overlaps.an.event.not.yet.accepted" = "Overlaps an event not yet accepted";
+"searchbarview.command.prompt" = "Search, create, jump to a date, or ask…";
 "searchbarview.search" = "Search";
 "searchbarview.time.is.free" = "Time is free";
 "searchresultrow.all.day" = "all day";

@@ -7,7 +7,7 @@ import UI
 /// New Chat command below. Choosing one continues it.
 ///
 /// Keyboard: ↑ ↓ move through chats and the command, Return or Space opens
-/// (or runs it), ⌘N starts a new chat, Esc closes.
+/// (or runs it), New Chat's shortcut starts a new chat, Esc closes.
 package struct ChatSelectionPopover: View {
     @Environment(\.themePalette) private var theme
 
@@ -45,7 +45,7 @@ package struct ChatSelectionPopover: View {
             SelectorCommandRow(symbol: "plus", title: L10n.tr("chatselectionpopover.new.chat", "New Chat"), isFocused: focusedIndex == sessions.count,
                                action: startNew)
                 .onHover { if $0 { focusedIndex = sessions.count } }
-                .help(L10n.tr("chatselectionpopover.new.chat.n", "New Chat (⌘N)"))
+                .help(newChatHelp)
         }
         .padding(SelectorPopoverMetrics.padding)
         .frame(width: 260, alignment: .leading)
@@ -58,11 +58,6 @@ package struct ChatSelectionPopover: View {
         .onKeyPress(.upArrow) { moveFocus(-1, stops: sessions.count + 1); return .handled }
         .onKeyPress(.return) { activate(sessions); return .handled }
         .onKeyPress(.space) { activate(sessions); return .handled }
-        .onKeyPress("n", phases: .down) { press in
-            guard press.modifiers.contains(.command) else { return .ignored }
-            startNew()
-            return .handled
-        }
         .onKeyPress(.escape) { dismiss(); return .handled }
     }
 
@@ -73,6 +68,14 @@ package struct ChatSelectionPopover: View {
         } else if focusedIndex == sessions.count {
             startNew()
         }
+    }
+
+    /// "New Chat (⌥⌘N)", with the shortcut as configured.
+    private var newChatHelp: String {
+        guard let shortcut = KeyboardShortcutSettings.shared.shortcut(for: .action(.newChat))?.displayLabel else {
+            return PanelAction.newChat.title
+        }
+        return L10n.tr("chatselectionpopover.new.chat.shortcut", "New Chat (\(shortcut))")
     }
 
     private func startNew() {

@@ -462,6 +462,47 @@ final class AppearanceTests: XCTestCase {
     /// The bottom selector and Settings are the view switcher's siblings:
     /// the same height and surface in every theme, a keyline only where the
     /// theme draws compact controls with one.
+    func testThePopoverKeepsItsRulesInEveryTheme() {
+        for definition in ThemeCatalog.themes {
+            for scheme in [ColorScheme.light, .dark] {
+                let p = definition.palette(scheme)
+                let appearance: NSAppearance.Name = p.isLight ? .aqua : .darkAqua
+                assertColor(p.gridRule(in: .compact), p.chrome.gridRule, appearance: appearance)
+            }
+        }
+    }
+
+    func testWorkspaceSeparatorsStrengthenFromGridToSectionToStructureInEveryTheme() {
+        for definition in ThemeCatalog.themes {
+            for scheme in [ColorScheme.light, .dark] {
+                let p = definition.palette(scheme)
+                let appearance: NSAppearance.Name = p.isLight ? .aqua : .darkAqua
+                NSAppearance(named: appearance)!.performAsCurrentDrawingAppearance {
+                    func alpha(_ color: Color) -> CGFloat { NSColor(color).usingColorSpace(.deviceRGB)!.alphaComponent }
+                    let workspace = p.workspace
+                    XCTAssertLessThan(alpha(workspace.gridHairline), alpha(workspace.sectionSeparator), definition.id)
+                    XCTAssertLessThanOrEqual(alpha(workspace.sectionSeparator), alpha(workspace.structuralDivider), definition.id)
+                }
+            }
+        }
+    }
+
+    func testTheDisplayedMonthStandsApartFromItsNeighboursInEveryTheme() {
+        for definition in ThemeCatalog.themes {
+            for scheme in [ColorScheme.light, .dark] {
+                let p = definition.palette(scheme)
+                let appearance: NSAppearance.Name = p.isLight ? .aqua : .darkAqua
+                NSAppearance(named: appearance)!.performAsCurrentDrawingAppearance {
+                    func alpha(_ color: Color) -> CGFloat { NSColor(color).usingColorSpace(.deviceRGB)!.alphaComponent }
+                    let workspace = p.workspace
+                    XCTAssertNotEqual(alpha(workspace.displayedMonthSurface), alpha(workspace.adjacentMonthSurface), definition.id)
+                    XCTAssertGreaterThan(alpha(workspace.selectedDaySurface), 0, definition.id)
+                    XCTAssertGreaterThan(alpha(workspace.destructive), 0, definition.id)
+                }
+            }
+        }
+    }
+
     func testPersistentChromeIsTheSwitchersFamilyInEveryTheme() {
         XCTAssertEqual(PersistentChromeMetrics.height, ViewModeSwitcherView.width(folded: true))
         for definition in ThemeCatalog.themes {

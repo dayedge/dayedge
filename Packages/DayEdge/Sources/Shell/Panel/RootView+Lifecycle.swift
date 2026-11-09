@@ -15,7 +15,11 @@ struct RootLifecycle: ViewModifier {
         let router = models.router
         let presentation = models.presentationCoordinator
         content
-            .task { await refresh.requestAccessAndLoad() }
+            .task {
+                await refresh.requestAccessAndLoad()
+                // The Command Window's month grid opens filled, the first time too.
+                await models.monthEvents.show(month: models.viewModel.visibleMonth)
+            }
             .onReceive(NotificationCenter.default.publisher(for: .sourceVisibilityDidChange, object: models.visibilityStore)) { _ in
                 refresh.sourceVisibilityDidChange()
             }

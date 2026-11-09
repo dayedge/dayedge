@@ -10,15 +10,15 @@ import Observation
 package final class ShortcutRecording {
     package static let shared = ShortcutRecording()
 
-    package private(set) var active: ShortcutCommand?
+    package private(set) var active: PanelCommand?
     package var isActive: Bool { active != nil }
 
     package init() {}
 
-    package func begin(_ command: ShortcutCommand) { active = command }
+    package func begin(_ command: PanelCommand) { active = command }
 
     /// Ends `command`'s recording (another one's is left alone).
-    package func end(_ command: ShortcutCommand) {
+    package func end(_ command: PanelCommand) {
         if active == command { active = nil }
     }
 

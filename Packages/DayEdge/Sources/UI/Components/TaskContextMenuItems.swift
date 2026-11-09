@@ -42,7 +42,7 @@ package struct TaskContextMenuItems: View {
         let isSearchReveal = action == .showInTasks && searchResultReveal != nil
         return MenuRow(TaskContextMenuPlan.title(for: action), symbol: action.symbolName,
                        role: action == .delete ? .destructive : nil,
-                       shortcut: isSearchReveal ? KeyboardCommands.showSearchResult.swiftUIShortcut : nil) { perform(action) }
+                       shortcut: isSearchReveal ? PanelCommands.showSearchResult.swiftUIShortcut : nil) { perform(action) }
     }
 
     /// A submenu choice, with the menu's checkmark on the task's current value.

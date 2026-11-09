@@ -38,6 +38,8 @@ package struct ScheduledTaskIndex: Equatable, Sendable {
     private let byDay: [Date: DayTasks]
     private let overdue: [TaskItem]
     private let repeating: [RepeatingTask]
+    /// Each day's answer once worked out (repeating tasks only).
+    private let memo = DayMemo()
 
     /// A repeating task and the rule its later occurrences follow.
     private struct RepeatingTask: Sendable {
@@ -102,8 +104,21 @@ package struct ScheduledTaskIndex: Equatable, Sendable {
 
     package func tasks(on day: Date, calendar: Calendar = .autoupdatingCurrent) -> DayTasks {
         let start = calendar.startOfDay(for: day)
+        // Without repeating tasks it's a lookup; with them, views ask for
+        // the same days on every redraw and each ask computed the rules
+        // again (measured: most of a scroll's main-thread time).
+        guard !repeating.isEmpty else { return stored(on: start) }
+        return memo.value(for: start) { projected(on: start, calendar: calendar) }
+    }
+
+    private func stored(on start: Date) -> DayTasks {
         var result = byDay[start] ?? .none
         if start == today { result.overdue = overdue }
+        return result
+    }
+
+    private func projected(on start: Date, calendar: Calendar) -> DayTasks {
+        var result = stored(on: start)
 
         var projectedTimed = false
         var projectedUntimed = false
@@ -160,5 +175,24 @@ package enum SelectionSuccessor {
         if index + 1 < order.count { return order[index + 1] }
         if index > 0 { return order[index - 1] }
         return nil
+    }
+}
+
+/// `ScheduledTaskIndex`'s per-day answers. One per index — a new index
+/// (any task change, a new day) starts empty, so it is never stale; bounded
+/// at about a year of days.
+private final class DayMemo: @unchecked Sendable {
+    private let lock = NSLock()
+    private var days: [Date: DayTasks] = [:]
+    private static let limit = 400
+
+    func value(for day: Date, make: () -> DayTasks) -> DayTasks {
+        lock.lock()
+        defer { lock.unlock() }
+        if let cached = days[day] { return cached }
+        if days.count >= Self.limit { days.removeAll() }
+        let value = make()
+        days[day] = value
+        return value
     }
 }

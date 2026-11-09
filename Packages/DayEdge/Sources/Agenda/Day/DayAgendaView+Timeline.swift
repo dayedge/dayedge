@@ -28,7 +28,7 @@ extension DayAgendaView {
                         isOngoing: isOngoing(positioned.event),
                         isKeyboardSelected: keyboardAnchor == .event(sectionID: section.id, eventID: positioned.event.id),
                         detailPresentationRequest: detailPresentationRequest,
-                        onDetailPresentationChange: { onEventDetailPresentationChange(positioned.event.id, $0) }
+                        onDetailPresentationChange: { eventDetailPresentationChanged(positioned.event.id, isShowing: $0) }
                     )
                         .frame(width: width, alignment: .topLeading)
                         .offset(x: x, y: y)

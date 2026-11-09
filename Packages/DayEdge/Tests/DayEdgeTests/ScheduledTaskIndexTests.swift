@@ -191,6 +191,18 @@ final class RecurringTaskProjectionTests: XCTestCase {
         XCTAssertFalse(index.tasks(on: date(9, 30), calendar: calendar).projectedIDs.contains("invoice"))
     }
 
+    func testAskingTheSameDayAgainGivesTheSameAnswer() {
+        let index = index([task("standup", due: date(9, 28, 9), time: true, .weekly)])
+        let first = index.tasks(on: date(10, 5), calendar: calendar)
+        XCTAssertEqual(index.tasks(on: date(10, 5, 15), calendar: calendar), first)
+    }
+
+    func testAnIndexForChangedTasksDoesNotReuseAnotherIndexsAnswers() {
+        _ = index([task("standup", due: date(9, 28, 9), time: true, .weekly)]).tasks(on: date(10, 5), calendar: calendar)
+        let changed = index([task("review", due: date(9, 28, 9), time: true, .weekly)])
+        XCTAssertEqual(ids(on: date(10, 5), changed), ["review"])
+    }
+
     func testProjectedTimedOccurrenceKeepsItsTime() {
         let index = index([task("standup", due: date(9, 28, 9), time: true, .weekly)])
         let october5 = index.tasks(on: date(10, 5), calendar: calendar)

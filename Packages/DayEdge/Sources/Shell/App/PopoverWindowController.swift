@@ -4,7 +4,7 @@ import UI
 /// Owns the bubble `NSWindow`'s entire lifecycle — creation/sizing, showing
 /// (centered, or anchored under a status item), hiding, and click-outside
 /// dismissal — split out of `AppDelegate`. Deliberately knows nothing about
-/// a status item or `MenuBarBadgeIcon`: `show(anchoredTo:)` takes a plain
+/// a status item or `MenuBarBadgeIcon`: `show(_:)` takes a plain
 /// screen-space geometry already resolved by the caller, so this type stays
 /// usable for any anchor, not just a menu-bar button.
 @MainActor
@@ -12,6 +12,7 @@ final class PopoverWindowController {
     private let window: BubbleWindow
     private let presentationStyle: PanelPresentationStyle
     private let presentationCoordinator: PopoverPresentationCoordinator
+    private let hostPresentation: PanelHostPresentation?
     private var globalClickMonitor: Any?
     private var localClickMonitor: Any?
 
@@ -19,9 +20,12 @@ final class PopoverWindowController {
 
     init(contentViewController: NSViewController,
          presentationStyle: PanelPresentationStyle,
-         presentationCoordinator: PopoverPresentationCoordinator) {
+         size: PanelWindowSize,
+         presentationCoordinator: PopoverPresentationCoordinator,
+         hostPresentation: PanelHostPresentation? = nil) {
         self.presentationStyle = presentationStyle
         self.presentationCoordinator = presentationCoordinator
+        self.hostPresentation = hostPresentation
 
         let window = BubbleWindow(contentViewController: contentViewController)
         window.styleMask = [.borderless, .resizable]
@@ -42,46 +46,46 @@ final class PopoverWindowController {
         // (`WindowDragBackground` in `RootView`).
         window.isMovableByWindowBackground = false
         window.level = .floating
+        if presentationStyle.pointer == nil {
+            // Free-floating: it opens on the Space in use, over full-screen apps too.
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+        }
 
-        // Vertical-only: width is locked (equal
-        // min/max) so the system resize edges only let the user drag the
-        // bottom edge, growing/shrinking how much agenda is visible.
-        let pointerHeight = presentationStyle.pointer?.height ?? 0
-        let width = AppTheme.Metrics.popoverWidth
-        window.minSize = NSSize(width: width, height: 320 + pointerHeight)
-        window.maxSize = NSSize(width: width, height: 1400 + pointerHeight)
-        window.setContentSize(NSSize(width: width, height: AppTheme.Metrics.popoverHeight + pointerHeight))
+        window.minSize = size.minSize
+        window.maxSize = size.maxSize
+        window.setContentSize(size.size)
+        // Restores the size the user left it at (the position is chosen per open).
+        if let autosaveName = size.autosaveName { window.setFrameAutosaveName(autosaveName) }
         self.window = window
     }
 
-    /// Standalone mode: center on screen and show immediately — there's no
-    /// status item to anchor to, and no "hide until positioned" dance
-    /// needed since nothing points at a today/now target on first launch.
-    func showCentered() {
-        window.centerOnMainScreen()
-        presentationCoordinator.willOpen()
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    /// Menu-bar mode: position under `screenAnchor` (the anchoring button's
-    /// own visual center, in screen coordinates), then reveal per
-    /// `presentationCoordinator`'s `.preserve`/`.todayNow` behavior.
-    /// Shows the popover if needed, then runs `then` once it's on screen.
-    func open(anchoredTo screenAnchor: PopoverAnchor, then: @escaping () -> Void) {
+    /// Shows the window if needed, then runs `then` once it's on screen.
+    func open(_ placement: PanelWindowPlacement, then: @escaping () -> Void) {
         if isVisible {
             then()
             return
         }
         onNextReveal = then
-        show(anchoredTo: screenAnchor)
+        show(placement)
     }
 
-    /// Runs after the next reveal (see `open(anchoredTo:then:)`).
+    /// Runs after the next reveal (see `open(_:then:)`).
     private var onNextReveal: (() -> Void)?
 
-    func show(anchoredTo screenAnchor: PopoverAnchor) {
-        applyPlacement(anchoredTo: screenAnchor)
+    /// Positions the window — under the status item, or centred on a
+    /// screen — then reveals it per `presentationCoordinator`'s
+    /// `.preserve`/`.todayNow` behavior.
+    func show(_ placement: PanelWindowPlacement) {
+        // Its views mount now, while the window is still hidden.
+        hostPresentation?.isPresented = true
+        switch placement {
+        case .anchored(let screenAnchor):
+            applyPlacement(anchoredTo: screenAnchor)
+        case .centered(let screen):
+            let frame = CommandWindowPlacement(size: window.frame.size, minSize: window.minSize,
+                                               visibleFrame: screen.visibleFrame).frame
+            window.setFrame(frame, display: false)
+        }
 
         let request = presentationCoordinator.willOpen()
         switch request.behavior {
@@ -115,16 +119,16 @@ final class PopoverWindowController {
         }
     }
 
-    func toggle(anchoredTo screenAnchor: PopoverAnchor) {
+    func toggle(_ placement: PanelWindowPlacement) {
         if isVisible {
             hide()
         } else {
-            show(anchoredTo: screenAnchor)
+            show(placement)
         }
     }
 
     func reposition(anchoredTo screenAnchor: PopoverAnchor) {
-        guard presentationCoordinator.isVisible else { return }
+        guard isVisible else { return }
         applyPlacement(anchoredTo: screenAnchor)
     }
 
@@ -142,6 +146,7 @@ final class PopoverWindowController {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         installClickOutsideMonitors()
+        hostPresentation?.didReveal()
         let then = onNextReveal
         onNextReveal = nil
         then?()
@@ -151,6 +156,7 @@ final class PopoverWindowController {
         onNextReveal = nil
         guard window.isVisible else { return }
         window.orderOut(nil)
+        hostPresentation?.isPresented = false
         presentationCoordinator.didHide()
         removeClickOutsideMonitors()
     }
@@ -226,4 +232,39 @@ final class PopoverWindowController {
         globalClickMonitor = nil
         localClickMonitor = nil
     }
+}
+
+/// Where `PopoverWindowController` puts its window.
+enum PanelWindowPlacement {
+    /// Under the status item, its pointer at the button.
+    case anchored(PopoverAnchor)
+    /// Centred on this screen (`CommandWindowPlacement`).
+    case centered(NSScreen)
+}
+
+/// A panel window's size: where it starts, how far it resizes, and
+/// whether the user's size is remembered.
+struct PanelWindowSize {
+    let size: NSSize
+    let minSize: NSSize
+    let maxSize: NSSize
+    var autosaveName: String?
+
+    /// The menu-bar popover: vertical-only — the width is locked (equal
+    /// min/max) so the resize edges only move the bottom edge, growing or
+    /// shrinking how much agenda is visible.
+    static func popover(pointerHeight: CGFloat) -> PanelWindowSize {
+        let width = AppTheme.Metrics.popoverWidth
+        return PanelWindowSize(size: NSSize(width: width, height: AppTheme.Metrics.popoverHeight + pointerHeight),
+                               minSize: NSSize(width: width, height: 320 + pointerHeight),
+                               maxSize: NSSize(width: width, height: 1400 + pointerHeight))
+    }
+
+    /// The Command Window: resizable both ways, its size remembered.
+    static let commandWindow = PanelWindowSize(
+        size: AppTheme.CommandWindow.size,
+        minSize: AppTheme.CommandWindow.minSize,
+        maxSize: NSSize(width: 2400, height: 1600),
+        autosaveName: "CommandWindow"
+    )
 }

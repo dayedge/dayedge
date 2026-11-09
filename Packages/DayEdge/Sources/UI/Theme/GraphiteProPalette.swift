@@ -1,8 +1,8 @@
 import SwiftUI
 
 extension ThemePalette {
-    /// Graphite Pro: near-black neutral surfaces and restrained violet accents,
-    /// inspired by the supplied Linear dark reference. Source identity colors stay vivid.
+    /// Graphite Pro: near-black neutral surfaces and restrained violet accents.
+    /// Source identity colors stay vivid.
     ///
     /// Three tones, told apart by luminance alone: the canvas (`base`) is
     /// the darkest and dominates; working surfaces (`working` — open

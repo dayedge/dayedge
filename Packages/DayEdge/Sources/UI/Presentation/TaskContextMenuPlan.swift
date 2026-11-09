@@ -24,7 +24,7 @@ package enum TaskDuePreset: CaseIterable {
     }
 }
 
-package enum TaskAction: Equatable {
+package enum TaskAction: Hashable {
     case complete
     case uncomplete
     case setPriority(TaskPriority)

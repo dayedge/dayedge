@@ -12,7 +12,7 @@ package struct ShortcutRecorder: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    let command: ShortcutCommand
+    let command: PanelCommand
     let shortcut: KeyboardCommand?
     let isCustomized: Bool
     /// A reason the key can't be used, or nil.
@@ -24,7 +24,7 @@ package struct ShortcutRecorder: View {
     @State private var isRecording = false
     @State private var message: String?
 
-    package init(command: ShortcutCommand, shortcut: KeyboardCommand?, isCustomized: Bool,
+    package init(command: PanelCommand, shortcut: KeyboardCommand?, isCustomized: Bool,
                  validate: @escaping (KeyboardCommand) -> String?, onAssign: @escaping (KeyboardCommand) -> Void,
                  onClear: @escaping () -> Void, onReset: @escaping () -> Void) {
         self.command = command

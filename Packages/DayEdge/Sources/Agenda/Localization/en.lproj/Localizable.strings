@@ -9,6 +9,7 @@
 "daytimelineeventview.since" = "Since %@ – %@";
 "daytimelinesegmentlabel.midnight" = "Midnight";
 "daytimelinesegmentlabel.yesterday" = "Yesterday";
+"dayweatherpanel.no.forecast" = "No forecast for this day";
 "eventdotsview.more.events" = "More events";
 "eventdotsview.open.tasks" = "Open tasks";
 "nowindicatorview.current.time" = "Current time, %@";

@@ -102,8 +102,10 @@ package final class CalendarViewModel {
     /// also covering `date` in the agenda store when it might fall outside
     /// the currently loaded window (see `RootView`).
     package func select(date: Date) {
-        guard !calendar.isDate(date, inSameDayAs: selectedDate) else { return }
         let changesVisibleMonth = !calendar.isDate(date, equalTo: visibleMonth, toGranularity: .month)
+        // The same day still brings its month back when another month is
+        // shown (Today after a jump to December).
+        guard changesVisibleMonth || !calendar.isDate(date, inSameDayAs: selectedDate) else { return }
         selectedDate = date
         if changesVisibleMonth {
             visibleMonth = date

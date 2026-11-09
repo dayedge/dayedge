@@ -6,6 +6,7 @@ import UI
 package struct HourGridBackgroundView: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.timeFormat) private var timeFormat
+    @Environment(\.panelLayout) private var panelLayout
 
     package var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +18,7 @@ package struct HourGridBackgroundView: View {
                         .frame(width: AppTheme.Metrics.timelineLabelGutterWidth, alignment: .trailing)
 
                     Rectangle()
-                        .fill(theme.chrome.gridRule)
+                        .fill(theme.gridRule(in: panelLayout))
                         .frame(height: 1)
                         .padding(.top, AppTheme.Metrics.timelineHourRuleOffset)
                 }

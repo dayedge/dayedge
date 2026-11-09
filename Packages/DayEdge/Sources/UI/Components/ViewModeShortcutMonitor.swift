@@ -2,14 +2,14 @@ import AppKit
 import SwiftUI
 import Domain
 
-/// Routes the view-mode switch shortcuts (`KeyboardShortcutSettings`
-/// — ⌘1–⌘4 by default) to `onSelectMode`. Uses the same local-monitor
+/// Routes the view switches (`KeyboardShortcutSettings` — ⌘1–⌘4 for the
+/// view modes, ⌥⌘1–⌥⌘4 for Tasks' Overview views) to `onSelect`. Uses the same local-monitor
 /// approach as `ArrowKeyMonitor`, for the same reason: the search field
 /// always holds keyboard focus (see `SearchBarView`), so a plain SwiftUI
 /// `.keyboardShortcut` on the switcher's own buttons can't be relied on to
 /// see the key event first.
 package struct ViewModeShortcutMonitor: NSViewRepresentable {
-    package let onSelectMode: (ViewMode) -> Void
+    package let onSelect: (PanelCommand) -> Void
 
     package func makeNSView(context: Context) -> NSView {
         let view = NSView(frame: .zero)
@@ -19,11 +19,11 @@ package struct ViewModeShortcutMonitor: NSViewRepresentable {
     }
 
     package func updateNSView(_ nsView: NSView, context: Context) {
-        context.coordinator.onSelectMode = onSelectMode
+        context.coordinator.onSelect = onSelect
     }
 
     package func makeCoordinator() -> Coordinator {
-        Coordinator(onSelectMode: onSelectMode)
+        Coordinator(onSelect: onSelect)
     }
 
     package static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
@@ -32,11 +32,11 @@ package struct ViewModeShortcutMonitor: NSViewRepresentable {
 
     package final class Coordinator {
         package weak var hostView: NSView?
-        package var onSelectMode: (ViewMode) -> Void
+        package var onSelect: (PanelCommand) -> Void
         private var monitor: Any?
 
-        package init(onSelectMode: @escaping (ViewMode) -> Void) {
-            self.onSelectMode = onSelectMode
+        package init(onSelect: @escaping (PanelCommand) -> Void) {
+            self.onSelect = onSelect
         }
 
         package func installMonitor() {
@@ -47,12 +47,13 @@ package struct ViewModeShortcutMonitor: NSViewRepresentable {
                 }
 
                 // The user's binding, exactly as recorded (modifiers included).
-                guard case .viewMode(let mode)? = KeyboardShortcutSettings.resolve(event) else {
+                switch KeyboardShortcutSettings.resolve(event) {
+                case let command? where command.isViewSwitch:
+                    self.onSelect(command)
+                    return nil
+                default:
                     return event
                 }
-
-                self.onSelectMode(mode)
-                return nil
             }
         }
 
@@ -64,7 +65,7 @@ package struct ViewModeShortcutMonitor: NSViewRepresentable {
         }
     }
 
-    package init(onSelectMode: @escaping (ViewMode) -> Void) {
-        self.onSelectMode = onSelectMode
+    package init(onSelect: @escaping (PanelCommand) -> Void) {
+        self.onSelect = onSelect
     }
 }

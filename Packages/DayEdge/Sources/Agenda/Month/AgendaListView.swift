@@ -26,6 +26,9 @@ package struct AgendaListView: View {
     package var onEventDetailActionFocusChange: (String, EventDetailFocusableAction?) -> Void = { _, _ in }
     package var isActive = true
     package var onScrollPrepared: (AgendaScrollTarget) -> Void = { _ in }
+    /// Taken off screen for good (its window's view closed): the row at its
+    /// top, so it can come back to it (`rememberMonthPosition`).
+    package var onLeave: (AgendaScrollAnchor?) -> Void = { _ in }
 
     @State private var weather = AgendaWeatherStore()
     @Environment(\.weatherProvider) private var weatherProvider
@@ -51,7 +54,8 @@ package struct AgendaListView: View {
                  onEventDetailPresentationChange: @escaping (String, Bool) -> Void = { _, _ in },
                  onEventDetailActionFocusChange: @escaping (String, EventDetailFocusableAction?) -> Void = { _, _ in },
                  isActive: Bool = true,
-                 onScrollPrepared: @escaping (AgendaScrollTarget) -> Void = { _ in }) {
+                 onScrollPrepared: @escaping (AgendaScrollTarget) -> Void = { _ in },
+                 onLeave: @escaping (AgendaScrollAnchor?) -> Void = { _ in }) {
         self.store = store
         self.scrollTarget = scrollTarget
         self.nowPresentation = nowPresentation
@@ -67,6 +71,7 @@ package struct AgendaListView: View {
         self.onEventDetailActionFocusChange = onEventDetailActionFocusChange
         self.isActive = isActive
         self.onScrollPrepared = onScrollPrepared
+        self.onLeave = onLeave
         _scroll = State(initialValue: AgendaScrollCoordinator(store: store, scrollTarget: scrollTarget))
     }
 
@@ -127,6 +132,10 @@ package struct AgendaListView: View {
             .onScrollTargetVisibilityChange(idType: AgendaScrollAnchor.self, threshold: 0.01) { anchors in
                 scroll.visibilityChanged(anchors, isActive: isActive, proxy: proxy, onCurrentSectionChange: onCurrentSectionChange)
             }
+            // Shown again (hidden behind Day): the last unseen jump once
+            // more, so nothing still settles in view.
+            .onChange(of: isActive) { _, active in if active { scroll.snapToLastJump(proxy: proxy) } }
+            .onDisappear { onLeave(scroll.leavingAnchor) }
             .onScrollPhaseChange { _, phase in
                 if isScrolling != phase.isScrolling { isScrolling = phase.isScrolling }
                 scroll.scrollPhaseChanged(isTracking: phase == .tracking || phase == .interacting || phase == .decelerating)

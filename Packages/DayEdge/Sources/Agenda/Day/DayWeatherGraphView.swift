@@ -18,11 +18,11 @@ package struct DayWeatherGraphView: View {
 
     @State private var hoveredIndex: Int?
 
-    private static let width: CGFloat = 150
-    private static let height: CGFloat = 36
+    /// The Day bar's strip by default; the Command Window's sidebar draws it larger.
+    package var size = CGSize(width: 150, height: 36)
 
     package var body: some View {
-        let plot = WeatherGraphPlot(hourly: hourly, size: CGSize(width: Self.width, height: Self.height))
+        let plot = WeatherGraphPlot(hourly: hourly, size: size)
         ZStack(alignment: .top) {
             // Shapes, not `Canvas`: every `Canvas` draw briefly allocated
             // ~130 MB of rendering buffers (measured), for this 150×36
@@ -30,7 +30,7 @@ package struct DayWeatherGraphView: View {
             // as shapes cost next to nothing and draw the same.
             PlotPathShape(path: plot.precipitationBars)
                 .fill(theme.controlAccent.opacity(0.28))
-                .frame(width: Self.width, height: Self.height)
+                .frame(width: size.width, height: size.height)
                 .mask(precipitationHorizontalMask)
                 .mask(verticalMask)
 
@@ -46,14 +46,14 @@ package struct DayWeatherGraphView: View {
                 if let hoveredIndex, let hovered = plot.point(at: hoveredIndex) {
                     PlotPathShape(path: Path { marker in
                         marker.move(to: CGPoint(x: hovered.x, y: 0))
-                        marker.addLine(to: CGPoint(x: hovered.x, y: Self.height))
+                        marker.addLine(to: CGPoint(x: hovered.x, y: size.height))
                     })
                     .stroke(theme.primaryText.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
                     PlotPathShape(path: Path(ellipseIn: CGRect(x: hovered.x - 3, y: hovered.y - 3, width: 6, height: 6)))
                         .fill(theme.dotOrange)
                 }
             }
-            .frame(width: Self.width, height: Self.height)
+            .frame(width: size.width, height: size.height)
             .mask(chartHorizontalMask)
             .mask(verticalMask)
 
@@ -66,7 +66,7 @@ package struct DayWeatherGraphView: View {
                     .allowsHitTesting(false)
             }
         }
-        .frame(width: Self.width, height: Self.height)
+        .frame(width: size.width, height: size.height)
         .contentShape(Rectangle())
         .onContinuousHover { phase in
             switch phase {
@@ -124,7 +124,7 @@ package struct DayWeatherGraphView: View {
 
     private func index(forX x: CGFloat) -> Int? {
         guard hourly.count > 1 else { return nil }
-        let fraction = min(max(x / Self.width, 0), 1)
+        let fraction = min(max(x / size.width, 0), 1)
         return Int((fraction * CGFloat(hourly.count - 1)).rounded())
     }
 
@@ -136,7 +136,7 @@ package struct DayWeatherGraphView: View {
         guard hourly.count > 1, let firstHour = hourly.first?.hour, let lastHour = hourly.last?.hour,
               lastHour > firstHour else { return 0 }
         let fraction = (hour - Double(firstHour)) / Double(lastHour - firstHour)
-        return Self.width * CGFloat(min(max(fraction, 0), 1))
+        return size.width * CGFloat(min(max(fraction, 0), 1))
     }
 
     private func tooltip(for point: HourlyWeatherPoint) -> some View {

@@ -92,7 +92,7 @@ package struct TaskNavigatorView: View {
         let isActive = item.id == activeID
         return Button { onSelect(item.id) } label: {
             HStack(spacing: 4) {
-                marker(for: item)
+                TaskNavigatorMarker(item: item)
                 Text(verbatim: item.title)
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(isActive ? theme.primaryText : theme.secondaryText)
@@ -123,17 +123,24 @@ package struct TaskNavigatorView: View {
         .accessibilityLabel(item.accessibilityLabel)
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
+}
 
-    @ViewBuilder
-    private func marker(for item: Item) -> some View {
+/// A navigation entry's mark — the list's dot (Attention's in its tint),
+/// Completed's symbol — in the chips and the Command Window's sidebar.
+struct TaskNavigatorMarker: View {
+    @Environment(\.themePalette) private var theme
+    let item: TaskNavigatorItem
+    var size: CGFloat = 6
+
+    var body: some View {
         if let symbol = item.symbol {
             Image(systemName: symbol)
-                .font(.system(size: 8, weight: .bold))
+                .font(.system(size: size + 2, weight: .bold))
                 .foregroundStyle(theme.secondaryText)
         } else {
             Circle()
                 .fill(item.isAttention ? theme.tasks.attentionTint : (item.color ?? theme.secondaryText))
-                .frame(width: 6, height: 6)
+                .frame(width: size, height: size)
         }
     }
 }

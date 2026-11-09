@@ -41,6 +41,7 @@ package final class TaskStore {
         let excluded: Set<String>
         let lingering: Set<String>
         let minute: Int
+        let filter: TaskFilter
     }
 
     /// Which lists and smart sections are shown (the footer selector and
@@ -59,6 +60,9 @@ package final class TaskStore {
     /// separate. Set by chip clicks, ← / →, and (while the user is
     /// scrolling) the scrollspy.
     package internal(set) var activeSectionID: String?
+    /// The filter picked in the sidebar, the menu, ⌥⌘2–4 or Actions.
+    /// Session-only: Tasks opens on All Tasks.
+    package internal(set) var filter = TaskFilter.all
     package internal(set) var lingeringIDs: Set<String> = []
     package internal(set) var selectedTaskID: String?
     package internal(set) var presentedDetailID: String?
@@ -93,7 +97,11 @@ package final class TaskStore {
     @ObservationIgnored let now: () -> Date
     @ObservationIgnored let calendar: Calendar
     @ObservationIgnored var lingerTasks: [String: Task<Void, Never>] = [:]
+    /// The document and the search results each keep their own, so views
+    /// asking for both while searching don't evict one another.
     @ObservationIgnored var cache: (key: CacheKey, sections: [TaskSection])?
+    @ObservationIgnored var searchCache: (key: CacheKey, sections: [TaskSection])?
+    @ObservationIgnored var countsCache: (key: CacheKey, counts: [TaskFilter: Int])?
 
     package convenience init(provider: TaskDataProviding,
                              listVisibility: SourceVisibilityStore? = nil,
