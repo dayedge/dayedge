@@ -76,6 +76,12 @@ extension DayAgendaView {
         }
     }
 
+    /// Opening an event's details, by click or ↩, selects it.
+    func eventDetailPresentationChanged(_ eventID: String, isShowing: Bool) {
+        if isShowing { select(.event(sectionID: section.id, eventID: eventID), scroll: false) }
+        onEventDetailPresentationChange(eventID, isShowing)
+    }
+
     func clearSelection() {
         guard keyboardAnchor != nil else { return }
         keyboardAnchor = nil
@@ -108,31 +114,29 @@ extension DayAgendaView {
         date: Date,
         isToday: Bool,
         events: [AgendaEventModel],
-        onPrevious: @escaping () -> Void,
-        onNext: @escaping () -> Void,
-        onToday: @escaping () -> Void = {},
         keyboardNavigationRequest: VerticalNavigationRequest? = nil,
         positioningRequest: AgendaScrollTarget? = nil,
         nowPresentation: AgendaNowPresentation? = nil,
         isActive: Bool = true,
+        showsWeatherBar: Bool = true,
         onPositioned: @escaping () -> Void = {},
         tasks: DayTasks = .none,
         taskCoordinator: CalendarTaskCoordinator? = nil,
         taskCompletionRequest: TaskCompletionRequest? = nil,
         detailPresentationRequest: EventDetailPresentationRequest? = nil,
         onKeyboardSelection: @escaping (AgendaSelection?) -> Void = { _ in },
-        onEventDetailPresentationChange: @escaping (String, Bool) -> Void = { _, _ in }
+        onEventDetailPresentationChange: @escaping (String, Bool) -> Void = { _, _ in },
+        @ViewBuilder header: @escaping (DayHeaderFacts) -> Header
     ) {
+        self.header = header
         self.date = date
         self.isToday = isToday
         self.events = events
-        self.onPrevious = onPrevious
-        self.onNext = onNext
-        self.onToday = onToday
         self.keyboardNavigationRequest = keyboardNavigationRequest
         self.positioningRequest = positioningRequest
         self.nowPresentation = nowPresentation
         self.isActive = isActive
+        self.showsWeatherBar = showsWeatherBar
         self.onPositioned = onPositioned
         self.tasks = tasks
         self.taskCoordinator = taskCoordinator

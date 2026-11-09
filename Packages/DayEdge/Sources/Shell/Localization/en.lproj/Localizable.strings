@@ -10,6 +10,7 @@
 "aboutsettingsview.version" = "Version %@";
 "aboutsettingsview.website" = "Website";
 "acknowledgements.full.licenses" = "Read full third-party licenses…";
+"acknowledgements.role.keyboardshortcuts" = "The global shortcut that opens the Command Window.";
 "license.third.party.title" = "Third-party licenses";
 "license.third.party.intro" = "Licenses and notices for the software, fonts and data used by DayEdge.";
 "appdelegate.dayedge.settings" = "DayEdge Settings";

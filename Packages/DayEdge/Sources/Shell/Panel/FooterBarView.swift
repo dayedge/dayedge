@@ -85,7 +85,7 @@ private extension View {
 /// The contextual selector — `[ ▤ All Calendars ▾ ]`. One focus target; a
 /// leading status segment joins it while the calendar index fills —
 /// `[ ◌ │ ▤ All Calendars ▾ ]` — growing from the anchored left edge.
-private struct BottomContextSelector<Picker: View>: View {
+struct BottomContextSelector<Picker: View>: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -159,6 +159,36 @@ private struct BottomContextSelector<Picker: View>: View {
         .accessibilityLabel(label)
         .accessibilityHint(L10n.tr("footerbarview.menu", "Menu"))
         .accessibilityValue(status.map(IndexingStatusSegment.accessibilityStatus) ?? "")
+    }
+}
+
+/// Actions (⌘K), in the Command Window's footer: its label and key, the
+/// footer controls' capsule; the list opens above it.
+struct ActionsChromeButton<List: View>: View {
+    @Environment(\.themePalette) private var theme
+    @Binding var isPresented: Bool
+    @ViewBuilder let list: () -> List
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button { isPresented.toggle() } label: {
+            HStack(spacing: PersistentChromeMetrics.symbolToLabel) {
+                Text(PanelAction.showActions.title)
+                    .font(AppTheme.TextStyle.footer)
+                    .foregroundStyle(theme.primaryText)
+                if let key = KeyboardShortcutSettings.shared.shortcut(for: .action(.showActions))?.displayLabel {
+                    KeyboardShortcutKey(key)
+                }
+            }
+            .padding(.horizontal, PersistentChromeMetrics.paddingH)
+            .frame(height: PersistentChromeMetrics.height)
+            .contentShape(PersistentChromeMetrics.shape)
+        }
+        .buttonStyle(.plain)
+        .persistentChromeSurface(theme, isHovered: isHovered)
+        .onHover { isHovered = $0 }
+        .popover(isPresented: $isPresented, arrowEdge: .bottom) { list() }
     }
 }
 

@@ -8,3 +8,6 @@
 "tasksview.show.more" = "Show more";
 "tasksview.show.more.45f9a2" = "Show %@ more";
 "tasksview.tasks" = "Tasks";
+"tasksidebar.overview" = "Overview";
+"tasksidebar.my.lists" = "My Lists";
+"taskscopemenu.label" = "Tasks view";

@@ -347,7 +347,8 @@ private struct ThemeTimelineBoard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            DayHeaderView(date: day, isToday: true, eventCount: 3, onPrevious: {}, onNext: {})
+            DayHeaderView(DayHeaderFacts(date: day, isToday: true, eventCount: 3, taskCount: 0),
+                          onToday: {}, onPrevious: {}, onNext: {})
             HStack(alignment: .top, spacing: 12) {
                 card("Planning", color: .orange, status: .confirmed)
                 card("Product review", color: .teal, status: .confirmed)
@@ -425,7 +426,9 @@ private struct FrostInteractionBoard: View {
     let notice: NoticeCenter
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            TasksView(store: tasks, query: "", isActive: false, navigationRequest: nil)
+            TasksView(store: tasks, query: "", isActive: false, navigationRequest: nil) {
+                TasksNavigatorHeader(store: tasks, query: "")
+            }
                 .frame(width: 420)
                 .floatingSurface(radius: FloatingSurface.calendarRadius)
             ChatView(session: chat, isPresented: true,

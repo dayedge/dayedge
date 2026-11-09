@@ -23,7 +23,7 @@ package enum ShortcutIneligibility: Equatable, Sendable {
 
 /// Who already uses a key.
 package enum ShortcutOwner: Equatable {
-    case command(ShortcutCommand)
+    case command(PanelCommand)
     case fixed(String)
 
     package var title: String {
@@ -39,7 +39,7 @@ package enum ShortcutOwner: Equatable {
     }
 }
 
-/// The one source of every shortcut: defaults in code (`ShortcutCommand`)
+/// The one source of every shortcut: defaults in code (`PanelCommand`)
 /// plus the user's overrides (UserDefaults, JSON, overrides only). Key
 /// handling, menus, tooltips and Settings all read `shortcut(for:)` /
 /// `resolve`. One key, one command, ever: overrides first, then defaults,
@@ -54,9 +54,9 @@ package final class KeyboardShortcutSettings {
     /// What a stored entry says for "the user removed this shortcut".
     static let cleared = "none"
 
-    package private(set) var effective: [ShortcutCommand: KeyboardCommand] = [:]
+    package private(set) var effective: [PanelCommand: KeyboardCommand] = [:]
     /// The same, by key.
-    private var bindings: [KeyboardCommand: ShortcutCommand] = [:]
+    private var bindings: [KeyboardCommand: PanelCommand] = [:]
     private var overrides: [String: Any] = [:]
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let key: String
@@ -70,25 +70,25 @@ package final class KeyboardShortcutSettings {
 
     // MARK: Reading
 
-    package func shortcut(for command: ShortcutCommand) -> KeyboardCommand? { effective[command] }
+    package func shortcut(for command: PanelCommand) -> KeyboardCommand? { effective[command] }
 
-    package func isCustomized(_ command: ShortcutCommand) -> Bool { overrides[command.id] != nil }
+    package func isCustomized(_ command: PanelCommand) -> Bool { overrides[command.id] != nil }
 
-    package var hasCustomizations: Bool { ShortcutCommand.commands.contains(where: isCustomized) }
+    package var hasCustomizations: Bool { PanelCommand.commands.contains(where: isCustomized) }
 
     /// The command a key press runs in the panel, or nil — while a
     /// recorder listens, while a menu tracks (an open menu runs its own
     /// key equivalent, so nothing runs twice), for a one-shot command's
     /// auto-repeat, and for any key nothing is bound to (a cleared or moved
     /// shortcut never falls back to its old default).
-    package func resolve(_ event: NSEvent, isRecording: Bool, isMenuTracking: Bool) -> ShortcutCommand? {
+    package func resolve(_ event: NSEvent, isRecording: Bool, isMenuTracking: Bool) -> PanelCommand? {
         guard !isRecording, !isMenuTracking, let pressed = KeyboardCommand(event: event),
               let command = bindings[pressed] else { return nil }
         return event.isARepeat && command.isConfigurable ? nil : command
     }
 
     /// `resolve` as the panel's key monitors call it (on the main thread).
-    package nonisolated static func resolve(_ event: NSEvent) -> ShortcutCommand? {
+    package nonisolated static func resolve(_ event: NSEvent) -> PanelCommand? {
         MainActor.assumeIsolated {
             shared.resolve(event, isRecording: ShortcutRecording.shared.isActive,
                            isMenuTracking: RunLoop.current.currentMode == .eventTracking)
@@ -116,14 +116,14 @@ package final class KeyboardShortcutSettings {
     }
 
     /// Who already uses this key in the panel, besides `command` itself.
-    package func collision(_ shortcut: KeyboardCommand, for command: ShortcutCommand) -> ShortcutOwner? {
+    package func collision(_ shortcut: KeyboardCommand, for command: PanelCommand) -> ShortcutOwner? {
         if let other = bindings[shortcut], other != command { return .command(other) }
-        return KeyboardCommands.fixedKeys.first { $0.shortcut == shortcut }.map { .fixed($0.owner) }
+        return PanelCommands.fixedKeys.first { $0.shortcut == shortcut }.map { .fixed($0.owner) }
     }
 
     // MARK: Changing
 
-    package func set(_ shortcut: KeyboardCommand, for command: ShortcutCommand) {
+    package func set(_ shortcut: KeyboardCommand, for command: PanelCommand) {
         guard command.isConfigurable, let data = try? JSONEncoder().encode(shortcut),
               let object = try? JSONSerialization.jsonObject(with: data) else { return }
         overrides[command.id] = object
@@ -131,21 +131,21 @@ package final class KeyboardShortcutSettings {
     }
 
     /// No shortcut at all (stored, so a default never comes back by itself).
-    package func clear(_ command: ShortcutCommand) {
+    package func clear(_ command: PanelCommand) {
         guard command.isConfigurable else { return }
         overrides[command.id] = Self.cleared
         save()
     }
 
     /// Back to the default.
-    package func reset(_ command: ShortcutCommand) {
+    package func reset(_ command: PanelCommand) {
         overrides[command.id] = nil
         save()
     }
 
     /// Every command back to its default; nothing else is touched.
     package func resetAll() {
-        for command in ShortcutCommand.commands { overrides[command.id] = nil }
+        for command in PanelCommand.commands { overrides[command.id] = nil }
         save()
     }
 
@@ -176,7 +176,7 @@ package final class KeyboardShortcutSettings {
         case shortcut(KeyboardCommand)
     }
 
-    private func stored(for command: ShortcutCommand) -> Stored {
+    private func stored(for command: PanelCommand) -> Stored {
         guard let value = overrides[command.id] else { return .none }
         if let text = value as? String, text == Self.cleared { return .cleared }
         guard let data = try? JSONSerialization.data(withJSONObject: value),
@@ -188,15 +188,15 @@ package final class KeyboardShortcutSettings {
     /// Fixed commands and keys first, then overrides, then defaults; a key
     /// already taken leaves the later command unassigned.
     private func rebuild() {
-        var result: [ShortcutCommand: KeyboardCommand] = [:]
-        var taken = Set(KeyboardCommands.fixedKeys.map(\.shortcut))
-        func bind(_ command: ShortcutCommand, _ shortcut: KeyboardCommand?) {
+        var result: [PanelCommand: KeyboardCommand] = [:]
+        var taken = Set(PanelCommands.fixedKeys.map(\.shortcut))
+        func bind(_ command: PanelCommand, _ shortcut: KeyboardCommand?) {
             guard let shortcut, !taken.contains(shortcut) else { return }
             result[command] = shortcut
             taken.insert(shortcut)
         }
-        for command in ShortcutCommand.allCases where !command.isConfigurable { bind(command, command.defaultShortcut) }
-        let entries = ShortcutCommand.commands.map { ($0, stored(for: $0)) }
+        for command in PanelCommand.allCases where !command.isConfigurable { bind(command, command.defaultShortcut) }
+        let entries = PanelCommand.commands.map { ($0, stored(for: $0)) }
         for (command, entry) in entries {
             if case .shortcut(let shortcut) = entry { bind(command, shortcut) }
         }

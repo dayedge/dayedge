@@ -11,7 +11,7 @@ package struct BubblePointerConfig: Equatable {
 /// How the app's root view is being presented — drives whether the bubble
 /// shows a pointer, since the same view is meant to be reused both as a
 /// menu-bar popover (pointing at its status item) and as a standalone
-/// floating window (e.g. launched from Raycast, nothing to point at).
+/// floating window (e.g. launched from a launcher, nothing to point at).
 package enum PanelPresentationStyle: Equatable {
     case standalone
     case menuBarPopover(pointer: BubblePointerConfig = BubblePointerConfig())

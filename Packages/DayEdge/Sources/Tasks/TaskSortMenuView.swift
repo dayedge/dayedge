@@ -7,41 +7,17 @@ import UI
 /// hover, and a slightly stronger one while the menu is open. Always shows
 /// the current mode; never colored.
 package struct TaskSortButton: View {
-    @Environment(\.themePalette) private var theme
-
     package let store: TaskStore
 
     @State private var isHovering = false
 
     private var isOpen: Bool { store.isSortMenuPresented }
 
-    private var fill: Color {
-        if isOpen { return theme.secondaryControl.pressed }
-        return isHovering ? theme.secondaryControl.hover : .clear
-    }
-
     package var body: some View {
         @Bindable var store = store
         Button { store.isSortMenuPresented.toggle() } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "arrow.up.arrow.down")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(theme.secondaryText.opacity(isOpen || isHovering ? 1 : 0.8))
-                Text(store.sortMode.shortTitle)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(theme.primaryText.opacity(isOpen || isHovering ? 0.9 : 0.7))
-                    .lineLimit(1)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundStyle(theme.content.detailMetadata)
-            }
-            .padding(.horizontal, 7)
-            // A modest floor keeps the width from jittering between
-            // "Smart" and "Title".
-            .frame(minWidth: 70, minHeight: 24)
-            .themedSurface(.floatingControl, fill: fill,
-                             in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            TaskRailButtonLabel(symbol: "arrow.up.arrow.down", title: store.sortMode.shortTitle,
+                                isOpen: isOpen, isHovering: isHovering)
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
@@ -53,6 +29,46 @@ package struct TaskSortButton: View {
         .accessibilityLabel(L10n.tr("tasksortmenuview.sort.tasks", "Sort tasks"))
         .accessibilityValue(store.sortAccessibilityValue)
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// A rail control's face — "⇅ Priority ⌄", "Today ⌄": borderless at rest,
+/// a soft rounded fill on hover, a slightly stronger one while open.
+struct TaskRailButtonLabel: View {
+    @Environment(\.themePalette) private var theme
+
+    let symbol: String?
+    let title: String
+    let isOpen: Bool
+    let isHovering: Bool
+
+    private var fill: Color {
+        if isOpen { return theme.secondaryControl.pressed }
+        return isHovering ? theme.secondaryControl.hover : .clear
+    }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            if let symbol {
+                Image(systemName: symbol)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(theme.secondaryText.opacity(isOpen || isHovering ? 1 : 0.8))
+            }
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(theme.primaryText.opacity(isOpen || isHovering ? 0.9 : 0.7))
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(theme.content.detailMetadata)
+        }
+        .padding(.horizontal, 7)
+        // A modest floor keeps the width from jittering between
+        // "Smart" and "Title".
+        .frame(minWidth: 70, minHeight: 24)
+        .themedSurface(.floatingControl, fill: fill,
+                         in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 }
 

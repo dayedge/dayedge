@@ -20,7 +20,11 @@ import Intelligence
 /// nothing. Managing a plain `NSWindow` ourselves sidesteps that entirely.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var popoverWindow: PopoverWindowController?
+    var popoverWindow: PopoverWindowController?
+    /// The Command Window (⌃⌥D): built on its first use, then kept, like
+    /// the popover. Never on screen together with the popover.
+    var commandWindow: PopoverWindowController?
+    let commandPresentation = PanelHostPresentation()
     private var settingsWindow: NSWindow?
     let onboardingWindow = OnboardingWindowController()
     private var dockSettingObserver: NSObjectProtocol?
@@ -31,15 +35,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// The local calendar index — the event source: opened at launch,
     /// filling in the background once Calendar access is granted.
     private var calendarIndex: CalendarIndexRuntime?
-    private let indexActivity = CalendarIndexActivity()
+    let indexActivity = CalendarIndexActivity()
 
     /// Toggle while developing to preview both contexts the app will run
     /// in: `.menuBarPopover` (pointing at a status item) and `.standalone`
-    /// (e.g. launched from Raycast, floating free with nothing to point
+    /// (e.g. launched from a launcher, floating free with nothing to point
     /// at). Deliberately two real, distinct modes — not one collapsed into
-    /// the other — since a future Raycast/Spotlight-launched build still
+    /// the other — since a future launcher-launched build still
     /// wants the plain floating window with no status item at all.
-    private let presentationStyle: PanelPresentationStyle = .menuBarPopover()
+    let presentationStyle: PanelPresentationStyle = .menuBarPopover()
 
     /// For writes, reminders and permissions; events are read from the
     /// calendar index. `RootView` and this delegate's status-item
@@ -58,10 +62,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// the popover and the Settings window.
     private let assistantSettings = AssistantSettingsStore()
     private let dataProvider: CalendarDataProviding
-    private let presentationCoordinator = PopoverPresentationCoordinator()
+    let presentationCoordinator = PopoverPresentationCoordinator()
     /// Calendar access, live — the only thing that decides whether events
     /// are shown. Watched from launch whatever the index does.
     let calendarAccess: CalendarPermissionMonitor
+    /// The panel's object graph — one, shared by the popover and the
+    /// Command Window, so both show the same date, view, search and chat.
+    lazy var panelModels = RootModels(
+        eventStore: eventStore,
+        dataProvider: dataProvider,
+        visibilityStore: visibilityStore,
+        taskRepository: taskRepository,
+        reminderSuppression: reminderSuppression,
+        assistantSettings: assistantSettings,
+        presentationCoordinator: presentationCoordinator,
+        calendarAccess: calendarAccess
+    )
 
     override init() {
         switch AppConfiguration.calendarBackend {
@@ -115,10 +131,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         switch presentationStyle {
         case .standalone:
-            popoverWindow.showCentered()
+            if let screen = NSScreen.main { popoverWindow.show(.centered(screen)) }
         case .menuBarPopover:
             installMenuBar(popoverWindow: popoverWindow)
         }
+        CommandWindowShortcut.register { [weak self] in self?.toggleCommandWindow() }
 
         // Settings or the popover menu changed which calendars count.
         NotificationCenter.default.addObserver(
@@ -140,44 +157,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startOnboardingOrAskForCalendar()
     }
 
-    /// The panel: the root view in its themed host, in the popover window.
-    private func makePopoverWindow() -> PopoverWindowController {
-        let rootView = RootView(
-            eventStore: eventStore,
-            dataProvider: dataProvider,
-            visibilityStore: visibilityStore,
-            taskRepository: taskRepository,
-            reminderSuppression: reminderSuppression,
-            assistantSettings: assistantSettings,
-            presentationCoordinator: presentationCoordinator,
-            calendarAccess: calendarAccess,
-            presentationStyle: presentationStyle,
-            indexActivity: indexActivity,
-            onOpenSettings: { [weak self] destination in self?.showSettings(destination) }
-        )
-        let hosting = NSHostingController(rootView: ThemedRoot(content: rootView, appearance: appearance))
-        // The panel's size is the window's (`PopoverWindowController` fixes
-        // the width and the height range). Without this the hosting view
-        // re-measures the whole UI for its min/ideal/max size whenever
-        // anything inside changes — on every scroll frame (measured).
-        hosting.sizingOptions = []
-
-        let popoverWindow = PopoverWindowController(
-            contentViewController: hosting,
-            presentationStyle: presentationStyle,
-            presentationCoordinator: presentationCoordinator
-        )
-        return popoverWindow
-    }
-
     /// The menu-bar mode: the status item, what it shows and the Meeting HUD.
     private func installMenuBar(popoverWindow: PopoverWindowController) {
         // Stays hidden until the status item is actually clicked —
         // see `MenuBarStatusItemController.onCalendarClick`.
         let statusItemController = MenuBarStatusItemController()
-        statusItemController.onCalendarClick = { [weak popoverWindow, weak statusItemController] in
+        statusItemController.onCalendarClick = { [weak self, weak popoverWindow, weak statusItemController] in
             guard let popoverWindow, let anchor = statusItemController?.screenAnchor else { return }
-            popoverWindow.toggle(anchoredTo: anchor)
+            self?.commandWindow?.hide()
+            popoverWindow.toggle(.anchored(anchor))
         }
         statusItemController.onMenuAction = { [weak self] row in self?.handleMenuAction(row) }
         statusItemController.onMuteUntil = { [weak self] option in
@@ -304,14 +292,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Shows the popover under the status item, then hands it the command.
     func openPopover(then command: PopoverCommand?) {
         guard let popoverWindow, let anchor = statusItemController?.screenAnchor else { return }
-        popoverWindow.open(anchoredTo: anchor) { [presentationCoordinator] in
+        commandWindow?.hide()
+        popoverWindow.open(.anchored(anchor)) { [presentationCoordinator] in
             if let command { presentationCoordinator.send(command) }
         }
     }
 
     // MARK: - Settings
 
-    private func showSettings(_ destination: SettingsDestination? = nil) {
+    func showSettings(_ destination: SettingsDestination? = nil) {
         if let destination { settingsRouter.open(destination) }
         if let settingsWindow {
             settingsWindow.makeKeyAndOrderFront(nil)

@@ -14,7 +14,7 @@ struct ShortcutsSettingsView: View {
             SettingsGroup(header: L10n.tr("shortcutssettingsview.commands", "Commands"),
                           footer: L10n.tr("shortcutssettingsview.commands.footer",
                                           "Click a shortcut, then press the new keys. ⌫ removes it, Esc cancels.")) {
-                ForEach(ShortcutCommand.commands, id: \.id) { command in
+                ForEach(PanelCommand.commands, id: \.id) { command in
                     SettingsRow(title: command.title) { recorder(for: command) }
                 }
             }
@@ -38,7 +38,7 @@ struct ShortcutsSettingsView: View {
         }
     }
 
-    private func recorder(for command: ShortcutCommand) -> some View {
+    private func recorder(for command: PanelCommand) -> some View {
         ShortcutRecorder(
             command: command,
             shortcut: settings.shortcut(for: command),
@@ -55,7 +55,7 @@ struct ShortcutsSettingsView: View {
     /// The fixed keys, as the app uses them (read from the registry where
     /// it names them).
     private static var navigation: [(title: String, keys: [String])] {
-        func label(_ action: KeyboardCommandAction) -> String {
+        func label(_ action: PanelAction) -> String {
             KeyboardShortcutSettings.shared.shortcut(for: .action(action))?.displayLabel ?? ""
         }
         return [
@@ -64,9 +64,9 @@ struct ShortcutsSettingsView: View {
             (L10n.tr("shortcutssettingsview.previous.next.day", "Previous / Next Day"), [label(.previousDay), label(.nextDay)]),
             (L10n.tr("shortcutssettingsview.previous.next.week", "Previous / Next Week"), [label(.previousWeek), label(.nextWeek)]),
             (L10n.tr("shortcutssettingsview.open.selected.item", "Open Selected Item"), [label(.openEventDetails)]),
-            (KeyboardCommandAction.completeSelectedTask.title, [label(.completeSelectedTask)]),
-            (L10n.tr("shortcutssettingsview.show.search.result", "Show Search Result"), [KeyboardCommands.showSearchResult.displayLabel]),
-            (KeyboardCommandAction.escapeSearch.title, [label(.escapeSearch)])
+            (PanelAction.completeSelectedTask.title, [label(.completeSelectedTask)]),
+            (L10n.tr("shortcutssettingsview.show.search.result", "Show Search Result"), [PanelCommands.showSearchResult.displayLabel]),
+            (PanelAction.escapeSearch.title, [label(.escapeSearch)])
         ]
     }
 }

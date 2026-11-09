@@ -7,3 +7,6 @@
 "tasksview.show.more" = "Pokaż więcej";
 "tasksview.show.more.45f9a2" = "Pokaż jeszcze %@";
 "tasksview.tasks" = "Zadania";
+"tasksidebar.overview" = "Przegląd";
+"tasksidebar.my.lists" = "Moje listy";
+"taskscopemenu.label" = "Widok zadań";

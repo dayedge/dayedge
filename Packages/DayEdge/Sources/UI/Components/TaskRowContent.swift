@@ -8,6 +8,7 @@ import Domain
 /// card — own padding, surface, hover and tap; this owns what a task *is*.
 package struct TaskRowContent: View {
     @Environment(\.themePalette) private var theme
+    @Environment(\.panelLayout) private var panelLayout
 
     /// Where the ring sits relative to the text.
     package enum RingPlacement {
@@ -48,7 +49,18 @@ package struct TaskRowContent: View {
         listName != nil || due != nil || task.isRecurring
     }
 
+    /// The Command Window's Tasks: the room for a one-line row with the due
+    /// date at its end, and the notes under it. Elsewhere (calendar, chat,
+    /// the popover) the regular row.
+    private var isWide: Bool {
+        panelLayout == .wide && ringPlacement == .plain && density == .regular && timeLabel == nil
+    }
+
     package var body: some View {
+        if isWide { wideBody } else { regularBody }
+    }
+
+    private var regularBody: some View {
         HStack(alignment: .top, spacing: spacing) {
             switch ringPlacement {
             case .plain:
@@ -102,6 +114,53 @@ package struct TaskRowContent: View {
         }
     }
 
+    /// Ring │ ! title … │ due ↻, then the notes' first line (and the list,
+    /// where a section mixes lists) only when there's something to say.
+    private var wideBody: some View {
+        HStack(alignment: .top, spacing: spacing) {
+            completionRing.padding(.top, 1)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    // Every priority, ahead of the title as in Reminders;
+                    // high in the warning colour.
+                    if let mark = task.priority.mark, !task.isCompleted {
+                        Text(verbatim: mark)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(task.priority == .high ? theme.content.ongoingIndicator : theme.secondaryText)
+                            .padding(.trailing, -4)
+                    }
+                    titleText
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 12)
+                    if let due {
+                        dueLabel(due)
+                            .font(AppTheme.TextStyle.eventSubtitle)
+                            .fixedSize()
+                    }
+                    if task.isRecurring { repeatMark }
+                }
+                let notes = task.notesPreview
+                if notes != nil || listName != nil {
+                    HStack(spacing: 4) {
+                        if let notes {
+                            Text(verbatim: notes).foregroundStyle(theme.secondaryText)
+                        }
+                        if notes != nil && listName != nil {
+                            Text("·").foregroundStyle(theme.content.quietMetadata)
+                        }
+                        if let listName {
+                            Text(verbatim: listName).foregroundStyle(theme.secondaryText).fixedSize()
+                        }
+                    }
+                    .font(AppTheme.TextStyle.eventSubtitle)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                }
+            }
+        }
+    }
+
     private func timeText(_ label: String) -> some View {
         Text(label)
             .font(AppTheme.TextStyle.eventTime)
@@ -140,18 +199,23 @@ package struct TaskRowContent: View {
             if listName != nil && due != nil {
                 Text("·").foregroundStyle(theme.content.quietMetadata)
             }
-            if let due {
-                Text(due.text)
-                    .foregroundStyle(due.isOverdue && !task.isCompleted ? theme.tasks.attentionTint : theme.secondaryText)
-            }
-            if task.isRecurring {
-                Image(systemName: "repeat")
-                    .font(.system(size: 9))
-                    .foregroundStyle(theme.content.subduedMetadata)
-            }
+            if let due { dueLabel(due) }
+            if task.isRecurring { repeatMark }
         }
         .font(AppTheme.TextStyle.eventSubtitle)
         .lineLimit(1)
+    }
+
+    /// Overdue (and still open) in the attention tint.
+    private func dueLabel(_ due: TaskDueText) -> some View {
+        Text(due.text)
+            .foregroundStyle(due.isOverdue && !task.isCompleted ? theme.tasks.attentionTint : theme.secondaryText)
+    }
+
+    private var repeatMark: some View {
+        Image(systemName: "repeat")
+            .font(.system(size: 9))
+            .foregroundStyle(theme.content.subduedMetadata)
     }
 
     package init(

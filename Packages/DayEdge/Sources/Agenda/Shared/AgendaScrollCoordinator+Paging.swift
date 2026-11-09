@@ -13,6 +13,7 @@ extension AgendaScrollCoordinator {
     ) {
         visibleAnchors = anchors
         isListActive = isActive
+        reportLandingIfVisible()
         guard isActive, isUserScrolling, !isProgrammaticScroll else { return }
 
         let visibleDays = Set(anchors.map(\.sectionID))

@@ -43,6 +43,11 @@ final class DatePresentationFormatterTests: XCTestCase {
         }
     }
 
+    func testWeekdayDayNamesTheWeekdayAndDayOnly() {
+        XCTAssertEqual(formatter("en_GB").weekdayDay(wednesday), "Wednesday 7")
+        XCTAssertEqual(formatter("en_US").weekdayDay(wednesday), "Wednesday 7")
+    }
+
     func testCompactNamesTheYearOnlyOutsideTheCurrentOne() {
         let gb = formatter("en_GB"), us = formatter("en_US")
         XCTAssertEqual(gb.format(wednesday, .compact, relativeTo: now), "Wednesday 7 Oct")

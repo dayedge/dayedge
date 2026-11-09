@@ -121,6 +121,21 @@ package enum AppTheme {
     }
     package static let dotSize: CGFloat = 4
 
+    /// The Command Window (⌃⌥D): its first size and the smallest it resizes to.
+    package enum CommandWindow {
+        package static let size = CGSize(width: 1000, height: 660)
+        package static let minSize = CGSize(width: 860, height: 560)
+        /// The sidebar of Day (mini-month, weather) and Tasks (lists): one
+        /// width, so switching views keeps the window's structure.
+        package static let sidebarWidth: CGFloat = 300
+        /// Month's agenda beside its grid.
+        package static let monthAgendaWidth: CGFloat = 360
+        /// A month cell's day strip: the workday it spans (whole hours),
+        /// and its thickness.
+        package static let busyStripHours = 8..<17
+        package static let busyStripHeight: CGFloat = 3
+    }
+
     package enum Metrics {
         package static let popoverWidth: CGFloat = 420
         package static let popoverPointerInset: CGFloat = AppTheme.cornerRadius + 16
@@ -193,6 +208,10 @@ package enum AppTheme {
         package static let userBubblePaddingV: CGFloat = 7
         /// A user turn never spans the full width (~¾ of the content).
         package static let userBubbleMaxWidth: CGFloat = 290
+        /// The Command Window: wider bubbles, and the reply's measure — long
+        /// text and its rows stop here rather than crossing the window.
+        package static let wideUserBubbleMaxWidth: CGFloat = 520
+        package static let wideReadingWidth: CGFloat = 760
 
         /// The toolbar row's height: the composer sits in it.
         package static let composerMinHeight: CGFloat = 42

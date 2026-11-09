@@ -9,6 +9,7 @@
 "aboutsettingsview.version" = "Wersja %@";
 "aboutsettingsview.website" = "Strona internetowa";
 "acknowledgements.full.licenses" = "Przeczytaj pełne licencje zewnętrznych komponentów…";
+"acknowledgements.role.keyboardshortcuts" = "Globalny skrót, który otwiera okno poleceń.";
 "license.third.party.title" = "Licencje zewnętrznych komponentów";
 "license.third.party.intro" = "Licencje i informacje dotyczące oprogramowania, czcionek i danych używanych przez DayEdge.";
 "appdelegate.dayedge.settings" = "Ustawienia DayEdge";

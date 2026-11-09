@@ -1,4 +1,7 @@
 /* First Polish translation for UI verification. Keep service names and interpolated user content unchanged. */
+"actionslistview.checked" = "Zaznaczone";
+"actionslistview.no.actions" = "Brak pasujących akcji";
+"actionslistview.search.actions" = "Szukaj akcji";
 "agendadayheaderview.today" = "Dzisiaj";
 "agendaeventrowview.join" = "Dołącz";
 "agendaeventrowview.join.09c8d1" = "Dołącz: %@";
@@ -130,15 +133,22 @@
 "keyboardcommands.go.to.today" = "Przejdź do dzisiaj";
 "keyboardcommands.join.selected.meeting" = "Dołącz do wybranego spotkania";
 "keyboardcommands.copy.meeting.link" = "Kopiuj link spotkania";
+"keyboardcommands.new.chat" = "Nowa rozmowa";
+"keyboardcommands.new.event" = "Nowe wydarzenie";
+"keyboardcommands.new.task" = "Nowe zadanie";
 "keyboardcommands.open.in.calendar" = "Otwórz w aplikacji Kalendarz";
 "keyboardcommands.go.to.next.occurrence" = "Przejdź do następnego wystąpienia";
 "keyboardcommands.go.to.previous.occurrence" = "Przejdź do poprzedniego wystąpienia";
 "keyboardcommands.next.day" = "Następny dzień";
 "keyboardcommands.next.week" = "Następny tydzień";
 "keyboardcommands.open.event.details" = "Otwórz szczegóły wydarzenia";
+"keyboardcommands.open.settings" = "Ustawienia…";
 "keyboardcommands.previous.day" = "Poprzedni dzień";
 "keyboardcommands.previous.week" = "Poprzedni tydzień";
+"keyboardcommands.show.actions" = "Akcje";
 "keyboardcommands.sort.tasks" = "Sortuj zadania";
+"panelactionlist.submenu.choice" = "%@: %@";
+"panelactionlist.show.list" = "Pokaż listę: %@";
 "permissionstateview.allow.calendar.access" = "Zezwól na dostęp do Kalendarza";
 "permissionstateview.allow.reminders.access" = "Zezwól na dostęp do Przypomnień";
 "permissionstateview.calendar.access.is.off" = "Dostęp do Kalendarza jest wyłączony";
@@ -232,12 +242,12 @@
 "transientnoticehost.undo" = "Cofnij";
 "agendadayheaderview.no.date" = "BEZ DATY";
 "keyboardcommands.switch.to" = "Przełącz na %@";
+"keyboardcommands.show.task.view" = "Pokaż: %@";
 "shortcuts.fixed.arrows" = "Klawisze strzałek";
 "shortcuts.fixed.show.search.result" = "Pokaż wynik wyszukiwania";
 "shortcuts.fixed.quick.add.fields" = "Pola szybkiego dodawania";
 "shortcuts.fixed.allow.change" = "Utwórz w szybkim dodawaniu, Zezwól w Zapytaj";
 "shortcuts.fixed.delete.in.ask" = "Usuń w Zapytaj";
-"shortcuts.fixed.new.chat" = "Nowa rozmowa w Zapytaj";
 "shortcuts.fixed.settings" = "Ustawienia";
 "shortcutrecorder.needs.modifier" = "Dodaj ⌘ lub ⌃";
 "shortcutrecorder.unsupported.key" = "Tego klawisza nie można użyć";

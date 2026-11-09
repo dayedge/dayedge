@@ -17,6 +17,20 @@ final class ChatSessionTests: XCTestCase {
         XCTAssertTrue(chat.isResponding)
     }
 
+    func testEscapeWhileReplyingStopsAndSaysSo() {
+        let chat = session()
+        chat.start(with: "hallo")
+        XCTAssertTrue(chat.escape())
+        XCTAssertFalse(chat.isResponding)
+    }
+
+    func testEscapeWithNothingToStopLeavesItToTheWindow() async {
+        let chat = session()
+        chat.start(with: "hallo")
+        await chat.settle()
+        XCTAssertFalse(chat.escape())
+    }
+
     func testTheReplyReplacesThinking() async {
         let chat = session(answer: "Hi — how can I help?")
         chat.start(with: "hallo")

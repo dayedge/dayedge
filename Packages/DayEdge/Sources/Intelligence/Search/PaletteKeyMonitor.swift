@@ -67,7 +67,7 @@ package struct PaletteKeyMonitor: NSViewRepresentable {
 
         /// ⌘Return — unless an input method is composing (it owns Return).
         private static func isCreate(_ event: NSEvent, in window: NSWindow) -> Bool {
-            guard let key = KeyboardCommand(event: event), key == KeyboardCommands.create || key == KeyboardCommands.createOnKeypad
+            guard let key = KeyboardCommand(event: event), key == PanelCommands.create || key == PanelCommands.createOnKeypad
             else { return false }
             return !((window.firstResponder as? NSTextView)?.hasMarkedText() ?? false)
         }

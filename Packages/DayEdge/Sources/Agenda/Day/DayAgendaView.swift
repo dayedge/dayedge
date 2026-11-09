@@ -2,7 +2,18 @@ import SwiftUI
 import Domain
 import UI
 
-package struct DayAgendaView: View {
+/// What the Day view's header has to show — the window around it decides
+/// how (the popover's `DayHeaderView`, the Command Window's own heading).
+package struct DayHeaderFacts {
+    package let date: Date
+    package let isToday: Bool
+    /// The day's events, cancelled ones excluded.
+    package let eventCount: Int
+    package let taskCount: Int
+}
+
+/// A day's timeline under a header its window composes.
+package struct DayAgendaView<Header: View>: View {
     @Environment(\.themePalette) var theme
     @Environment(\.timeFormat) var timeFormat
     @Environment(\.weatherProvider) private var weatherProvider
@@ -11,10 +22,7 @@ package struct DayAgendaView: View {
     package let date: Date
     package let isToday: Bool
     package let events: [AgendaEventModel]
-    package let onPrevious: () -> Void
-    package let onNext: () -> Void
-    /// The header's title: back to today.
-    package var onToday: () -> Void = {}
+    package let header: (DayHeaderFacts) -> Header
     package var keyboardNavigationRequest: VerticalNavigationRequest?
     package var positioningRequest: AgendaScrollTarget?
     package var nowPresentation: AgendaNowPresentation?
@@ -22,6 +30,9 @@ package struct DayAgendaView: View {
     /// behind Month mode — an up/down keypress should move whichever
     /// agenda is actually on screen, not both at once.
     package var isActive = true
+    /// Weather above the timeline; off where it's shown beside it (the
+    /// Command Window's Day sidebar).
+    package var showsWeatherBar = true
     /// Fired whenever `applyPositioningIfReady` actually applies (or
     /// determines there's nothing to apply for) the current
     /// `positioningRequest` — lets `RootView` know this column's
@@ -100,15 +111,8 @@ package struct DayAgendaView: View {
 
     package var body: some View {
         VStack(spacing: 0) {
-            DayHeaderView(
-                date: date,
-                isToday: isToday,
-                eventCount: eventCount,
-                taskCount: taskCoordinator == nil ? 0 : tasks.count,
-                onToday: onToday,
-                onPrevious: onPrevious,
-                onNext: onNext
-            )
+            header(DayHeaderFacts(date: date, isToday: isToday, eventCount: eventCount,
+                                  taskCount: taskCoordinator == nil ? 0 : tasks.count))
 
             ScrollViewReader { proxy in
             ThemedScrollView(
@@ -148,13 +152,13 @@ package struct DayAgendaView: View {
             .floatingTopBar(usesNativeEffect: false) {
                 DayTopBar(
                     date: date,
-                    weather: showsWeather ? weather : nil,
+                    weather: showsWeather && showsWeatherBar ? weather : nil,
                     allDayEvents: allDayEvents,
                     // Hidden, it follows Month's selected day: no motion for nobody.
                     animation: isActive && !reduceMotion ? Self.positioningAnimation : nil,
                     selectedEventID: selectedAllDayEventID,
                     detailPresentationRequest: detailPresentationRequest,
-                    onDetailPresentationChange: onEventDetailPresentationChange
+                    onDetailPresentationChange: { eventDetailPresentationChanged($0, isShowing: $1) }
                 )
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { _ in
                     reanchor(animated: !reduceMotion)
@@ -203,7 +207,7 @@ package struct DayAgendaView: View {
         .onChange(of: date) { _, _ in clearSelection() }
         .task(id: isActive ? "\(date.timeIntervalSince1970)-\(showsWeather)-\(weatherLocation)" : nil) {
             guard isActive else { return }
-            guard showsWeather, WeatherForecastWindow.contains(date) else {
+            guard showsWeather, showsWeatherBar, WeatherForecastWindow.contains(date) else {
                 weather = nil
                 return
             }

@@ -54,6 +54,8 @@ final class RootModels {
     let refresh: PanelRefreshCoordinator
     let daySnapshot: DaySnapshot
     let workdayStore = WorkdayStore(provider: CachingHolidayProvider.shared)
+    /// The Command Window's month chips, kept ready between its opens.
+    let monthEvents: MonthEventsStore
     let visibilityStore: SourceVisibilityStore
     /// The calendar as it is now — what keyboard commands re-check a
     /// selection against.
@@ -85,6 +87,7 @@ final class RootModels {
 
         let viewModel = CalendarViewModel(dataProvider: dataProvider, visibleMonth: today, selectedDate: today)
         let agendaStore = AgendaSectionStore(dataProvider: dataProvider, calendar: agendaCalendar)
+        self.monthEvents = MonthEventsStore(dataProvider: dataProvider)
         let eventDetail = EventDetailCoordinator()
         let agendaNavigation = AgendaNavigationCoordinator(
             viewModel: viewModel, agendaStore: agendaStore, presentationCoordinator: presentationCoordinator,
@@ -128,6 +131,25 @@ final class RootModels {
             calendarAccess: calendarAccess, eventDetail: eventDetail
         )
         self.daySnapshot = DaySnapshot(viewModel: viewModel, agendaStore: agendaStore, agendaNavigation: agendaNavigation)
+    }
+
+    /// Month or Day is the view, but Calendar isn't allowed.
+    var isAccessCardShown: Bool {
+        !searchPalette.isResultsViewShown && !calendarAccess.isGranted
+            && [.month, .day].contains(agendaNavigation.displayedViewMode)
+    }
+
+    /// Scheduled reminders for the calendar views; empty when turned off
+    /// in Settings, which leaves those views exactly as without tasks.
+    func calendarTaskIndex(showsTasksInCalendar: Bool) -> ScheduledTaskIndex {
+        showsTasksInCalendar ? taskStore.repository.scheduledIndex() : .empty
+    }
+
+    /// What chat's references open: events and tasks in place, a day in
+    /// the calendar — for Ask in either window.
+    var chatObjects: ChatObjectContext {
+        ChatObjectContext(event: chat.eventLookup, taskActions: taskStore.actions,
+                          taskCoordinator: chatTasks, showDay: { [router] in router.showDay($0) })
     }
 
     private static func makeEventActions(eventStore: EKEventStore, editor: EventKitEventEditor, noticeCenter: NoticeCenter,

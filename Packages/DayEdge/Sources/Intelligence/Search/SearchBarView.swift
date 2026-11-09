@@ -10,12 +10,16 @@ import UI
 /// always visible before Enter runs anything.
 package struct SearchBarView: View {
     @Environment(\.themePalette) var theme
+    @Environment(\.panelLayout) private var panelLayout
 
     @Binding package var query: String
     package var searchFocus: FocusState<Bool>.Binding
     package let palette: SearchPaletteModel
     /// Opens task details from search results (its own, like chat's).
     package var taskCoordinator: CalendarTaskCoordinator?
+    /// The Command Window's command bar: the field always shown, border to
+    /// border, with no view switcher sharing its row.
+    private var isCommandBar: Bool { panelLayout == .wide }
 
     /// Which Quick Add field has keyboard focus — an explicit order that Tab
     /// walks (menus aren't in the system's key loop without Full Keyboard
@@ -93,9 +97,8 @@ package struct SearchBarView: View {
     /// show/blend through instead of reading as one solid surface.
     private var surfaceFill: Color { theme.searchSurface }
 
-    private var isExpanded: Bool {
-        !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    /// A query typed — or Quick Add opened on an empty draft (⌘N, ⇧⌘N).
+    private var isExpanded: Bool { palette.isOpen(query: query) }
 
     /// The palette's elevated surface: expanded, unless the Search view is
     /// showing the results (then the field sits flat in the toolbar row).
@@ -194,14 +197,14 @@ package struct SearchBarView: View {
     /// The Search view: the query stays in the toolbar row as Ask's
     /// composer's twin — the field surface, border to border, under the
     /// folded view switcher.
-    private var showsField: Bool { palette.isResultsViewShown }
+    private var showsField: Bool { palette.isResultsViewShown || (isCommandBar && !showsSurface) }
 
     private var headerRow: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(theme.secondaryText)
 
-            TextField("", text: $query, prompt: Text(L10n.tr("searchbarview.search", "Search")).foregroundStyle(theme.secondaryText))
+            TextField("", text: $query, prompt: Text(prompt).foregroundStyle(theme.secondaryText))
                 .textFieldStyle(.plain)
                 .themedTextInput()
                 .font(AppTheme.TextStyle.eventTitle)
@@ -211,9 +214,15 @@ package struct SearchBarView: View {
                 // Collapsed and empty, the field is as wide as "Search": the
                 // rest of the row is the panel's drag area (it's focused on
                 // open anyway, so typing just works).
-                .fixedSize(horizontal: !isExpanded && query.isEmpty, vertical: false)
+                .fixedSize(horizontal: !isCommandBar && !isExpanded && query.isEmpty, vertical: false)
 
             Spacer(minLength: 0)
+
+            if isCommandBar, query.isEmpty,
+               let shortcut = KeyboardShortcutSettings.shared.shortcut(for: .action(.focusSearch))?.displayLabel {
+                KeyboardShortcutKey(shortcut)
+                    .accessibilityHidden(true)
+            }
         }
         // The view switcher is the panel toolbar's (drawn once, above this
         // layer); the field leaves its room unless the palette is open.
@@ -225,6 +234,12 @@ package struct SearchBarView: View {
                 .padding(.horizontal, Self.surfaceHorizontalInset)
                 .opacity(showsField ? 1 : 0)
         }
+    }
+
+    private var prompt: String {
+        isCommandBar
+            ? L10n.tr("searchbarview.command.prompt", "Search, create, jump to a date, or ask…")
+            : L10n.tr("searchbarview.search", "Search")
     }
 
     package init(

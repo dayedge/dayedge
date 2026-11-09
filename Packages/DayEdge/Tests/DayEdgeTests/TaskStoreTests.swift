@@ -414,4 +414,48 @@ final class TaskStoreRevealTests: XCTestCase {
         XCTAssertEqual(TaskContextMenuPlan.title(for: .showInTasks), "Show in Tasks")
         XCTAssertFalse(TaskContextMenuPlan.entries(for: task).contains(.action(.showInTasks)), "not in the Tasks view itself")
     }
+
+    // MARK: Filters
+
+    func testTasksOpensOnAllTasks() async {
+        let store = await makeStore()
+        XCTAssertEqual(store.filter, .all)
+    }
+
+    func testPickingAFilterStartsFromItsFirstSection() async {
+        let store = await makeStore()
+        store.jump(to: "list-personal")
+        store.select(.today)
+        XCTAssertEqual(store.currentSectionID(), store.navigableSections().first?.id)
+        XCTAssertNil(store.activeSectionID)
+    }
+
+    func testShowingASectionJumpsToItWithinTheFilter() async {
+        let store = await makeStore()
+        store.show(section: "list-work")
+        XCTAssertEqual(store.filter, .all)
+        XCTAssertEqual(store.currentSectionID(), "list-work")
+    }
+
+    func testShowingASectionTheFilterLeavesOutSwitchesToAllTasks() async {
+        let store = await makeStore()
+        store.select(.today)
+        store.show(section: "completed")
+        XCTAssertEqual(store.filter, .all)
+        XCTAssertEqual(store.currentSectionID(), "completed")
+    }
+
+    func testNeedsAttentionIsNotOfferedWhileSwitchedOff() async {
+        let store = await makeStore()
+        store.toggleVisibility(TaskSmartSection.attention.visibilityID)
+        XCTAssertFalse(store.smartViews.contains(.attention))
+    }
+
+    func testAHiddenListIsLeftOutOfTheCounts() async {
+        let store = await makeStore()
+        let all = store.filterCounts[.all] ?? 0
+        let personal = store.tasks.filter { $0.listID == "personal" && !$0.isCompleted }.count
+        store.toggleVisibility("personal")
+        XCTAssertEqual(store.filterCounts[.all], all - personal)
+    }
 }
