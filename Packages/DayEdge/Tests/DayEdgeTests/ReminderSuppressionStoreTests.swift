@@ -93,11 +93,11 @@ final class ReminderSuppressionStoreTests: XCTestCase {
         store.onGlobalMutation = { notified += 1 }
         XCTAssertFalse(store.isGloballyMuted)
 
-        store.muteAll(until: monday.addingTimeInterval(3600), chosen: .evening)
+        store.muteAll(until: monday.addingTimeInterval(3600), chosen: .duration(.evening))
         XCTAssertTrue(store.isGloballyMuted)
         XCTAssertEqual(notified, 1)
         let reloaded = ReminderSuppressionStore(defaults: defaults, now: clock.now)
-        XCTAssertEqual(reloaded.activeGlobalMute, .init(until: monday.addingTimeInterval(3600), chosen: .evening))
+        XCTAssertEqual(reloaded.activeGlobalMute, .init(until: monday.addingTimeInterval(3600), chosen: .duration(.evening)))
 
         clock.date = monday.addingTimeInterval(3601)
         XCTAssertFalse(reloaded.isGloballyMuted)
@@ -109,6 +109,27 @@ final class ReminderSuppressionStoreTests: XCTestCase {
         store.unmuteAll()
         XCTAssertFalse(store.isGloballyMuted)
         XCTAssertNil(ReminderSuppressionStore(defaults: defaults, now: clock.now).globalMute)
+    }
+
+    func testMeetingEndPauseKeepsItsMeetingAcrossLaunches() {
+        let suite = "ReminderSuppressionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let clock = Clock(monday)
+        let until = monday.addingTimeInterval(1800)
+        let choice = PauseChoice.meetingEnd(title: "Design Review", end: until)
+        ReminderSuppressionStore(defaults: defaults, now: clock.now).muteAll(until: until, chosen: choice)
+        XCTAssertEqual(ReminderSuppressionStore(defaults: defaults, now: clock.now).activeGlobalMute, .init(until: until, chosen: choice))
+    }
+
+    func testPauseStoredByAnEarlierVersionReadsAsItsDuration() {
+        let suite = "ReminderSuppressionStoreTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let until = monday.addingTimeInterval(3600)
+        defaults.set(["until": until, "chosen": "evening"], forKey: ReminderSuppressionStore.globalStorageKey)
+        XCTAssertEqual(ReminderSuppressionStore(defaults: defaults, now: Clock(monday).now).activeGlobalMute?.chosen,
+                       .duration(.evening))
     }
 
     func testReconcileExtendsMutedMovedOccurrenceOnly() {

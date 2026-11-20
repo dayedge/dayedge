@@ -39,6 +39,7 @@ Paths relative to `Packages/DayEdge/Sources/`.
 - Transient `NSPanel`s guard async completions with `presentationGeneration`.
 - Menu bar: `MenuBarStateController` resolves a pure composition plan: Icon mode combines calendar and meeting presentation; date/time modes use separate primary and meeting items. Both controllers share meeting rendering, with native text outside bounded image caches. Shared readiness-window logic lives in `Shell/Meetings`, used by the menu bar and Meeting HUD.
 - Status menu: pure `StatusMenuPlan`, rebuilt on each open; navigation sends `PopoverCommand` after the popover is revealed.
+- Pause Meeting Alerts: one global pause (`ReminderSuppressionStore.muteAll`) — until the meeting in progress ends (the menu's meeting; offered if it ends later today, ≥ 5 min away; end time and title fixed when chosen) or a duration.
 - Global meeting-alert pause (`ReminderSuppressionStore`) outranks per-occurrence mutes.
 
 ## Weather

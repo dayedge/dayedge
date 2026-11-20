@@ -199,6 +199,10 @@ final class KeyboardShortcutSettingsTests: XCTestCase {
                        "the panel's ⌘] — Settings' own ⌘] is another window")
     }
 
+    func testKeyFromOutsideThePanelCollidesWithEveryCommand() {
+        XCTAssertEqual(store().collision(KeyboardCommand(key: "j"), for: nil), .command(.action(.joinSelectedMeeting)))
+    }
+
     // MARK: Dispatch
 
     private func resolve(_ settings: KeyboardShortcutSettings, _ event: NSEvent?, recording: Bool = false,
@@ -275,11 +279,11 @@ final class ShortcutRecorderTests: XCTestCase {
 
     func testRecordingStateIsOneAtATime() {
         let recording = ShortcutRecording()
-        recording.begin(.action(.joinSelectedMeeting))
+        recording.begin(PanelCommand.action(.joinSelectedMeeting).id)
         XCTAssertTrue(recording.isActive)
-        recording.end(.action(.focusSearch))
+        recording.end(PanelCommand.action(.focusSearch).id)
         XCTAssertTrue(recording.isActive, "another recorder's end leaves this one")
-        recording.end(.action(.joinSelectedMeeting))
+        recording.end(PanelCommand.action(.joinSelectedMeeting).id)
         XCTAssertFalse(recording.isActive)
     }
 }

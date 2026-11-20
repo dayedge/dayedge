@@ -11,7 +11,9 @@
 - `ShortcutRecorder`: local monitor on its own window only; no global monitors, no permissions.
 
 ## Global shortcut
-- One: ⌃⌥D shows or hides the Command Window (`CommandWindowShortcut`, `KeyboardShortcuts` package — a system hot key, no event monitor, no permissions). Xcode builds only. Not configurable yet; the package stores overrides under `KeyboardShortcuts_toggleCommandWindow`. Taken by another app ⇒ nothing happens.
+- One: ⌃⌥D shows or hides the Command Window (`CommandWindowShortcut`, `KeyboardShortcuts` package — a system hot key, no event monitor, no permissions). Xcode builds only. Taken by another app ⇒ nothing happens.
+- Settings › Shortcuts › Global (first group) records it with the same `ShortcutRecorder` (same eligibility; can't take a panel command's key, nor they its). The package stores it, default included, under `KeyboardShortcuts_toggleCommandWindow` (by key code; shown and matched as the current layout's character). Restore Defaults resets it too.
+- Paused (`KeyboardShortcuts.isEnabled`) while any recorder listens, so its own key reaches the recorder.
 - The Command Window uses the panel's keys (`PanelKeyHandler`) unchanged. Esc unwinds as in the popover; with nothing left to close and an empty query it hides the window (the popover only leaves the field). In Ask, Esc denies a pending change or stops a reply first; with nothing to stop it hides the window.
 
 ## New Event / New Task

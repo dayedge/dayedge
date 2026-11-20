@@ -11,12 +11,14 @@ enum StatusMenuItem {
     case showTodayTasks(count: Int)
     case muteMeeting(AgendaEventModel)
     case restoreMeeting(AgendaEventModel)
-    /// Every meeting's alerts, for a while (the Focus-style durations). While
-    /// paused, the row's title is `pausedTitle` (it says when they resume) and
-    /// the submenu starts with Resume (`unmuteAll`); `checked` is the
-    /// duration the pause came from, only when choosing it now would end at
-    /// exactly the same moment.
-    case pauseAlerts([MuteUntilOption], pausedTitle: String?, checked: MuteUntilOption?)
+    /// Every meeting's alerts, for a while: its submenu's `.pause` rows.
+    /// While paused, the row's title is `pausedTitle` (it says when they
+    /// resume) and the submenu starts with Resume (`unmuteAll`).
+    case pauseAlerts([StatusMenuItem], pausedTitle: String?)
+    /// One way to pause — until the meeting in progress ends, or a
+    /// Focus-style duration; `checked` when the pause came from it and
+    /// choosing it now would end at exactly the same moment.
+    case pause(PauseChoice, title: String, checked: Bool)
     /// Resume Meeting Alerts — the paused submenu's first row.
     case unmuteAll
     case settings, about, quit
@@ -31,8 +33,9 @@ enum StatusMenuItem {
         case .showTodayTasks(let count): return L10n.tr("statusmenuplan.show.today.s.tasks", "Show Today’s Tasks (\(String(describing: count)))")
         case .muteMeeting: return L10n.tr("statusmenuplan.mute.this.meeting", "Mute This Meeting")
         case .restoreMeeting: return L10n.tr("statusmenuplan.unmute.this.meeting", "Unmute This Meeting")
-        case .pauseAlerts(_, let pausedTitle, _):
+        case .pauseAlerts(_, let pausedTitle):
             return pausedTitle ?? L10n.tr("statusmenuplan.pause.meeting.alerts", "Pause Meeting Alerts")
+        case .pause(_, let title, _): return title
         case .unmuteAll: return L10n.tr("statusmenuplan.resume.meeting.alerts", "Resume Meeting Alerts")
         case .settings: return L10n.tr("statusmenuplan.settings", "Settings…")
         case .about: return L10n.tr("statusmenuplan.about.dayedge", "About DayEdge")
@@ -52,9 +55,9 @@ enum StatusMenuItem {
         case .showTodayTasks: return "checklist"
         case .muteMeeting: return "bell.slash"
         case .restoreMeeting: return "bell"
-        case .pauseAlerts(_, let pausedTitle, _): return pausedTitle == nil ? "pause.circle" : "pause.circle.fill"
-        // In a text-only submenu, like the durations under it.
-        case .unmuteAll: return nil
+        case .pauseAlerts(_, let pausedTitle): return pausedTitle == nil ? "pause.circle" : "pause.circle.fill"
+        // A text-only submenu.
+        case .pause, .unmuteAll: return nil
         case .settings: return "gearshape"
         case .about: return "info.circle"
         case .quit: return nil
@@ -77,12 +80,14 @@ enum StatusMenuPlan {
         var actionableTaskCount: Int
         var isMuted: (AgendaEventModel) -> Bool
         /// The global mute, while active.
-        var globalMute: (until: Date, chosen: MuteUntilOption?)?
+        var globalMute: (until: Date, chosen: PauseChoice?)?
         var dates: DatePresentationFormatter
         var timeFormat: TimeFormat
     }
 
     static let titleLimit = 40
+    /// Shorter where the title sits inside a longer sentence.
+    static let pauseTitleLimit = 30
 
     static func resolve(_ inputs: Inputs) -> [[StatusMenuItem]] {
         let meeting = relevantMeeting(in: inputs.events, now: inputs.now)
@@ -105,17 +110,26 @@ enum StatusMenuPlan {
             context.append(.showTodayTasks(count: inputs.actionableTaskCount))
         }
 
-        let options = MuteUntilOption.available(now: inputs.now, calendar: inputs.calendar)
+        var choices = MuteUntilOption.available(now: inputs.now, calendar: inputs.calendar).map(PauseChoice.duration)
+        if let meeting, let end = meeting.endDate, canPauseUntilEnd(meeting, now: inputs.now, calendar: inputs.calendar) {
+            choices.insert(.meetingEnd(title: meeting.title, end: end), at: 0)
+        }
         // A check only for a choice that still means this pause: "For 1 Hour"
-        // stops matching as soon as time passes, a daypart doesn't.
-        let checked = inputs.globalMute.flatMap { mute in
-            mute.chosen.flatMap { $0.endDate(now: inputs.now, calendar: inputs.calendar) == mute.until ? $0 : nil }
+        // stops matching as soon as time passes, a daypart doesn't, a moved
+        // meeting no longer does.
+        let rows = choices.map { choice in
+            StatusMenuItem.pause(
+                choice, title: pauseTitle(choice, timeFormat: inputs.timeFormat, calendar: inputs.calendar),
+                checked: inputs.globalMute.map {
+                    $0.chosen == choice && choice.endDate(now: inputs.now, calendar: inputs.calendar) == $0.until
+                } ?? false
+            )
         }
         let pausedTitle = inputs.globalMute.map { mute in
-            Self.pausedTitle(until: mute.until, now: inputs.now, dates: inputs.dates.with(inputs.calendar),
-                             timeFormat: inputs.timeFormat)
+            Self.pausedTitle(until: mute.until, chosen: mute.chosen, now: inputs.now,
+                             dates: inputs.dates.with(inputs.calendar), timeFormat: inputs.timeFormat)
         }
-        let reminders: [StatusMenuItem] = [.pauseAlerts(options, pausedTitle: pausedTitle, checked: checked)]
+        let reminders: [StatusMenuItem] = [.pauseAlerts(rows, pausedTitle: pausedTitle)]
 
         return [[.open, .search, .ask], context, reminders, [.settings, .about], [.quit]]
             .filter { !$0.isEmpty }
@@ -125,8 +139,7 @@ enum StatusMenuPlan {
     /// one later today. Timed, not cancelled or declined.
     static func relevantMeeting(in events: [AgendaEventModel], now: Date) -> AgendaEventModel? {
         let meetings = events.filter { event in
-            !event.isAllDay && event.status != .cancelled && event.status != .untimed
-                && event.startDate != nil && event.endDate != nil
+            event.blocksTime && event.status != .untimed && event.startDate != nil && event.endDate != nil
         }
         let current = meetings
             .filter { $0.startDate! <= now && now < $0.endDate! }
@@ -137,11 +150,38 @@ enum StatusMenuPlan {
             .min { $0.startDate! < $1.startDate! }
     }
 
-    /// "Meeting Alerts Paused · Until 15:00" — the day only when it isn't today.
-    static func pausedTitle(until: Date, now: Date, dates: DatePresentationFormatter, timeFormat: TimeFormat) -> String {
+    /// Pausing until a meeting ends is worth offering while it's in
+    /// progress, ends later today and not within minutes.
+    static func canPauseUntilEnd(_ meeting: AgendaEventModel, now: Date, calendar: Calendar) -> Bool {
+        guard let start = meeting.startDate, let end = meeting.endDate else { return false }
+        return start <= now && end.timeIntervalSince(now) >= 5 * 60 && calendar.isDate(end, inSameDayAs: now)
+    }
+
+    /// For 1 Hour, …, or Until “Design Review” Ends (11:00).
+    static func pauseTitle(_ choice: PauseChoice, timeFormat: TimeFormat, calendar: Calendar) -> String {
+        switch choice {
+        case .duration(let option):
+            return option.menuTitle
+        case .meetingEnd(let title, let end):
+            let name = quoted(title, limit: pauseTitleLimit)
+            let time = timeFormat.time(end, calendar: calendar)
+            return L10n.tr("statusmenuplan.pause.until.meeting.ends.at",
+                           "Until \(String(describing: name)) Ends (\(String(describing: time)))")
+        }
+    }
+
+    /// "Meeting Alerts Paused · Until 15:00" — the day only when it isn't
+    /// today; a meeting's pause names the meeting instead.
+    static func pausedTitle(until: Date, chosen: PauseChoice?, now: Date, dates: DatePresentationFormatter,
+                            timeFormat: TimeFormat) -> String {
+        let locale = dates.displayLocale
+        if case .meetingEnd(let title, _) = chosen {
+            let name = quoted(title, limit: pauseTitleLimit)
+            return L10n.tr("statusmenuplan.meeting.alerts.paused.until.meeting.ends",
+                           "Meeting Alerts Paused · Until \(String(describing: name)) Ends", locale: locale)
+        }
         // Whole sentences per case: "tomorrow" after "until" takes its own form in some languages (Polish "do jutra").
         let time = timeFormat.time(until, calendar: dates.calendar)
-        let locale = dates.displayLocale
         switch dates.dayOffset(until, from: now) {
         case 0:
             return L10n.tr("statusmenuplan.meeting.alerts.paused.until", "Meeting Alerts Paused · Until \(time)", locale: locale)
@@ -154,12 +194,19 @@ enum StatusMenuPlan {
         }
     }
 
-    /// “Title”, shortened so the menu stays narrow.
-    static func quoted(_ title: String) -> String {
-        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let short = trimmed.count > titleLimit
-            ? String(trimmed.prefix(titleLimit - 1)).trimmingCharacters(in: .whitespaces) + "…"
-            : trimmed
-        return "“\(short)”"
+    /// “Title”, on one line and shortened so the menu stays narrow: cut on
+    /// a word when one ends close by, never mid-character.
+    static func quoted(_ title: String, limit: Int = titleLimit) -> String {
+        let flat = title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard flat.count > limit else { return "“\(flat)”" }
+        let prefix = String(flat.prefix(limit - 1))
+        var cut = prefix
+        let endsOnWord = flat.dropFirst(limit - 1).first == " "
+        // Back to the last whole word, if it ends close by.
+        if !endsOnWord, let space = cut.lastIndex(of: " "), cut.distance(from: space, to: cut.endIndex) <= 10 {
+            cut = String(cut[..<space])
+        }
+        while let last = cut.last, last.isWhitespace || last.isPunctuation { cut.removeLast() }
+        return "“\(cut.isEmpty ? prefix : cut)…”"
     }
 }
