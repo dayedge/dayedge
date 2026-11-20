@@ -51,10 +51,21 @@ final class MenuBarPrimaryRenderer {
             return Content(image: badge, title: label, text: meeting.text,
                            badgeWidth: badge?.size.width ?? 0, hasCallIcon: false)
         case nil:
-            return Content(image: badge, title: title(presentation.text, font: AppTheme.MenuBar.primaryFont),
+            let label = NSMutableAttributedString()
+            if badge != nil, !presentation.text.isEmpty { label.append(Self.iconTitleSpacer) }
+            label.append(title(presentation.text, font: AppTheme.MenuBar.primaryFont))
+            return Content(image: badge, title: label,
                            text: presentation.text, badgeWidth: badge?.size.width ?? 0, hasCallIcon: false)
         }
     }
+
+    /// Widens the button's tight icon–title gap to match system items.
+    private static let iconTitleSpacer: NSAttributedString = {
+        let attachment = NSTextAttachment()
+        attachment.image = NSImage(size: NSSize(width: 3, height: 1))
+        attachment.bounds = CGRect(x: 0, y: 0, width: 3, height: 1)
+        return NSAttributedString(attachment: attachment)
+    }()
 
     private func title(_ text: String, font: NSFont) -> NSAttributedString {
         NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.labelColor])

@@ -10,16 +10,17 @@ import Observation
 package final class ShortcutRecording {
     package static let shared = ShortcutRecording()
 
-    package private(set) var active: PanelCommand?
+    /// The recorder's shortcut id (`PanelCommand.id`, or a global one's).
+    private var active: String?
     package var isActive: Bool { active != nil }
 
     package init() {}
 
-    package func begin(_ command: PanelCommand) { active = command }
+    package func begin(_ id: String) { active = id }
 
-    /// Ends `command`'s recording (another one's is left alone).
-    package func end(_ command: PanelCommand) {
-        if active == command { active = nil }
+    /// Ends `id`'s recording (another one's is left alone).
+    package func end(_ id: String) {
+        if active == id { active = nil }
     }
 
     /// For event monitors (on the main thread): whether any recorder listens.

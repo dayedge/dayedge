@@ -135,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .menuBarPopover:
             installMenuBar(popoverWindow: popoverWindow)
         }
-        CommandWindowShortcut.register { [weak self] in self?.toggleCommandWindow() }
+        CommandWindowShortcut.shared.register { [weak self] in self?.toggleCommandWindow() }
 
         // Settings or the popover menu changed which calendars count.
         NotificationCenter.default.addObserver(
@@ -168,9 +168,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popoverWindow.toggle(.anchored(anchor))
         }
         statusItemController.onMenuAction = { [weak self] row in self?.handleMenuAction(row) }
-        statusItemController.onMuteUntil = { [weak self] option in
-            self?.reminderSuppression.muteAll(until: option.endDate(now: .now, calendar: .autoupdatingCurrent), chosen: option)
-        }
         statusItemController.onAnchorChange = { [weak popoverWindow] anchor in
             popoverWindow?.reposition(anchoredTo: anchor)
         }
@@ -283,6 +280,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let url = event.meetingLink?.preferredURL { NSWorkspace.shared.open(url) }
         case .muteMeeting(let event): reminderSuppression.setMuted(true, for: event)
         case .restoreMeeting(let event): reminderSuppression.setMuted(false, for: event)
+        case .pause(let choice, _, _):
+            reminderSuppression.muteAll(until: choice.endDate(now: .now, calendar: .autoupdatingCurrent), chosen: choice)
         case .unmuteAll: reminderSuppression.unmuteAll()
         case .settings: showSettings(nil)
         case .pauseAlerts, .about, .quit: break

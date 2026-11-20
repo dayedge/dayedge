@@ -23,7 +23,7 @@ package final class ReminderSuppressionStore {
     package struct GlobalMute: Equatable {
         package let until: Date
         /// What the user picked, so the menu can say it back.
-        package let chosen: MuteUntilOption?
+        package let chosen: PauseChoice?
     }
 
     package init(defaults: UserDefaults = .standard, now: @escaping () -> Date = { .now }) {
@@ -33,7 +33,7 @@ package final class ReminderSuppressionStore {
             .compactMapValues { $0 as? Date } ?? [:]
         if let stored = defaults.dictionary(forKey: Self.globalStorageKey),
            let until = stored["until"] as? Date {
-            self.globalMute = GlobalMute(until: until, chosen: (stored["chosen"] as? String).flatMap(MuteUntilOption.init(rawValue:)))
+            self.globalMute = GlobalMute(until: until, chosen: Self.choice(from: stored, until: until))
         }
         pruneExpired()
     }
@@ -69,7 +69,7 @@ package final class ReminderSuppressionStore {
     /// The active global mute, if any.
     package var activeGlobalMute: GlobalMute? { isGloballyMuted ? globalMute : nil }
 
-    package func muteAll(until: Date, chosen: MuteUntilOption?) {
+    package func muteAll(until: Date, chosen: PauseChoice?) {
         globalMute = GlobalMute(until: until, chosen: chosen)
         persistGlobal()
         onGlobalMutation?()
@@ -120,7 +120,16 @@ package final class ReminderSuppressionStore {
             return
         }
         var stored: [String: Any] = ["until": globalMute.until]
-        if let chosen = globalMute.chosen { stored["chosen"] = chosen.rawValue }
+        switch globalMute.chosen {
+        case .duration(let option): stored["chosen"] = option.rawValue
+        case .meetingEnd(let title, _): stored["meetingTitle"] = title
+        case nil: break
+        }
         defaults.set(stored, forKey: Self.globalStorageKey)
+    }
+
+    private static func choice(from stored: [String: Any], until: Date) -> PauseChoice? {
+        if let title = stored["meetingTitle"] as? String { return .meetingEnd(title: title, end: until) }
+        return (stored["chosen"] as? String).flatMap(MuteUntilOption.init(rawValue:)).map(PauseChoice.duration)
     }
 }

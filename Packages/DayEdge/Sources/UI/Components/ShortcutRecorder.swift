@@ -12,7 +12,9 @@ package struct ShortcutRecorder: View {
     @Environment(\.themePalette) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    let command: PanelCommand
+    /// Which shortcut, for `ShortcutRecording`.
+    let id: String
+    let title: String
     let shortcut: KeyboardCommand?
     let isCustomized: Bool
     /// A reason the key can't be used, or nil.
@@ -24,10 +26,11 @@ package struct ShortcutRecorder: View {
     @State private var isRecording = false
     @State private var message: String?
 
-    package init(command: PanelCommand, shortcut: KeyboardCommand?, isCustomized: Bool,
+    package init(id: String, title: String, shortcut: KeyboardCommand?, isCustomized: Bool,
                  validate: @escaping (KeyboardCommand) -> String?, onAssign: @escaping (KeyboardCommand) -> Void,
                  onClear: @escaping () -> Void, onReset: @escaping () -> Void) {
-        self.command = command
+        self.id = id
+        self.title = title
         self.shortcut = shortcut
         self.isCustomized = isCustomized
         self.validate = validate
@@ -81,7 +84,7 @@ package struct ShortcutRecorder: View {
             RecorderKeyCatcher(isRecording: isRecording, onKey: handle, onEnd: stop)
         )
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isRecording)
-        .accessibilityLabel(command.title)
+        .accessibilityLabel(title)
         .accessibilityValue(isRecording ? L10n.tr("shortcutrecorder.recording", "Recording")
                                         : shortcut?.displayLabel ?? L10n.tr("shortcutrecorder.none", "None"))
         .accessibilityHint(L10n.tr("shortcutrecorder.hint", "Press to record a new shortcut"))
@@ -91,14 +94,14 @@ package struct ShortcutRecorder: View {
     private func start() {
         message = nil
         isRecording = true
-        ShortcutRecording.shared.begin(command)
+        ShortcutRecording.shared.begin(id)
     }
 
     private func stop() {
         guard isRecording else { return }
         isRecording = false
         message = nil
-        ShortcutRecording.shared.end(command)
+        ShortcutRecording.shared.end(id)
     }
 
     private func handle(_ event: NSEvent) {

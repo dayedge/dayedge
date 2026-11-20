@@ -48,3 +48,19 @@ package enum MuteUntilOption: String, CaseIterable, Hashable {
         }
     }
 }
+
+/// A way to pause every meeting's alerts; kept with the pause so the menu
+/// can say it back.
+package enum PauseChoice: Equatable {
+    case duration(MuteUntilOption)
+    /// Until the meeting then in progress ends: its title and end as they were then.
+    case meetingEnd(title: String, end: Date)
+
+    /// When the pause ends.
+    package func endDate(now: Date, calendar: Calendar) -> Date {
+        switch self {
+        case .duration(let option): return option.endDate(now: now, calendar: calendar)
+        case .meetingEnd(_, let end): return end
+        }
+    }
+}

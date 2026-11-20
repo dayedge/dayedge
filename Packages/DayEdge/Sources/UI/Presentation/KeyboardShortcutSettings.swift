@@ -115,8 +115,9 @@ package final class KeyboardShortcutSettings {
         return reserved.contains(shortcut) ? .reservedBySystem : nil
     }
 
-    /// Who already uses this key in the panel, besides `command` itself.
-    package func collision(_ shortcut: KeyboardCommand, for command: PanelCommand) -> ShortcutOwner? {
+    /// Who already uses this key in the panel, besides `command` itself
+    /// (nil: a key from outside the panel, such as the global shortcut).
+    package func collision(_ shortcut: KeyboardCommand, for command: PanelCommand?) -> ShortcutOwner? {
         if let other = bindings[shortcut], other != command { return .command(other) }
         return PanelCommands.fixedKeys.first { $0.shortcut == shortcut }.map { .fixed($0.owner) }
     }

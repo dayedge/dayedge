@@ -244,6 +244,8 @@
 "statusmenuplan.meeting.alerts.paused.until" = "Meeting Alerts Paused · Until %@";
 "statusmenuplan.meeting.alerts.paused.until.tomorrow" = "Meeting Alerts Paused · Until Tomorrow, %@";
 "statusmenuplan.meeting.alerts.paused.until.date" = "Meeting Alerts Paused · Until %@, %@";
+"statusmenuplan.meeting.alerts.paused.until.meeting.ends" = "Meeting Alerts Paused · Until %@ Ends";
+"statusmenuplan.pause.until.meeting.ends.at" = "Until %1$@ Ends (%2$@)";
 "statusmenuplan.resume.meeting.alerts" = "Resume Meeting Alerts";
 "statusmenuplan.open.dayedge" = "Open DayEdge";
 "statusmenuplan.quit.dayedge" = "Quit DayEdge";
@@ -311,6 +313,9 @@
 "shortcutssettingsview.commands" = "Commands";
 "shortcutssettingsview.commands.footer" = "Click a shortcut, then press the new keys. ⌫ removes it, Esc cancels.";
 "shortcutssettingsview.restore.defaults" = "Restore Defaults";
+"shortcutssettingsview.global" = "Global";
+"shortcutssettingsview.global.footer" = "Works from any app.";
+"shortcutssettingsview.show.command.window" = "Show Command Window";
 "shortcutssettingsview.move.between.items" = "Move Between Items";
 "shortcutssettingsview.previous.next.month.or.list" = "Previous / Next Month or List";
 "shortcutssettingsview.previous.next.day" = "Previous / Next Day";

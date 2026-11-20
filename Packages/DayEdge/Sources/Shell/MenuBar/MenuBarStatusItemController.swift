@@ -12,12 +12,13 @@ final class MenuBarStatusItemController {
     var menuPlan: () -> [[StatusMenuItem]] = { [[.settings], [.quit]] }
     /// A menu row was chosen (Quit and About are handled here).
     var onMenuAction: (StatusMenuItem) -> Void = { _ in }
-    /// Mute Until › one of its options.
-    var onMuteUntil: (MuteUntilOption) -> Void = { _ in }
 
     private var statusItem: NSStatusItem?
     private let renderer = MenuBarPrimaryRenderer()
     private var badgeWidth: CGFloat = 0
+    /// What was last assigned. Attachments compare by identity, so the
+    /// button's own copy of the title may never match a fresh render.
+    private var appliedTitle: NSAttributedString?
     private var hasCallIcon = false
     private var onMeetingClick: (() -> Void)?
     private var anchorObservers: [NSObjectProtocol] = []
@@ -53,7 +54,10 @@ final class MenuBarStatusItemController {
         let content = renderer.render(presentation, scale: scale)
         if button.image !== content.image { button.image = content.image }
         button.imagePosition = presentation.showsIcon ? .imageLeft : .noImage
-        if !button.attributedTitle.isEqual(to: content.title) { button.attributedTitle = content.title }
+        if appliedTitle?.isEqual(to: content.title) != true {
+            button.attributedTitle = content.title
+            appliedTitle = content.title
+        }
         badgeWidth = content.badgeWidth
         hasCallIcon = content.hasCallIcon
         onMeetingClick = presentation.meeting == nil ? nil : onJoin
@@ -172,9 +176,12 @@ final class MenuBarStatusItemController {
             item.keyEquivalent = ","
         case .quit:
             item.keyEquivalent = "q"
-        case .pauseAlerts(let options, let pausedTitle, let checked):
-            // Like Focus: Resume first while paused, then the durations —
-            // text only, the chosen one checked when it still holds.
+        case .pause(_, _, let checked):
+            item.state = checked ? .on : .off
+        case .pauseAlerts(let rows, let pausedTitle):
+            // Like Focus: Resume first while paused, then the meeting in
+            // progress, then the durations — text only, the chosen one
+            // checked when it still holds.
             item.action = nil
             let submenu = NSMenu()
             submenu.autoenablesItems = false
@@ -182,12 +189,9 @@ final class MenuBarStatusItemController {
                 submenu.addItem(menuItem(for: .unmuteAll))
                 submenu.addItem(.separator())
             }
-            for option in options {
-                let choice = NSMenuItem(title: option.menuTitle, action: #selector(chooseMuteUntil(_:)), keyEquivalent: "")
-                choice.target = self
-                choice.representedObject = option.rawValue
-                choice.state = option == checked ? .on : .off
-                submenu.addItem(choice)
+            for row in rows {
+                submenu.addItem(menuItem(for: row))
+                if case .pause(.meetingEnd, _, _) = row { submenu.addItem(.separator()) }
             }
             item.submenu = submenu
         default:
@@ -213,11 +217,6 @@ final class MenuBarStatusItemController {
             NSApp.orderFrontStandardAboutPanel(nil)
         default: onMenuAction(row)
         }
-    }
-
-    @objc private func chooseMuteUntil(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String, let option = MuteUntilOption(rawValue: raw) else { return }
-        onMuteUntil(option)
     }
 
     /// Relaunches the exact binary currently running, then quits this

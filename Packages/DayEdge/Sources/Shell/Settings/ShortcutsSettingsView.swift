@@ -8,9 +8,16 @@ import UI
 /// tooltips use — so a change here is live everywhere at once.
 struct ShortcutsSettingsView: View {
     private let settings = KeyboardShortcutSettings.shared
+    private let global = CommandWindowShortcut.shared
 
     var body: some View {
         SettingsPane {
+            if CommandWindowShortcut.isAvailable {
+                SettingsGroup(header: L10n.tr("shortcutssettingsview.global", "Global"),
+                              footer: L10n.tr("shortcutssettingsview.global.footer", "Works from any app.")) {
+                    SettingsRow(title: Self.globalTitle) { globalRecorder }
+                }
+            }
             SettingsGroup(header: L10n.tr("shortcutssettingsview.commands", "Commands"),
                           footer: L10n.tr("shortcutssettingsview.commands.footer",
                                           "Click a shortcut, then press the new keys. ⌫ removes it, Esc cancels.")) {
@@ -30,26 +37,53 @@ struct ShortcutsSettingsView: View {
             }
             HStack {
                 Spacer()
-                Button(L10n.tr("shortcutssettingsview.restore.defaults", "Restore Defaults")) { settings.resetAll() }
+                Button(L10n.tr("shortcutssettingsview.restore.defaults", "Restore Defaults")) {
+                    settings.resetAll()
+                    global.reset()
+                }
                     .buttonStyle(.link)
                     .font(.system(size: 12))
-                    .disabled(!settings.hasCustomizations)
+                    .disabled(!settings.hasCustomizations && !global.isCustomized)
             }
         }
     }
 
     private func recorder(for command: PanelCommand) -> some View {
         ShortcutRecorder(
-            command: command,
+            id: command.id,
+            title: command.title,
             shortcut: settings.shortcut(for: command),
             isCustomized: settings.isCustomized(command),
-            validate: { candidate in
-                KeyboardShortcutSettings.eligibility(candidate)?.message ?? settings.collision(candidate, for: command)?.usedMessage
-            },
+            validate: { problem($0, for: command) },
             onAssign: { settings.set($0, for: command) },
             onClear: { settings.clear(command) },
             onReset: { settings.reset(command) }
         )
+    }
+
+    private static var globalTitle: String {
+        L10n.tr("shortcutssettingsview.show.command.window", "Show Command Window")
+    }
+
+    /// A hot key takes its keys from every app, the panel included.
+    private var globalRecorder: some View {
+        ShortcutRecorder(
+            id: CommandWindowShortcut.id,
+            title: Self.globalTitle,
+            shortcut: global.shortcut,
+            isCustomized: global.isCustomized,
+            validate: { problem($0, for: nil) },
+            onAssign: { global.set($0) },
+            onClear: { global.set(nil) },
+            onReset: global.reset
+        )
+    }
+
+    /// Why a key can't be `command`'s (nil: the global shortcut's), if it can't.
+    private func problem(_ candidate: KeyboardCommand, for command: PanelCommand?) -> String? {
+        if let ineligible = KeyboardShortcutSettings.eligibility(candidate) { return ineligible.message }
+        if let owner = settings.collision(candidate, for: command) { return owner.usedMessage }
+        return command != nil && candidate == global.shortcut ? ShortcutOwner.fixed(Self.globalTitle).usedMessage : nil
     }
 
     /// The fixed keys, as the app uses them (read from the registry where

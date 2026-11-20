@@ -243,6 +243,8 @@
 "statusmenuplan.meeting.alerts.paused.until" = "Alerty spotkań wstrzymane · do %@";
 "statusmenuplan.meeting.alerts.paused.until.tomorrow" = "Alerty spotkań wstrzymane · do jutra, %@";
 "statusmenuplan.meeting.alerts.paused.until.date" = "Alerty spotkań wstrzymane · do %@, %@";
+"statusmenuplan.meeting.alerts.paused.until.meeting.ends" = "Alerty spotkań wstrzymane · do końca %@";
+"statusmenuplan.pause.until.meeting.ends.at" = "Do końca %1$@ (%2$@)";
 "statusmenuplan.resume.meeting.alerts" = "Wznów alerty spotkań";
 "statusmenuplan.open.dayedge" = "Otwórz DayEdge";
 "statusmenuplan.quit.dayedge" = "Zakończ DayEdge";
@@ -310,6 +312,9 @@
 "shortcutssettingsview.commands" = "Polecenia";
 "shortcutssettingsview.commands.footer" = "Kliknij skrót i naciśnij nowe klawisze. ⌫ go usuwa, Esc anuluje.";
 "shortcutssettingsview.restore.defaults" = "Przywróć domyślne";
+"shortcutssettingsview.global" = "Globalne";
+"shortcutssettingsview.global.footer" = "Działa w każdej aplikacji.";
+"shortcutssettingsview.show.command.window" = "Pokaż okno poleceń";
 "shortcutssettingsview.move.between.items" = "Przechodzenie między elementami";
 "shortcutssettingsview.previous.next.month.or.list" = "Poprzedni / następny miesiąc lub lista";
 "shortcutssettingsview.previous.next.day" = "Poprzedni / następny dzień";

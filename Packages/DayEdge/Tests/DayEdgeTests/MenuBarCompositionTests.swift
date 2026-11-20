@@ -158,6 +158,20 @@ final class MenuBarPrimaryRendererTests: XCTestCase {
         XCTAssertNotEqual(first.text, next.text)
     }
 
+    func testDateTimeBesideIconIsSpacedFromIt() {
+        let renderer = MenuBarPrimaryRenderer()
+        let content = renderer.render(primary(meeting: nil, text: "06:57"), scale: 2)
+        XCTAssertNotNil(content.title.attribute(.attachment, at: 0, effectiveRange: nil))
+        XCTAssertEqual(content.title.string.dropFirst(), "06:57")
+    }
+
+    func testDateTimeWithoutIconHasNoSpacer() {
+        let renderer = MenuBarPrimaryRenderer()
+        let presentation = MenuBarPrimaryPresentation(badge: MenuBarBadgeContent(number: 11, isOverflow: false),
+                                                      cornerGlyph: nil, text: "06:57", showsIcon: false, meeting: nil)
+        XCTAssertEqual(renderer.render(presentation, scale: 2).title.string, "06:57")
+    }
+
     func testEndingCallRestoresCalendarOnlyImage() throws {
         let renderer = MenuBarPrimaryRenderer()
         let call = renderer.render(primary(meeting: .callIcon(.zoom)), scale: 2)
